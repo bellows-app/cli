@@ -63,7 +63,7 @@ class Octane extends Plugin
     public function daemons($server, $site): array
     {
         return [
-            $this->forgeCliArtisan("octane:start --port={$this->octanePort} --no-interaction"),
+            $this->artisan->forDaemon("octane:start --port={$this->octanePort} --no-interaction"),
         ];
     }
 }
