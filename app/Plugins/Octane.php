@@ -15,16 +15,6 @@ class Octane extends Plugin
         'laravel/octane',
     ];
 
-    public function enabled(): bool
-    {
-        if (!$this->getDefaultEnabled()['enabled']) {
-            $this->info('Octane is not installed in this project, skipping.');
-            return false;
-        }
-
-        return $this->confirm('Use Octane?', true);
-    }
-
     public function setup($server): void
     {
         $defaultOctanePort = 8000;

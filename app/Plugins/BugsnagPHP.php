@@ -12,17 +12,6 @@ class BugsnagPHP extends Bugsnag
         'bugsnag/bugsnag-laravel',
     ];
 
-    public function enabled(): bool
-    {
-        if (!$this->getDefaultEnabled()['enabled']) {
-            $this->info('Bugsnag is not installed in this project, skipping.');
-
-            return false;
-        }
-
-        return $this->confirm('Use Bugsnag?', $this->getDefaultEnabled()['enabled']);
-    }
-
     public function setup($server): void
     {
         $this->bugsnagKey = $this->env->get('BUGSNAG_API_KEY');

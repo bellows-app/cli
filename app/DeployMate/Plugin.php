@@ -29,6 +29,8 @@ abstract class Plugin
 
     protected Env $env;
 
+    protected bool $defaultEnabledDecisionIsFinal = false;
+
     public function __construct(protected ProjectConfig $projectConfig, protected Config $config, $output, $input)
     {
         // TODO: Maybe bind this to the container? Feels outdated and a bit gross.
@@ -43,6 +45,14 @@ abstract class Plugin
 
     public function enabled(): bool
     {
+        if (
+            (count($this->requiredComposerPackages) || count($this->requiredNpmPackages))
+            && $this->getDefaultEnabled()['enabled'] === false
+        ) {
+            // We've already determined that we don't have the required packages, just skip it.
+            return false;
+        }
+
         return $this->confirm(
             'Enable ' . $this->getName() . '?',
             $this->getDefaultEnabled()['enabled'] ?? false
