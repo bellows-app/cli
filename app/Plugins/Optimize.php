@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 
-class Optimize extends BasePlugin
+class Optimize extends Plugin
 {
     public function defaultEnabled(): array
     {

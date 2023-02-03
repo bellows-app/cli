@@ -2,11 +2,12 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\NewTokenPrompt;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-class DigitalOceanDatabase extends BasePlugin
+class DigitalOceanDatabase extends Plugin
 {
     protected string $host;
     protected string $port;
@@ -24,15 +25,14 @@ class DigitalOceanDatabase extends BasePlugin
 
     public function setup($server): void
     {
-        $this->databaseName = $this->ask('Database', $this->config->isolatedUser);
+        $this->databaseName = $this->ask('Database', $this->projectConfig->isolatedUser);
         $this->databaseUser = $this->ask('Database User', $this->databaseName);
 
-        $configKey = $this->askForConfig(
-            'digitalocean',
-            'Which DigitalOcean configuration'
+        $token = $this->askForToken(
+            newTokenPrompt: new NewTokenPrompt(
+                url: 'https://cloud.digitalocean.com/account/api/tokens',
+            ),
         );
-
-        $token = config("forge.digitalocean.{$configKey}");
 
         Http::macro(
             'digitalocean',

@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 
-class CompileAssets extends BasePlugin
+class CompileAssets extends Plugin
 {
     public function defaultEnabled(): array
     {

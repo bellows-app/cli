@@ -2,10 +2,10 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 
-class LetsEncryptSSL extends BasePlugin
+class LetsEncryptSSL extends Plugin
 {
     public function defaultEnabled(): array
     {
@@ -20,7 +20,7 @@ class LetsEncryptSSL extends BasePlugin
         Http::forgeSite()->post(
             'certificates/letsencrypt',
             [
-                'domains' => [$this->config->domain],
+                'domains' => [$this->projectConfig->domain],
             ],
         );
     }
@@ -28,7 +28,7 @@ class LetsEncryptSSL extends BasePlugin
     public function setEnvironmentVariables($server, $site, array $envVars): array
     {
         return [
-            'APP_URL' => "https://{$this->config->domain}",
+            'APP_URL' => "https://{$this->projectConfig->domain}",
         ];
     }
 }

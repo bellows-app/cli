@@ -2,12 +2,12 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 
-class Octane extends BasePlugin
+class Octane extends Plugin
 {
     protected int $octanePort;
 
@@ -33,7 +33,7 @@ class Octane extends BasePlugin
             Http::forgeServer()->get('sites')->json()['sites']
         )
             ->filter(fn ($s) => $s['project_type'] === 'octane')
-            ->map(fn ($s) => (string) Http::forge()->get("servers/{$server['id']}/sites/{$s['id']}/env"))
+            ->map(fn ($s) => (string) Http::forgeServer()->get("sites/{$s['id']}/env"))
             ->map(fn ($s) => Dotenv::parse($s))
             ->map(fn ($s) => Arr::get($s,  'OCTANE_PORT'))
             ->filter()

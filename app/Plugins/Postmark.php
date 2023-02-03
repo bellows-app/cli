@@ -2,11 +2,12 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\NewTokenPrompt;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class Postmark extends BasePlugin
+class Postmark extends Plugin
 {
     protected $server;
 
@@ -22,12 +23,12 @@ class Postmark extends BasePlugin
 
     public function setup($server): void
     {
-        $configKey = $this->askForConfig(
-            'postmark',
-            'Which Postmark configuration'
+        $token = $this->askForToken(
+            newTokenPrompt: new NewTokenPrompt(
+                url: 'https://account.postmarkapp.com/api_tokens',
+                helpText: 'Retrieve your *Account* token here.',
+            ),
         );
-
-        $token = config("forge.postmark.{$configKey}");
 
         Http::macro(
             'postmark',
@@ -39,8 +40,8 @@ class Postmark extends BasePlugin
                 ->asJson()
         );
 
-        $this->server          = $this->getServer();
-        $this->sendingDomain   = $this->getDomain();
+        $this->server        = $this->getServer();
+        $this->sendingDomain = $this->getDomain();
 
         $this->updateDomainRecordsWithProvider();
 
@@ -93,7 +94,7 @@ class Postmark extends BasePlugin
             return;
         }
 
-        $configKey = $this->askForConfig(
+        $configKey = $this->askForToken(
             'digitalocean',
             'Which DigitalOcean configuration'
         );
@@ -150,7 +151,7 @@ class Postmark extends BasePlugin
     public function getServer()
     {
         if ($this->confirm('Create new Postmark server?', true)) {
-            $name = $this->ask('Server name', $this->config->appName);
+            $name = $this->ask('Server name', $this->projectConfig->appName);
             $color = $this->choice(
                 'Server color',
                 [
@@ -187,7 +188,7 @@ class Postmark extends BasePlugin
         );
 
         $default = $servers->first(
-            fn ($server) => $server['Name'] === $this->config->appName
+            fn ($server) => $server['Name'] === $this->projectConfig->appName
         );
 
         $serverId = $this->choice(
@@ -204,7 +205,7 @@ class Postmark extends BasePlugin
     public function getDomain()
     {
         if ($this->confirm('Create new Postmark domain?', true)) {
-            $name = $this->ask('Domain name', "mail.{$this->config->domain}");
+            $name = $this->ask('Domain name', "mail.{$this->projectConfig->domain}");
 
             return Http::postmark()->post('domains', [
                 'Name'         => $name,
@@ -224,7 +225,7 @@ class Postmark extends BasePlugin
         );
 
         $default = $domains->first(
-            fn ($domain) => Str::contains($domain['Name'], $this->config->domain),
+            fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
         );
 
         $domainId = $this->choice(

@@ -2,11 +2,12 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\NewTokenPrompt;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class FathomAnalytics extends BasePlugin
+class FathomAnalytics extends Plugin
 {
     protected $siteId;
 
@@ -14,32 +15,28 @@ class FathomAnalytics extends BasePlugin
     {
         return $this->confirm(
             'Do you want to enable Fathom Analytics?',
-            !Str::contains($this->config->domain, ['dev.', 'staging.'])
+            !Str::contains($this->projectConfig->domain, ['dev.', 'staging.'])
         );
     }
 
     public function setup($server): void
     {
-        // if (!env('FATHOM_ANALYTICS_TOKEN')) {
-        //     $this->info(
-        //         'FATHOM_ANALYTICS_TOKEN to your .env file. Get a token here: https://app.usefathom.com/api'
-        //     );
+        $token = $this->askForToken(
+            newTokenPrompt: new NewTokenPrompt(
+                url: 'https://app.usefathom.com/api',
+            )
+        );
 
-        //     $token = $this->ask('Enter your token');
-
-        //     $this->config->setEnvironmentVariable('FATHOM_ANALYTICS_TOKEN', $token);
-        //     return;
-        // }
-
-        Http::macro('fathom', function () {
-            return Http::baseUrl('https://api.usefathom.com/v1/')
-                ->withToken(env('FATHOM_ANALYTICS_TOKEN'))
+        Http::macro(
+            'fathom',
+            fn () =>  Http::baseUrl('https://api.usefathom.com/v1/')
+                ->withToken($token)
                 ->acceptJson()
-                ->asJson();
-        });
+                ->asJson()
+        );
 
         if ($this->confirm('Create new Fathom Analytics site?', true)) {
-            $siteName = $this->ask('Enter your site name', $this->config->appName);
+            $siteName = $this->ask('Enter your site name', $this->projectConfig->appName);
 
             $response = Http::fathom()->post('sites', [
                 'name' => $siteName,
@@ -56,7 +53,7 @@ class FathomAnalytics extends BasePlugin
 
         $siteChoices = $sites->sortBy('name')->mapWithKeys(fn ($site) => [$site['id'] => $site['name']]);
 
-        $default = $sites->first(fn ($site) => $site['name'] === $this->config->appName);
+        $default = $sites->first(fn ($site) => $site['name'] === $this->projectConfig->appName);
 
         $this->siteId = $this->choice('Choose a site', $siteChoices->toArray(), $default['id'] ?? null);
     }

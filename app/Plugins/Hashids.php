@@ -2,10 +2,10 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Str;
 
-class Hashids extends BasePlugin
+class Hashids extends Plugin
 {
     protected array $anyRequiredComposerPackages = [
         'mtvs/eloquent-hashids',

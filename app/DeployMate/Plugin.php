@@ -4,10 +4,10 @@ namespace App\DeployMate;
 
 use Illuminate\Console\Concerns\InteractsWithIO;
 
-abstract class BasePlugin
+abstract class Plugin
 {
     use InteractsWithIO;
-    use ReadsFromConfig;
+    use InteractsWithConfig;
 
     protected array $cachedDefaultEnabledPayload;
 
@@ -29,16 +29,16 @@ abstract class BasePlugin
 
     protected Env $env;
 
-    public function __construct(protected Config $config, $output, $input)
+    public function __construct(protected ProjectConfig $projectConfig, protected Config $config, $output, $input)
     {
         // TODO: Maybe bind this to the container? Feels outdated and a bit gross.
         $this->output = $output;
         $this->input = $input;
-        $this->composer = new Composer($config);
-        $this->npm = new Npm($config);
-        $this->deployScript = new DeployScript($config);
-        $this->artisan = new Artisan($config);
-        $this->env = new Env($config);
+        $this->composer = new Composer($projectConfig);
+        $this->npm = new Npm($projectConfig);
+        $this->deployScript = new DeployScript($projectConfig);
+        $this->artisan = new Artisan($projectConfig);
+        $this->env = new Env($projectConfig);
     }
 
     public function enabled(): bool
@@ -181,5 +181,10 @@ abstract class BasePlugin
     public function wrapUp($server, $site): void
     {
         //
+    }
+
+    protected function getDefaultNewAccountName(string $token): ?string
+    {
+        return null;
     }
 }

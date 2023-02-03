@@ -2,10 +2,10 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 
-class QuickDeploy extends BasePlugin
+class QuickDeploy extends Plugin
 {
     public function enabled(): bool
     {

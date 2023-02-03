@@ -2,8 +2,9 @@
 
 namespace App\Commands;
 
-use App\DeployMate\BasePlugin;
 use App\DeployMate\Config;
+use App\DeployMate\Plugin;
+use App\DeployMate\ProjectConfig;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -33,8 +34,17 @@ class Deploy extends Command
      *
      * @return mixed
      */
-    public function handle()
+    public function handle(Config $config)
     {
+        if (!$config->get('forge.token')) {
+            $this->info('No Forge token found! You can get one here:');
+            $this->info('https://forge.laravel.com/user-profile/api');
+
+            $token = $this->secret('Forge API Token');
+
+            $config->set('forge.token', $token);
+        }
+
         // $this->task(
         //     'What is this exactly',
         //     function () {
@@ -60,7 +70,7 @@ class Deploy extends Command
         Http::macro(
             'forge',
             fn () => Http::baseUrl($forgeApiUrl)
-                ->withToken(env('FORGE_TOKEN'))
+                ->withToken($config->get('forge.token'))
                 ->acceptJson()
                 ->asJson()
         );
@@ -101,7 +111,7 @@ class Deploy extends Command
 
         $this->line('PHP Version: ' . $phpVersionBinary);
 
-        $config = new Config(
+        $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
@@ -118,9 +128,10 @@ class Deploy extends Command
         $plugins = collect(config('forge.plugins'))
             // TODO: There is a better way to do this, figure it out. This is a bandaid.
             ->map(fn (string $plugin) => app($plugin, [
-                'output' => $this->output,
-                'input'  => $this->input,
-                'config' => $config,
+                'output'        => $this->output,
+                'input'         => $this->input,
+                'projectConfig' => $projectConfig,
+                'config'        => $config,
             ]));
 
         $autoDecision = $plugins->filter(fn ($plugin) => $plugin->hasDefaultEnabled());
@@ -136,7 +147,7 @@ class Deploy extends Command
 
         $defaultsAreGood = $autoDecision->count() > 0 ? $this->confirm('Continue?', true) : false;
 
-        $activePlugins = $plugins->filter(function (BasePlugin $p) use ($server, $defaultsAreGood) {
+        $activePlugins = $plugins->filter(function (Plugin $p) use ($server, $defaultsAreGood) {
             $enabled = $defaultsAreGood && $p->hasDefaultEnabled()
                 ? $p->getDefaultEnabled()['enabled']
                 : $p->enabled();
@@ -165,10 +176,8 @@ class Deploy extends Command
 
         $siteResponse = Http::forgeServer()->post('sites', array_merge(
             $baseParams,
-            ...$activePlugins->map(fn (BasePlugin $p) => $p->createSiteParams($baseParams))->toArray(),
+            ...$activePlugins->map(fn (Plugin $p) => $p->createSiteParams($baseParams))->toArray(),
         ))->json();
-
-        ray($siteResponse);
 
         $site = $siteResponse['site'];
 
@@ -199,7 +208,7 @@ class Deploy extends Command
             array_merge(
                 $baseRepoParams,
                 ...$activePlugins->map(
-                    fn (BasePlugin $p) => $p->installRepoParams($server, $site, $baseRepoParams)
+                    fn (Plugin $p) => $p->installRepoParams($server, $site, $baseRepoParams)
                 )->toArray()
             )
         );
@@ -238,7 +247,7 @@ class Deploy extends Command
         $parsedEnv = DotEnv::parse($this->siteEnv);
 
         $activePlugins->each(
-            fn (BasePlugin $p) => collect($p->setEnvironmentVariables($server, $site, $parsedEnv))->each(
+            fn (Plugin $p) => collect($p->setEnvironmentVariables($server, $site, $parsedEnv))->each(
                 fn ($v, $k) => $this->updateEnvKeyValue($k, is_array($v) ? $v[0] : $v, is_array($v))
             )
         );
@@ -260,7 +269,7 @@ class Deploy extends Command
         $this->title('Creating Deamons');
 
         $activePlugins->each(
-            fn (BasePlugin $p) => collect($p->daemons($server, $site))->each(
+            fn (Plugin $p) => collect($p->daemons($server, $site))->each(
                 fn ($commandOrParams) => Http::forgeServer()->post(
                     'daemons',
                     is_string($commandOrParams) ? [
@@ -275,7 +284,7 @@ class Deploy extends Command
         $this->title('Creating Workers');
 
         $activePlugins->each(
-            fn (BasePlugin $p) => collect($p->workers($server, $site))->each(
+            fn (Plugin $p) => collect($p->workers($server, $site))->each(
                 fn ($commandParams) => Http::forgeServer()->post(
                     'workers',
                     array_merge(['php_version'  => $phpVersion], $commandParams),
@@ -286,7 +295,7 @@ class Deploy extends Command
         $this->title('Creating Scheduled Jobs');
 
         $activePlugins->each(
-            fn (BasePlugin $p) => collect($p->jobs($server, $site))->each(
+            fn (Plugin $p) => collect($p->jobs($server, $site))->each(
                 fn ($commandParams) => Http::forgeServer()->post(
                     'jobs',
                     array_merge(['user' => $isolatedUser], $commandParams),
@@ -296,7 +305,7 @@ class Deploy extends Command
 
         $this->title('Wrapping Up');
 
-        $activePlugins->each(fn (BasePlugin $p) => $p->wrapUp($server, $site));
+        $activePlugins->each(fn (Plugin $p) => $p->wrapUp($server, $site));
 
         $this->info('Site created successfully!');
         $this->info(

@@ -4,7 +4,7 @@ namespace App\DeployMate;
 
 class Composer extends PackageManager
 {
-    public function __construct(protected Config $config)
+    public function __construct(protected ProjectConfig $config)
     {
     }
 

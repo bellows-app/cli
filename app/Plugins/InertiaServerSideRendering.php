@@ -2,12 +2,12 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 
-class InertiaServerSideRendering extends BasePlugin
+class InertiaServerSideRendering extends Plugin
 {
     protected int $ssrPort;
 
@@ -20,9 +20,9 @@ class InertiaServerSideRendering extends BasePlugin
         $defaultSSRPort = 13716;
 
         $highestSSRPortInUse = collect(
-            Http::forge()->get("servers/{$server['id']}/sites")->json()['sites']
+            Http::forgeServer()->get('sites')->json()['sites']
         )
-            ->map(fn ($s) => (string) Http::forge()->get("servers/{$server['id']}/sites/{$s['id']}/env"))
+            ->map(fn ($s) => (string) Http::forgeServer()->get("sites/{$s['id']}/env"))
             ->map(fn ($s) => Dotenv::parse($s))
             ->map(fn ($s) => Arr::get($s,  'SSR_PORT'))
             ->filter()

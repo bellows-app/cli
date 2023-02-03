@@ -5,7 +5,7 @@ namespace App\DeployMate;
 class Artisan
 {
     public function __construct(
-        protected Config $config,
+        protected ProjectConfig $config,
     ) {
     }
 

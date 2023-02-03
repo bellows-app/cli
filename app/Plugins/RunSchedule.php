@@ -2,10 +2,10 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use App\DeployMate\JobFrequency;
 
-class RunSchedule extends BasePlugin
+class RunSchedule extends Plugin
 {
     public function defaultEnabled(): array
     {

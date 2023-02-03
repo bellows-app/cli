@@ -2,6 +2,7 @@
 
 return [
     'plugins' => [
+        \App\Plugins\Postmark::class,
         \App\Plugins\Optimize::class,
         \App\Plugins\Octane::class,
         \App\Plugins\InertiaServerSideRendering::class,
@@ -14,7 +15,6 @@ return [
         \App\Plugins\LetsEncryptSSL::class,
         \App\Plugins\Hashids::class,
         \App\Plugins\FathomAnalytics::class,
-        \App\Plugins\Postmark::class,
         \App\Plugins\RunSchedule::class,
         \App\Plugins\DatabaseWorker::class,
     ],

@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 
-class MomentumTrail extends BasePlugin
+class MomentumTrail extends Plugin
 {
     protected array $requiredComposerPackages = [
         'momentum-trail',

@@ -21,7 +21,8 @@
         "guzzlehttp/guzzle": "^7.4",
         "illuminate/http": "^9.0",
         "laravel-zero/framework": "^9.2",
-        "nunomaduro/termwind": "^1.14"
+        "nunomaduro/termwind": "^1.14",
+        "spatie/laravel-data": "^3.0"
     },
     "require-dev": {
         "laravel/pint": "^1.2",

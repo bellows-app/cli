@@ -9,7 +9,7 @@ class Env
     protected array $parsed;
 
     public function __construct(
-        protected Config $config,
+        protected ProjectConfig $config,
     ) {
     }
 

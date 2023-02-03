@@ -2,10 +2,10 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\BasePlugin;
+use App\DeployMate\Plugin;
 use App\DeployMate\JobFrequency;
 
-class DatabaseWorker extends BasePlugin
+class DatabaseWorker extends Plugin
 {
     public function defaultEnabled(): array
     {
