@@ -2,6 +2,7 @@
 
 namespace App\DeployMate;
 
+use App\DeployMate\Data\ProjectConfig;
 use Dotenv\Dotenv;
 
 class Env

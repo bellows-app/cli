@@ -2,6 +2,8 @@
 
 namespace App\DeployMate;
 
+use App\DeployMate\Data\ProjectConfig;
+
 class Artisan
 {
     public function __construct(

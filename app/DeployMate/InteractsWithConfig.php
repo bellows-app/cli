@@ -2,6 +2,7 @@
 
 namespace App\DeployMate;
 
+use App\DeployMate\Data\NewTokenPrompt;
 use Illuminate\Support\Arr;
 
 trait InteractsWithConfig

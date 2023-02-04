@@ -1,6 +1,8 @@
 <?php
 
-namespace App\DeployMate;
+namespace App\DeployMate\PackageManagers;
+
+use App\DeployMate\Data\ProjectConfig;
 
 class Npm extends PackageManager
 {

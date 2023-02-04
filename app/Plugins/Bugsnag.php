@@ -2,7 +2,7 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\NewTokenPrompt;
+use App\DeployMate\Data\NewTokenPrompt;
 use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 

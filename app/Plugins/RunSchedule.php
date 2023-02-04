@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\DefaultEnabledDecision;
+use App\DeployMate\Data\DefaultEnabledDecision;
+use App\DeployMate\Enums\JobFrequency;
 use App\DeployMate\Plugin;
-use App\DeployMate\JobFrequency;
 
 class RunSchedule extends Plugin
 {

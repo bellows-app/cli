@@ -2,7 +2,7 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\DefaultEnabledDecision;
+use App\DeployMate\Data\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 
 class Optimize extends Plugin

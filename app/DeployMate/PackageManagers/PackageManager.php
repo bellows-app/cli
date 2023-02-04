@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DeployMate;
+namespace App\DeployMate\PackageManagers;
 
 abstract class PackageManager
 {

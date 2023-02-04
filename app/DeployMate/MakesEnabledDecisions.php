@@ -2,6 +2,10 @@
 
 namespace App\DeployMate;
 
+use App\DeployMate\Data\DefaultEnabledDecision;
+use App\DeployMate\Data\DisabledByDefault;
+use App\DeployMate\Data\EnabledByDefault;
+
 trait MakesEnabledDecisions
 {
     protected DefaultEnabledDecision $cachedDecision;

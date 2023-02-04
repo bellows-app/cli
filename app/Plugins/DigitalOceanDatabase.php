@@ -2,8 +2,8 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\DefaultEnabledDecision;
-use App\DeployMate\NewTokenPrompt;
+use App\DeployMate\Data\DefaultEnabledDecision;
+use App\DeployMate\Data\NewTokenPrompt;
 use App\DeployMate\Plugin;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;

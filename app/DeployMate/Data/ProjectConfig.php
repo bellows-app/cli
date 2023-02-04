@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DeployMate;
+namespace App\DeployMate\Data;
 
 use Spatie\LaravelData\Data;
 
