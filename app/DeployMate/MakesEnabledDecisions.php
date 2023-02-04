@@ -129,6 +129,8 @@ trait MakesEnabledDecisions
 
             return $this->cachedDecision;
         }
+
+        return null;
     }
 
     protected function getDefaultEnabledDecision(bool $enabled, $messageIfEnabled, $messageIfDisabled = null): DefaultEnabledDecision
