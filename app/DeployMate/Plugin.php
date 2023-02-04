@@ -2,6 +2,9 @@
 
 namespace App\DeployMate;
 
+use App\DeployMate\Data\ProjectConfig;
+use App\DeployMate\PackageManagers\Composer;
+use App\DeployMate\PackageManagers\Npm;
 use Illuminate\Console\Concerns\InteractsWithIO;
 
 abstract class Plugin

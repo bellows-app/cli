@@ -4,7 +4,7 @@ namespace App\Commands;
 
 use App\DeployMate\Config;
 use App\DeployMate\Plugin;
-use App\DeployMate\ProjectConfig;
+use App\DeployMate\Data\ProjectConfig;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
