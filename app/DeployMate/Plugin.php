@@ -3,9 +3,12 @@
 namespace App\DeployMate;
 
 use App\DeployMate\Data\ProjectConfig;
+use App\DeployMate\Dns\DnsProvider;
 use App\DeployMate\PackageManagers\Composer;
 use App\DeployMate\PackageManagers\Npm;
 use Illuminate\Console\Concerns\InteractsWithIO;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class Plugin
 {
@@ -23,8 +26,13 @@ abstract class Plugin
 
     protected Env $env;
 
-    public function __construct(protected ProjectConfig $projectConfig, protected Config $config, $output, $input)
-    {
+    public function __construct(
+        protected ProjectConfig $projectConfig,
+        protected Config $config,
+        protected ?DnsProvider $dnsProvider = null,
+        InputInterface $input,
+        OutputInterface $output,
+    ) {
         // TODO: Maybe bind this to the container? Feels outdated and a bit gross.
         $this->output = $output;
         $this->input = $input;

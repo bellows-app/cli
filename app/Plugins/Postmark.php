@@ -86,6 +86,7 @@ class Postmark extends Plugin
 
     public function updateDomainRecordsWithProvider()
     {
+
         if (
             $this->sendingDomain['ReturnPathDomainVerified']
             && $this->sendingDomain['DKIMVerified']
@@ -94,52 +95,29 @@ class Postmark extends Plugin
             return;
         }
 
-        $configKey = $this->askForToken(
-            'digitalocean',
-            'Which DigitalOcean configuration'
-        );
-
-        $token = config("forge.digitalocean.{$configKey}");
-
-        Http::macro(
-            'pmDigitalOcean',
-            fn () => Http::baseUrl('https://api.digitalocean.com/v2/')
-                ->withToken($token)
-                ->acceptJson()
-                ->asJson()
-        );
-
-        $mainDomain = collect(
-            explode('.', $this->sendingDomain['Name'])
-        )->slice(-2)->implode('.');
-
-        try {
-            Http::pmDigitalOcean()->get("domains/{$mainDomain}")->json()['domain'];
-        } catch (\Exception $e) {
-            $this->info('Error checking for domain in DigitalOcean: ' . $e->getMessage());
+        if (!$this->dnsProvider) {
+            $this->info('Skipping DNS verification as no DNS provider is configured.');
             return;
         }
 
         if (!$this->sendingDomain['ReturnPathDomainVerified']) {
-            $this->info('Adding ReturnPath record to DigitalOcean');
+            $this->info('Adding ReturnPath record to ' . $this->dnsProvider->getName());
 
-            $response = Http::pmDigitalOcean()->post("domains/{$mainDomain}/records", [
-                'type' => 'CNAME',
-                'name' => 'pm-bounces.' . $this->getSubdomain($this->sendingDomain['Name']),
-                'data' => $this->sendingDomain['ReturnPathDomainCNAMEValue'] . (Str::endsWith($this->sendingDomain['ReturnPathDomainCNAMEValue'], '.') ? '' : '.'),   // DigitalOcean requires a trailing dot
-                'ttl'  => 1800,
-            ]);
+            $this->dnsProvider->addCNAMERecord(
+                name: 'pm-bounces.' . $this->getSubdomain($this->sendingDomain['Name']),
+                value: $this->sendingDomain['ReturnPathDomainCNAMEValue'],
+                ttl: 1800,
+            );
         }
 
         if (!$this->sendingDomain['DKIMVerified']) {
-            $this->info('Adding DKIM record to DigitalOcean');
+            $this->info('Adding DKIM record to ' . $this->dnsProvider->getName());
 
-            Http::pmDigitalOcean()->post("domains/{$mainDomain}/records", [
-                'type'     => 'TXT',
-                'name'     => $this->getSubDomain($this->sendingDomain['DKIMPendingHost']),
-                'data'     => $this->sendingDomain['DKIMPendingTextValue'],
-                'ttl'      => 1800,
-            ]);
+            $this->dnsProvider->addTXTRecord(
+                name: $this->getSubDomain($this->sendingDomain['DKIMPendingHost']),
+                value: $this->sendingDomain['DKIMPendingTextValue'],
+                ttl: 1800,
+            );
         }
     }
 

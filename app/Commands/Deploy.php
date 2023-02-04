@@ -8,6 +8,7 @@ use App\DeployMate\Data\Job;
 use App\DeployMate\Plugin;
 use App\DeployMate\Data\ProjectConfig;
 use App\DeployMate\Data\Worker;
+use App\DeployMate\Dns\DnsFactory;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -108,6 +109,17 @@ class Deploy extends Command
         $repo         = $this->ask('Repo', $defaultRepo);
         $repoBranch   = $this->ask('Repo Branch', Str::contains($domain, 'dev.') ? 'develop' : 'main');
 
+        $dnsProvider = DnsFactory::fromDomain($domain);
+
+        if (!$dnsProvider) {
+            $this->warn('Unsupported DNS provider for ' . $domain);
+        } else {
+            $this->info('Using DNS provider: ' . $dnsProvider->getName());
+            $dnsProvider->setInput($this->input);
+            $dnsProvider->setOutput($this->output);
+            $dnsProvider->setCredentials();
+        }
+
         $this->info('Configuring PHP version...');
 
         [$phpVersion, $phpVersionBinary] = $this->determinePhpVersion($dir);
@@ -135,6 +147,7 @@ class Deploy extends Command
                 'input'         => $this->input,
                 'projectConfig' => $projectConfig,
                 'config'        => $config,
+                'dnsProvider'   => $dnsProvider,
             ]));
 
         $autoDecision = $plugins->filter(fn ($plugin) => $plugin->hasDefaultEnabled());
