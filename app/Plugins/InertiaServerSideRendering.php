@@ -2,6 +2,7 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\Data\Daemon;
 use App\DeployMate\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -43,7 +44,9 @@ class InertiaServerSideRendering extends Plugin
     public function daemons($server, $site): array
     {
         return [
-            $this->artisan->forDaemon('inertia:start-ssr'),
+            new Daemon(
+                $this->artisan->forDaemon('inertia:start-ssr'),
+            ),
         ];
     }
 

@@ -3,8 +3,11 @@
 namespace App\Commands;
 
 use App\DeployMate\Config;
+use App\DeployMate\Data\Daemon;
+use App\DeployMate\Data\Job;
 use App\DeployMate\Plugin;
 use App\DeployMate\Data\ProjectConfig;
+use App\DeployMate\Data\Worker;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -189,7 +192,7 @@ class Deploy extends Command
         while ($site['status'] !== 'installed') {
             $this->info('Waiting for site to be created... Status: ' . $site['status']);
 
-            sleep(3);
+            sleep(2);
 
             $site = Http::forgeSite()->get('')->json()['site'];
         }
@@ -219,7 +222,7 @@ class Deploy extends Command
                     . ($site['repository_status'] ? 'Status: ' . $site['repository_status'] : '')
             );
 
-            sleep(3);
+            sleep(2);
 
             $site = Http::forgeSite()->get('')->json()['site'];
         }
@@ -270,13 +273,13 @@ class Deploy extends Command
 
         $activePlugins->each(
             fn (Plugin $p) => collect($p->daemons($server, $site))->each(
-                fn ($commandOrParams) => Http::forgeServer()->post(
+                fn (Daemon $daemon) => Http::forgeServer()->post(
                     'daemons',
-                    is_string($commandOrParams) ? [
-                        'command'   => $commandOrParams,
-                        'user'      => $isolatedUser,
-                        'directory' => "/home/{$isolatedUser}/{$domain}",
-                    ] : $commandOrParams
+                    [
+                        'command'   => $daemon->command,
+                        'user'      => $daemon->user ?: $isolatedUser,
+                        'directory' => $daemon->directory ?: "/home/{$isolatedUser}/{$domain}",
+                    ],
                 )
             )
         );
@@ -285,9 +288,12 @@ class Deploy extends Command
 
         $activePlugins->each(
             fn (Plugin $p) => collect($p->workers($server, $site))->each(
-                fn ($commandParams) => Http::forgeServer()->post(
+                fn (Worker $worker) => Http::forgeServer()->post(
                     'workers',
-                    array_merge(['php_version'  => $phpVersion], $commandParams),
+                    array_merge(
+                        ['php_version'  => $phpVersion],
+                        $worker->toArray()
+                    ),
                 )
             )
         );
@@ -296,9 +302,12 @@ class Deploy extends Command
 
         $activePlugins->each(
             fn (Plugin $p) => collect($p->jobs($server, $site))->each(
-                fn ($commandParams) => Http::forgeServer()->post(
+                fn (Job $job) => Http::forgeServer()->post(
                     'jobs',
-                    array_merge(['user' => $isolatedUser], $commandParams),
+                    array_merge(
+                        ['user' => $isolatedUser],
+                        $job->toArray()
+                    ),
                 )
             )
         );
@@ -322,7 +331,6 @@ class Deploy extends Command
 
     protected function determinePhpVersion($projectDir)
     {
-
         $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortBy('version', SORT_REGULAR, true);
         $composerJson = file_get_contents($projectDir . '/composer.json');
         $composerJson = json_decode($composerJson, true);

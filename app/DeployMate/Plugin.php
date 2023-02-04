@@ -60,16 +60,25 @@ abstract class Plugin
         return $deployScript;
     }
 
+    /**
+     * @return \App\DeployMate\Data\Worker[]
+     */
     public function workers($server, $site): array
     {
         return [];
     }
 
+    /**
+     * @return \App\DeployMate\Data\Job[]
+     */
     public function jobs($server, $site): array
     {
         return [];
     }
 
+    /**
+     * @return \App\DeployMate\Data\Daemon[]
+     */
     public function daemons($server, $site): array
     {
         return [];
