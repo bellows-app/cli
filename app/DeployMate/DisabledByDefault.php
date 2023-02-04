@@ -2,11 +2,13 @@
 
 namespace App\DeployMate;
 
-class EnabledDefault extends DefaultEnabledDecision
+class DisabledByDefault extends DefaultEnabledDecision
 {
+    public bool $enabled;
+
     public function __construct(
-        public bool $enabled,
         public string $reason,
     ) {
+        $this->enabled = false;
     }
 }

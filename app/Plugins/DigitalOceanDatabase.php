@@ -2,8 +2,10 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\NewTokenPrompt;
 use App\DeployMate\Plugin;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -15,12 +17,9 @@ class DigitalOceanDatabase extends Plugin
     protected string $databaseName;
     protected string $databaseUser;
 
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        return $this->defaultEnabledPayload(
-            true,
-            'There is a good chance you are using a DigitalOcean database',
-        );
+        return $this->enabledByDefault('There is a good chance you are using a DigitalOcean database');
     }
 
     public function setup($server): void
@@ -81,6 +80,20 @@ class DigitalOceanDatabase extends Plugin
 
         $this->host = $db['private_connection']['host'];
         $this->port = $db['private_connection']['port'];
+    }
+
+    protected function getDefaultNewAccountName(string $token): ?string
+    {
+        $result = Http::baseUrl('https://api.digitalocean.com/v2/')
+            ->withToken($token)
+            ->acceptJson()
+            ->asJson()
+            ->get('account')
+            ->json();
+
+        $teamName = Arr::get($result, 'account.team.name');
+
+        return $teamName === 'My Team' ? null : $teamName;
     }
 
     protected function fixUserPermissions($db)

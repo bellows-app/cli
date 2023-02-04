@@ -22,7 +22,8 @@
         "illuminate/http": "^9.0",
         "laravel-zero/framework": "^9.2",
         "nunomaduro/termwind": "^1.14",
-        "spatie/laravel-data": "^3.0"
+        "spatie/laravel-data": "^3.0",
+        "spatie/laravel-ray": "^1.32"
     },
     "require-dev": {
         "laravel/pint": "^1.2",

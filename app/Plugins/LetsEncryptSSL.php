@@ -2,17 +2,15 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 use Illuminate\Support\Facades\Http;
 
 class LetsEncryptSSL extends Plugin
 {
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        return $this->defaultEnabledPayload(
-            true,
-            'You probably want to secure your site',
-        );
+        return $this->enabledByDefault('You probably want to secure your site');
     }
 
     public function wrapUp($server, $site): void

@@ -2,17 +2,15 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 use App\DeployMate\JobFrequency;
 
 class RunSchedule extends Plugin
 {
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        return $this->defaultEnabledPayload(
-            true,
-            'You probably want to run your artisan schedule',
-        );
+        return $this->enabledByDefault('You probably want to run your artisan schedule');
     }
 
     public function enabled(): bool

@@ -2,16 +2,14 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 
 class Optimize extends Plugin
 {
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        return $this->defaultEnabledPayload(
-            true,
-            'You probably want to optimize your application',
-        );
+        return $this->enabledByDefault('You probably want to optimize your application');
     }
 
     public function updateDeployScript(

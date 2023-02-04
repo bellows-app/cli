@@ -2,17 +2,14 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 
 class CompileAssets extends Plugin
 {
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        // TODO: This is a DTO
-        return $this->defaultEnabledPayload(
-            true,
-            'You probably want to compile your assets',
-        );
+        return $this->enabledByDefault('You probably want to compile your assets');
     }
 
     public function updateDeployScript($server, $site, string $deployScript): string

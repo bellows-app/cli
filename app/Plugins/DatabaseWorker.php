@@ -2,17 +2,15 @@
 
 namespace App\Plugins;
 
+use App\DeployMate\DefaultEnabledDecision;
 use App\DeployMate\Plugin;
 use App\DeployMate\JobFrequency;
 
 class DatabaseWorker extends Plugin
 {
-    public function defaultEnabled(): array
+    public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        return $this->defaultEnabledPayload(
-            true,
-            'You probably want to run a database worker',
-        );
+        return $this->enabledByDefault('You probably want to run a database worker');
     }
 
     public function jobs($server, $site): array
