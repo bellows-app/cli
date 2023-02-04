@@ -138,10 +138,10 @@ class Deploy extends Command
 
         $this->table(
             ['Plugin', 'Enabled', 'Reason'],
-            $autoDecision->map(fn ($p) => [
+            $autoDecision->map(fn (Plugin $p) => [
                 get_class($p),
-                $p->getDefaultEnabled()['enabled'] ? '✓' : '',
-                $p->getDefaultEnabled()['reason'],
+                $p->getDefaultEnabled()->enabled ? '✓' : '',
+                $p->getDefaultEnabled()->reason,
             ])->toArray(),
         );
 
@@ -149,7 +149,7 @@ class Deploy extends Command
 
         $activePlugins = $plugins->filter(function (Plugin $p) use ($server, $defaultsAreGood) {
             $enabled = $defaultsAreGood && $p->hasDefaultEnabled()
-                ? $p->getDefaultEnabled()['enabled']
+                ? $p->getDefaultEnabled()->enabled
                 : $p->enabled();
 
             if (!$enabled) {
