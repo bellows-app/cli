@@ -2,6 +2,8 @@
 
 return [
     'plugins' => [
+        \App\Plugins\BugsnagPHP::class,
+        \App\Plugins\BugsnagJS::class,
         \App\Plugins\Postmark::class,
         \App\Plugins\Optimize::class,
         \App\Plugins\Octane::class,
@@ -10,8 +12,6 @@ return [
         \App\Plugins\CompileAssets::class,
         \App\Plugins\MomentumTrail::class,
         \App\Plugins\DigitalOceanDatabase::class,
-        \App\Plugins\BugsnagPHP::class,
-        \App\Plugins\BugsnagJS::class,
         \App\Plugins\LetsEncryptSSL::class,
         \App\Plugins\Hashids::class,
         \App\Plugins\FathomAnalytics::class,

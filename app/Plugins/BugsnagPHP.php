@@ -21,17 +21,19 @@ class BugsnagPHP extends Bugsnag
             return;
         }
 
-        if (!$this->confirm('Create Bugsnag PHP Project?', true)) {
-            return;
-        }
+        $type = $this->composer->packageIsInstalled('laravel/framework') ? 'laravel' : 'php';
 
         $this->setupClient();
 
-        $project = $this->createProject('laravel');
+        if ($this->confirm('Create Bugsnag PHP Project?', true)) {
+            $project = $this->createProject($type);
+            $this->bugsnagKey = $project['api_key'];
+        }
 
-        $this->bugsnagKey = $project['api_key'];
-
-        // $bugsnagLaravelProject = $bugsnagProjects->first(fn ($r) => $r['type'] === 'laravel');
+        if ($this->confirm('Use existing Bugsnag PHP Project?', true)) {
+            $project = $this->selectFromExistingProjects($type);
+            $this->bugsnagKey = $project['api_key'];
+        }
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

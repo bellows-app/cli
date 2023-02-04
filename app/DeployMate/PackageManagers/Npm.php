@@ -3,6 +3,7 @@
 namespace App\DeployMate\PackageManagers;
 
 use App\DeployMate\Data\ProjectConfig;
+use Illuminate\Support\Arr;
 
 class Npm extends PackageManager
 {
@@ -15,7 +16,7 @@ class Npm extends PackageManager
         $npmJson = file_get_contents($this->config->projectDirectory . '/package.json');
         $npmJson = json_decode($npmJson, true);
 
-        return isset($npmJson['dependencies'][$package]);
+        return Arr::get($npmJson, 'dependencies.' . $package) || Arr::get($npmJson, 'devDependencies.' . $package);
     }
 
     public function installPackage(string $package): void

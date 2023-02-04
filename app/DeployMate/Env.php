@@ -16,7 +16,7 @@ class Env
 
     protected function parse()
     {
-        if ($this->parsed) {
+        if (isset($this->parsed)) {
             return;
         }
 

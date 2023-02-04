@@ -21,17 +21,21 @@ class BugsnagJS extends Bugsnag
             return;
         }
 
-        if (!$this->confirm('Create Bugsnag JS Project?', true)) {
-            return;
-        }
+        $type = collect(['vue', 'react'])->first(fn ($p) => $this->npm->packageIsInstalled($p)) ?: 'js';
 
         $this->setupClient();
 
-        $project = $this->createProject('vue');
+        if ($this->confirm('Create Bugsnag JS Project?', true)) {
+            $project = $this->createProject($type);
+            $this->bugsnagKey = $project['api_key'];
+        }
 
-        $this->bugsnagKey = $project['api_key'];
+        if ($this->confirm('Use existing Bugsnag JS Project?', true)) {
+            $project = $this->selectFromExistingProjects($type);
+            $this->bugsnagKey = $project['api_key'];
+        }
 
-        // $bugsnagJsProject = $bugsnagProjects->first(fn ($r) => $r['type'] === 'vue');
+        return;
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array
