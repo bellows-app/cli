@@ -20,6 +20,8 @@ abstract class DnsProvider
         $this->baseDomain = Str::of($domain)->explode('.')->slice(-2)->implode('.');
     }
 
+    abstract public static function getNameServerDomain(): string;
+
     abstract public function setCredentials(): void;
 
     abstract public function addCNAMERecord(string $name, string $value, int $ttl): bool;
@@ -35,7 +37,7 @@ abstract class DnsProvider
 
     public static function matchByNameserver(string $nameserver): bool
     {
-        return Str::contains($nameserver, 'digitalocean.com');
+        return Str::contains($nameserver, static::getNameServerDomain());
     }
 
     protected function getConfig()

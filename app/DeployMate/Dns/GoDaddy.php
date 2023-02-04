@@ -3,15 +3,14 @@
 namespace App\DeployMate\Dns;
 
 use App\DeployMate\Enums\DnsRecordType;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class DigitalOcean extends DnsProvider
+class GoDaddy extends DnsProvider
 {
     public static function getNameServerDomain(): string
     {
-        return 'digitalocean.com';
+        return 'domaincontrol.com';
     }
 
     public function setCredentials(): void
@@ -23,9 +22,9 @@ class DigitalOcean extends DnsProvider
             return;
         }
 
-        $token = collect($config)->first(fn ($token) => $this->checkAccountForDomain($token));
+        $credentials = collect($config)->first(fn ($credentials) => $this->checkAccountForDomain($credentials['key'], $credentials['secret']));
 
-        if (!$token) {
+        if (!$credentials) {
             $this->line('No account found for this domain.');
 
             if (!$this->confirm('Do you want to add a new account?', true)) {
@@ -36,15 +35,15 @@ class DigitalOcean extends DnsProvider
             return;
         }
 
-        $this->line('Found account for this domain: ' . collect($config)->search($token));
+        $this->line('Found account for this domain: ' . collect($config)->search($credentials));
 
-        $this->setClient(fn () => $this->getClient($token));
+        $this->setClient(fn () => $this->getClient($credentials['key'], $credentials['secret']));
     }
 
-    protected function checkAccountForDomain(string $token): bool
+    protected function checkAccountForDomain(string $key, string $secret): bool
     {
         try {
-            $this->getClient($token)->get("domains/{$this->baseDomain}")->throw();
+            $this->getClient($key, $secret)->get("domains/{$this->baseDomain}")->throw();
             return true;
         } catch (\Exception $e) {
             return false;
@@ -53,31 +52,24 @@ class DigitalOcean extends DnsProvider
 
     protected function askForToken()
     {
-        $this->info('https://cloud.digitalocean.com/account/api/tokens');
-        $token = $this->secret('Please enter your DigitalOcean API token');
-        $name = $this->ask('Name', $this->getDefaultNewAccountName($token));
+        $this->info('https://developer.godaddy.com/keys');
+        $key = $this->secret('Please enter your GoDaddy key');
+        $secret = $this->secret('Please enter your GoDaddy secret');
+        $name = $this->ask('Name');
 
-        $this->setConfig($name, $token);
+        $this->setConfig($name, compact('key', 'secret'));
 
         return $this->setCredentials();
     }
 
-    protected function getClient(string $token)
+    protected function getClient(string $key, string $secret)
     {
-        return Http::baseUrl('https://api.digitalocean.com/v2/')
-            ->withToken($token)
+        return Http::baseUrl('https://api.godaddy.com/v1/')
+            ->withToken("{$key}:{$secret}", 'sso-key')
             ->acceptJson()
             ->asJson();
     }
 
-    protected function getDefaultNewAccountName(string $token): ?string
-    {
-        $result = $this->getClient($token)->get('account')->json();
-
-        $teamName = Arr::get($result, 'account.team.name');
-
-        return $teamName === 'My Team' ? null : $teamName;
-    }
 
     public function addCNAMERecord(string $name, string $value, int $ttl): bool
     {
@@ -102,11 +94,13 @@ class DigitalOcean extends DnsProvider
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
     {
         try {
-            Http::dns()->post("domains/{$this->baseDomain}/records", [
-                'type' => $type->value,
-                'name' => $name,
-                'data' => $value,
-                'ttl'  => $ttl,
+            Http::dns()->patch("domains/{$this->baseDomain}/records", [
+                [
+                    "data" => $value,
+                    "name" => $name,
+                    "ttl"  => $ttl,
+                    "type" => $type->value,
+                ]
             ]);
 
             return true;
