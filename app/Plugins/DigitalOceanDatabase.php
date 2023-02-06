@@ -3,7 +3,7 @@
 namespace App\Plugins;
 
 use App\DeployMate\Data\DefaultEnabledDecision;
-use App\DeployMate\Data\NewTokenPrompt;
+use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -27,21 +27,16 @@ class DigitalOceanDatabase extends Plugin
         $this->databaseName = $this->ask('Database', $this->projectConfig->isolatedUser);
         $this->databaseUser = $this->ask('Database User', $this->databaseName);
 
-        $token = $this->askForToken(
-            newTokenPrompt: new NewTokenPrompt(
+        $this->http->createJsonClient(
+            'https://api.digitalocean.com/v2/',
+            fn ($request, $credentials) => $request->withToken($credentials['token']),
+            new AddApiCredentialsPrompt(
                 url: 'https://cloud.digitalocean.com/account/api/tokens',
+                credentials: ['token'],
             ),
         );
 
-        Http::macro(
-            'digitalocean',
-            fn () => Http::baseUrl('https://api.digitalocean.com/v2/')
-                ->withToken($token)
-                ->acceptJson()
-                ->asJson()
-        );
-
-        $response = Http::digitalocean()->get('databases');
+        $response = $this->http->client()->get('databases');
 
         $dbs = collect(
             $response->json()['databases']
@@ -127,7 +122,7 @@ class DigitalOceanDatabase extends Plugin
             return true;
         }
 
-        $newDbUser = Http::digitalocean()->post(
+        $newDbUser = $this->http->client()->post(
             "databases/{$db['id']}/users",
             [
                 'name' => $this->databaseUser,
@@ -147,7 +142,7 @@ class DigitalOceanDatabase extends Plugin
             return $this->confirm('Database already exists, do you want to continue?', true);
         }
 
-        Http::digitalocean()->post(
+        $this->http->client()->post(
             "databases/{$db['id']}/dbs",
             [
                 'name' => $this->databaseName,

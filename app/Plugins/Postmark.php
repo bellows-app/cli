@@ -2,8 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\NewTokenPrompt;
+use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -23,21 +24,16 @@ class Postmark extends Plugin
 
     public function setup($server): void
     {
-        $token = $this->askForToken(
-            newTokenPrompt: new NewTokenPrompt(
+        $this->http->createJsonClient(
+            'https://api.postmarkapp.com/',
+            fn (PendingRequest $request, array $credentials) => $request->withHeaders([
+                'X-Postmark-Account-Token' => $credentials['token'],
+            ]),
+            new AddApiCredentialsPrompt(
                 url: 'https://account.postmarkapp.com/api_tokens',
                 helpText: 'Retrieve your *Account* token here.',
+                credentials: ['token'],
             ),
-        );
-
-        Http::macro(
-            'postmark',
-            fn () => Http::baseUrl('https://api.postmarkapp.com/')
-                ->withHeaders([
-                    'X-Postmark-Account-Token' => $token,
-                ])
-                ->acceptJson()
-                ->asJson()
         );
 
         $this->server        = $this->getServer();
@@ -57,18 +53,14 @@ class Postmark extends Plugin
     {
         $token = $this->server['ApiTokens'][0];
 
-        Http::macro(
-            'postmarkServer',
-            fn () => Http::baseUrl('https://api.postmarkapp.com/')
-                ->withHeaders([
-                    'X-Postmark-Server-Token' => $token,
-                ])
+        $streams = collect(
+            Http::withHeaders([
+                'X-Postmark-Server-Token' => $token,
+            ])
                 ->acceptJson()
                 ->asJson()
-        );
-
-        $streams = collect(
-            Http::postmarkServer()->get('message-streams')->json()['MessageStreams']
+                ->get('https://api.postmarkapp.com/message-streams')
+                ->json()['MessageStreams']
         );
 
         $choices = $streams->mapWithKeys(fn ($s) => [$s['ID'] => "{$s['Name']} ({$s['Description']})"])->toArray();
@@ -86,7 +78,6 @@ class Postmark extends Plugin
 
     public function updateDomainRecordsWithProvider()
     {
-
         if (
             $this->sendingDomain['ReturnPathDomainVerified']
             && $this->sendingDomain['DKIMVerified']
@@ -145,14 +136,14 @@ class Postmark extends Plugin
                 'Blue'
             );
 
-            return Http::postmark()->post('servers', [
+            return $this->http->client()->post('servers', [
                 'Name'  => $name,
                 'Color' => $color,
             ])->json();
         }
 
         $servers = collect(
-            Http::postmark()->get('servers', [
+            $this->http->client()->get('servers', [
                 'count'  => 200,
                 'offset' => 0,
             ])->json()['Servers']
@@ -185,13 +176,13 @@ class Postmark extends Plugin
         if ($this->confirm('Create new Postmark domain?', true)) {
             $name = $this->ask('Domain name', "mail.{$this->projectConfig->domain}");
 
-            return Http::postmark()->post('domains', [
+            return $this->http->client()->post('domains', [
                 'Name'         => $name,
             ])->json();
         }
 
         $domains = collect(
-            Http::postmark()->get('domains', [
+            $this->http->client()->get('domains', [
                 'count'  => 200,
                 'offset' => 0,
             ])->json()['Domains']
@@ -214,7 +205,7 @@ class Postmark extends Plugin
 
         $domainId = Str::replace('ID-', '', $domainId);
 
-        return Http::postmark()->get("domains/{$domainId}")->json();
+        return $this->http->client()->get("domains/{$domainId}")->json();
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

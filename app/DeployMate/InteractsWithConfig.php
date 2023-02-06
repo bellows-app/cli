@@ -2,82 +2,46 @@
 
 namespace App\DeployMate;
 
-use App\DeployMate\Data\NewTokenPrompt;
 use Illuminate\Support\Arr;
 
 trait InteractsWithConfig
 {
-    public function askForToken(
-        ?string $question = null,
-        ?string $default = null,
-        ?NewTokenPrompt $newTokenPrompt = null,
-    ): string {
-        if (!$this->getConfig()) {
-            $this->info('No config found for ' . $this->getName() . '.');
-
-            $token = $this->addNewConfig($newTokenPrompt);
-
-            return $token;
-        }
-
-        $choices = collect(array_keys($this->getConfig()));
-
-        $addNewAccountText = 'Add new account';
-
-        $choices->push($addNewAccountText);
-
-        $result = $this->choice(
-            $question ?: 'Select account',
-            $choices->toArray(),
-            $default ?? array_key_first($choices->toArray()),
-        );
-
-        if ($result === $addNewAccountText) {
-            $token = $this->addNewConfig($newTokenPrompt);
-
-            return $token;
-        }
-
-        return $this->getFromConfig($result);
-    }
-
-    protected function getConfig()
+    protected function getApiConfig(string $host)
     {
-        return $this->config->get($this->getKey());
+        return $this->config->get($this->getApiConfigKey($host));
     }
 
-    protected function getFromConfig(string $key, ?string $default = null)
+    protected function setApiConfig(string $host, string $key, $value)
     {
-        return Arr::get($this->getConfig(), $key, $default);
+        return $this->config->set($this->getApiConfigKey($host) . '.' . $key, $value);
     }
 
-
-    protected function setConfig(string $key, $value)
+    protected function getApiConfigValue(string $host, string $key, ?string $default = null)
     {
-        $this->config->set($this->getKey() . '.' . $key, $value);
+        return Arr::get($this->getApiConfig($host), $key, $default);
     }
 
-    protected function addNewConfig(?NewTokenPrompt $newTokenPrompt = null): string
+    protected function getPluginConfig()
     {
-        if ($newTokenPrompt) {
-            if ($newTokenPrompt->helpText) {
-                $this->info($newTokenPrompt->helpText);
-                $this->info($newTokenPrompt->url);
-            } else {
-                $this->info('You can get your token from ' . $newTokenPrompt->url);
-            }
-        }
-
-        $token = $this->secret('Token');
-
-        $accountName = $this->ask('Name (for your reference)', $this->getDefaultNewAccountName($token));
-
-        $this->setConfig($accountName, $token);
-
-        return $token;
+        return $this->config->get($this->getPluginConfigKey());
     }
 
-    protected function getKey()
+    protected function getPluginConfigValue(string $key, ?string $default = null)
+    {
+        return Arr::get($this->getPluginConfig(), $key, $default);
+    }
+
+    protected function setPluginConfig(string $key, $value)
+    {
+        $this->config->set($this->getPluginConfigKey() . '.' . $key, $value);
+    }
+
+    protected function getApiConfigKey(string $host)
+    {
+        return 'apiCredentials.' . str_replace('.', '-', $host);
+    }
+
+    protected function getPluginConfigKey()
     {
         return 'plugins.' . get_class($this);
     }

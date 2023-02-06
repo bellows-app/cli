@@ -2,39 +2,33 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\NewTokenPrompt;
+use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
-use Illuminate\Support\Facades\Http;
 
 abstract class Bugsnag extends Plugin
 {
     public function setupClient(): void
     {
-        $token = $this->askForToken(
-            newTokenPrompt: new NewTokenPrompt(
+        $this->http->createJsonClient(
+            'https://api.bugsnag.com/',
+            fn ($request, $credentials) => $request->withToken($credentials['token'], 'token'),
+            new AddApiCredentialsPrompt(
                 url: 'https://app.bugsnag.com/settings/my-account',
-            )
+                credentials: ['token'],
+            ),
         );
 
-        Http::macro(
-            'bugsnag',
-            fn () => Http::baseUrl('https://api.bugsnag.com/')
-                ->withToken($token, 'token')
-                ->acceptJson()
-                ->asJson()
-        );
+        $organization = $this->http->client()->get('user/organizations')->json()[0];
 
-        $organization = Http::bugsnag()->get('user/organizations')->json()[0];
-
-        Http::macro(
+        $this->http->extendClient(
+            "https://api.bugsnag.com/organizations/{$organization['id']}",
             'bugsnagOrganization',
-            fn () => Http::bugsnag()->baseUrl("https://api.bugsnag.com/organizations/{$organization['id']}")
         );
     }
 
     protected function createProject(string $type): array
     {
-        return Http::bugsnagOrganization()->post('projects', [
+        return $this->http->client('bugsnagOrganization')->post('projects', [
             'name' => $this->projectConfig->appName,
             'type' => $type,
         ])->json();
@@ -42,7 +36,7 @@ abstract class Bugsnag extends Plugin
 
     protected function selectFromExistingProjects(string $type): array
     {
-        $result = Http::bugsnagOrganization()->get('projects', [
+        $result = $this->http->client('bugsnagOrganization')->get('projects', [
             'per_page' => 100,
         ])->json();
 

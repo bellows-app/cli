@@ -16,6 +16,8 @@ abstract class Plugin
     use InteractsWithConfig;
     use MakesEnabledDecisions;
 
+    protected Http $http;
+
     protected Composer $composer;
 
     protected Npm $npm;
@@ -41,6 +43,7 @@ abstract class Plugin
         $this->deployScript = new DeployScript($projectConfig);
         $this->artisan = new Artisan($projectConfig);
         $this->env = new Env($projectConfig);
+        $this->http = new Http($config, $input, $output);
     }
 
     public function setup($server): void

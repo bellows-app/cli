@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\NewTokenPrompt;
+use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Str;
 
 class FathomAnalytics extends Plugin
@@ -21,24 +21,19 @@ class FathomAnalytics extends Plugin
 
     public function setup($server): void
     {
-        $token = $this->askForToken(
-            newTokenPrompt: new NewTokenPrompt(
+        $this->http->createJsonClient(
+            'https://api.usefathom.com/v1/',
+            fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
+            new AddApiCredentialsPrompt(
                 url: 'https://app.usefathom.com/api',
+                credentials: ['token'],
             )
-        );
-
-        Http::macro(
-            'fathom',
-            fn () =>  Http::baseUrl('https://api.usefathom.com/v1/')
-                ->withToken($token)
-                ->acceptJson()
-                ->asJson()
         );
 
         if ($this->confirm('Create new Fathom Analytics site?', true)) {
             $siteName = $this->ask('Enter your site name', $this->projectConfig->appName);
 
-            $response = Http::fathom()->post('sites', [
+            $response = $this->http->client()->post('sites', [
                 'name' => $siteName,
             ])->json();
 
@@ -48,7 +43,7 @@ class FathomAnalytics extends Plugin
         }
 
         $sites = collect(
-            Http::fathom()->get('sites', ['limit' => 100])->json()['data']
+            $this->http->client()->get('sites', ['limit' => 100])->json()['data']
         );
 
         $siteChoices = $sites->sortBy('name')->mapWithKeys(fn ($site) => [$site['id'] => $site['name']]);
