@@ -10,6 +10,7 @@ use App\DeployMate\Plugin;
 use App\DeployMate\Data\ProjectConfig;
 use App\DeployMate\Data\Worker;
 use App\DeployMate\Dns\DnsFactory;
+use App\DeployMate\Dns\DnsProvider;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -122,6 +123,8 @@ class Deploy extends Command
             $dnsProvider->setCredentials();
         }
 
+        app()->instance(DnsProvider::class, $dnsProvider);
+
         $this->info('Configuring PHP version...');
 
         [$phpVersion, $phpVersionBinary] = $this->determinePhpVersion($dir);
@@ -139,18 +142,12 @@ class Deploy extends Command
             appName: $appName,
         );
 
+        app()->instance(ProjectConfig::class, $projectConfig);
+
         $this->info('Loading plugins...');
 
         /** @var \Illuminate\Support\Collection<\App\ForgePlugins\BasePlugin> */
-        $plugins = collect(config('forge.plugins'))
-            // TODO: There is a better way to do this, figure it out. This is a bandaid.
-            ->map(fn (string $plugin) => app($plugin, [
-                'output'        => $this->output,
-                'input'         => $this->input,
-                'projectConfig' => $projectConfig,
-                'config'        => $config,
-                'dnsProvider'   => $dnsProvider,
-            ]));
+        $plugins = collect(config('forge.plugins'))->map(fn (string $plugin) => app($plugin));
 
         $autoDecision = $plugins->filter(fn ($plugin) => $plugin->hasDefaultEnabled());
 

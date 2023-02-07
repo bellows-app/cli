@@ -12,29 +12,18 @@ abstract class Plugin
     use InteractsWithConfig;
     use MakesEnabledDecisions;
 
-    protected Composer $composer;
-
-    protected Npm $npm;
-
-    protected DeployScript $deployScript;
-
-    protected Artisan $artisan;
-
-    protected Env $env;
-
     public function __construct(
         protected ProjectConfig $projectConfig,
         protected Config $config,
         protected Http $http,
         protected Console $console,
+        protected Composer $composer,
+        protected Npm $npm,
+        protected DeployScript $deployScript,
+        protected Artisan $artisan,
+        protected Env $env,
         protected ?DnsProvider $dnsProvider = null,
     ) {
-        // TODO: Maybe bind this to the container? Feels outdated and a bit gross.
-        $this->composer = new Composer($projectConfig);
-        $this->npm = new Npm($projectConfig);
-        $this->deployScript = new DeployScript($projectConfig);
-        $this->artisan = new Artisan($projectConfig);
-        $this->env = new Env($projectConfig);
     }
 
     public function setup($server): void

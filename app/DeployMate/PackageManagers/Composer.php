@@ -2,6 +2,7 @@
 
 namespace App\DeployMate\PackageManagers;
 
+use App\DeployMate\Console;
 use App\DeployMate\Data\ProjectConfig;
 
 class Composer extends PackageManager
