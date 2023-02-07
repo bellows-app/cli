@@ -13,7 +13,7 @@ class FathomAnalytics extends Plugin
 
     public function enabled(): bool
     {
-        return $this->confirm(
+        return $this->console->confirm(
             'Do you want to enable Fathom Analytics?',
             !Str::contains($this->projectConfig->domain, ['dev.', 'staging.'])
         );
@@ -30,8 +30,8 @@ class FathomAnalytics extends Plugin
             )
         );
 
-        if ($this->confirm('Create new Fathom Analytics site?', true)) {
-            $siteName = $this->ask('Enter your site name', $this->projectConfig->appName);
+        if ($this->console->confirm('Create new Fathom Analytics site?', true)) {
+            $siteName = $this->console->ask('Enter your site name', $this->projectConfig->appName);
 
             $response = $this->http->client()->post('sites', [
                 'name' => $siteName,
@@ -50,7 +50,7 @@ class FathomAnalytics extends Plugin
 
         $default = $sites->first(fn ($site) => $site['name'] === $this->projectConfig->appName);
 
-        $this->siteId = $this->choice('Choose a site', $siteChoices->toArray(), $default['id'] ?? null);
+        $this->siteId = $this->console->choice('Choose a site', $siteChoices->toArray(), $default['id'] ?? null);
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

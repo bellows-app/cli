@@ -3,6 +3,7 @@
 namespace App\Commands;
 
 use App\DeployMate\Config;
+use App\DeployMate\Console;
 use App\DeployMate\Data\Daemon;
 use App\DeployMate\Data\Job;
 use App\DeployMate\Plugin;
@@ -38,8 +39,11 @@ class Deploy extends Command
      *
      * @return mixed
      */
-    public function handle(Config $config)
+    public function handle(Config $config, Console $console)
     {
+        $console->setInput($this->input);
+        $console->setOutput($this->output);
+
         if (!$config->get('forge.token')) {
             $this->info('No Forge token found! You can get one here:');
             $this->info('https://forge.laravel.com/user-profile/api');
@@ -115,8 +119,6 @@ class Deploy extends Command
             $this->warn('Unsupported DNS provider for ' . $domain);
         } else {
             $this->info('Using DNS provider: ' . $dnsProvider->getName());
-            $dnsProvider->setInput($this->input);
-            $dnsProvider->setOutput($this->output);
             $dnsProvider->setCredentials();
         }
 

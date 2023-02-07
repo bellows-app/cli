@@ -9,7 +9,7 @@ class QuickDeploy extends Plugin
 {
     public function enabled(): bool
     {
-        return $this->confirm('Enable quick deploy?', true);
+        return $this->console->confirm('Enable quick deploy?', true);
     }
 
     public function wrapUp($server, $site): void

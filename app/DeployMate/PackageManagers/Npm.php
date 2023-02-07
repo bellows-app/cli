@@ -7,7 +7,7 @@ use Illuminate\Support\Arr;
 
 class Npm extends PackageManager
 {
-    public function __construct(protected ProjectConfig $config)
+    public function __construct(protected ProjectConfig $config, protected Console $console)
     {
     }
 
@@ -21,7 +21,7 @@ class Npm extends PackageManager
 
     public function installPackage(string $package): void
     {
-        // $this->info("Installing {$package}...");
+        $this->console->info("Installing {$package}...");
         exec("cd {$this->config->projectDirectory} && yarn add {$package}");
     }
 }

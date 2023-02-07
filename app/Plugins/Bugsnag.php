@@ -46,7 +46,7 @@ abstract class Bugsnag extends Plugin
             $project['id'] => $project['name'],
         ])->toArray();
 
-        $choice = $this->choice(
+        $choice = $this->console->choice(
             'Select a project',
             $choices,
             $result->pluck('name')->contains($this->projectConfig->appName)

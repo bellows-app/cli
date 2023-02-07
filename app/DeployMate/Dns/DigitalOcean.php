@@ -26,9 +26,9 @@ class DigitalOcean extends DnsProvider
         $token = collect($config)->first(fn ($token) => $this->checkAccountForDomain($token));
 
         if (!$token) {
-            $this->line('No account found for this domain.');
+            $this->console->line('No account found for this domain.');
 
-            if (!$this->confirm('Do you want to add a new account?', true)) {
+            if (!$this->console->confirm('Do you want to add a new account?', true)) {
                 return;
             }
 
@@ -36,7 +36,7 @@ class DigitalOcean extends DnsProvider
             return;
         }
 
-        $this->line('Found account for this domain: ' . collect($config)->search($token));
+        $this->console->line('Found account for this domain: ' . collect($config)->search($token));
 
         $this->setClient(fn () => $this->getClient($token));
     }
@@ -53,9 +53,9 @@ class DigitalOcean extends DnsProvider
 
     protected function askForToken()
     {
-        $this->info('https://cloud.digitalocean.com/account/api/tokens');
-        $token = $this->secret('Please enter your DigitalOcean API token');
-        $name = $this->ask('Name', $this->getDefaultNewAccountName($token));
+        $this->console->info('https://cloud.digitalocean.com/account/api/tokens');
+        $token = $this->console->secret('Please enter your DigitalOcean API token');
+        $name = $this->console->ask('Name', $this->getDefaultNewAccountName($token));
 
         $this->setConfig($name, $token);
 
@@ -111,7 +111,7 @@ class DigitalOcean extends DnsProvider
 
             return true;
         } catch (\Exception $e) {
-            $this->error($e->getMessage());
+            $this->console->error($e->getMessage());
             return false;
         }
     }

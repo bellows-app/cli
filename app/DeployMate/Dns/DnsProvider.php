@@ -3,19 +3,18 @@
 namespace App\DeployMate\Dns;
 
 use App\DeployMate\Config;
-use Illuminate\Console\Concerns\InteractsWithIO;
+use App\DeployMate\Console;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 abstract class DnsProvider
 {
-    use InteractsWithIO;
-
     protected $baseDomain;
 
     public function __construct(
         protected Config $config,
         protected string $domain,
+        protected Console $console,
     ) {
         $this->baseDomain = Str::of($domain)->explode('.')->slice(-2)->implode('.');
     }

@@ -12,6 +12,10 @@ class DeployScript
     const OCTANE_RELOAD = '! $FORGE_PHP artisan octane:status';
     const MIGRATE = '$FORGE_PHP artisan migrate';
 
+    public function __construct(protected Console $console)
+    {
+    }
+
     public function addAfterComposerInstall(string $currentScript, string | array $toAdd): string
     {
         return $this->addAfterLine($currentScript, self::COMPOSER_INSTALL, $toAdd);
@@ -89,8 +93,7 @@ class DeployScript
         );
 
         if ($index === false) {
-            // TODO: How are we handling this?
-            // $this->warn("Could not find {$toFind->join(' or ')} in deploy script!");
+            $this->console->warn("Could not find {$toFind->join(' or ')} in deploy script!");
 
             return [$parts, $index];
         }

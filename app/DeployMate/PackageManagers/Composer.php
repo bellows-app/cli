@@ -6,7 +6,7 @@ use App\DeployMate\Data\ProjectConfig;
 
 class Composer extends PackageManager
 {
-    public function __construct(protected ProjectConfig $config)
+    public function __construct(protected ProjectConfig $config, protected Console $console)
     {
     }
 
@@ -20,7 +20,7 @@ class Composer extends PackageManager
 
     public function require(string $package, bool $dev): void
     {
-        // $this->info("Installing {$package}...");
+        $this->console->info("Installing {$package}...");
         exec("cd {$this->config->projectDirectory} && composer require {$package}");
     }
 }

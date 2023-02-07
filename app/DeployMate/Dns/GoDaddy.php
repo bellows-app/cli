@@ -25,9 +25,9 @@ class GoDaddy extends DnsProvider
         $credentials = collect($config)->first(fn ($credentials) => $this->checkAccountForDomain($credentials['key'], $credentials['secret']));
 
         if (!$credentials) {
-            $this->line('No account found for this domain.');
+            $this->console->line('No account found for this domain.');
 
-            if (!$this->confirm('Do you want to add a new account?', true)) {
+            if (!$this->console->confirm('Do you want to add a new account?', true)) {
                 return;
             }
 
@@ -35,7 +35,7 @@ class GoDaddy extends DnsProvider
             return;
         }
 
-        $this->line('Found account for this domain: ' . collect($config)->search($credentials));
+        $this->console->line('Found account for this domain: ' . collect($config)->search($credentials));
 
         $this->setClient(fn () => $this->getClient($credentials['key'], $credentials['secret']));
     }
@@ -52,10 +52,10 @@ class GoDaddy extends DnsProvider
 
     protected function askForToken()
     {
-        $this->info('https://developer.godaddy.com/keys');
-        $key = $this->secret('Please enter your GoDaddy key');
-        $secret = $this->secret('Please enter your GoDaddy secret');
-        $name = $this->ask('Name');
+        $this->console->info('https://developer.godaddy.com/keys');
+        $key = $this->console->secret('Please enter your GoDaddy key');
+        $secret = $this->console->secret('Please enter your GoDaddy secret');
+        $name = $this->console->ask('Name');
 
         $this->setConfig($name, compact('key', 'secret'));
 
@@ -105,7 +105,7 @@ class GoDaddy extends DnsProvider
 
             return true;
         } catch (\Exception $e) {
-            $this->error($e->getMessage());
+            $this->console->error($e->getMessage());
             return false;
         }
     }

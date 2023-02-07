@@ -43,7 +43,7 @@ class Postmark extends Plugin
 
         $this->messageStreamId = $this->getMessageStreamId();
 
-        $this->fromEmail = $this->ask(
+        $this->fromEmail = $this->console->ask(
             'From email',
             "hello@{$this->sendingDomain['Name']}"
         );
@@ -69,7 +69,7 @@ class Postmark extends Plugin
             return array_key_first($choices);
         }
 
-        return $this->choice(
+        return $this->console->choice(
             'Which Postmark message stream',
             $choices,
             'outbound',
@@ -87,12 +87,12 @@ class Postmark extends Plugin
         }
 
         if (!$this->dnsProvider) {
-            $this->info('Skipping DNS verification as no DNS provider is configured.');
+            $this->console->info('Skipping DNS verification as no DNS provider is configured.');
             return;
         }
 
         if (!$this->sendingDomain['ReturnPathDomainVerified']) {
-            $this->info('Adding ReturnPath record to ' . $this->dnsProvider->getName());
+            $this->console->info('Adding ReturnPath record to ' . $this->dnsProvider->getName());
 
             $this->dnsProvider->addCNAMERecord(
                 name: 'pm-bounces.' . $this->getSubdomain($this->sendingDomain['Name']),
@@ -102,7 +102,7 @@ class Postmark extends Plugin
         }
 
         if (!$this->sendingDomain['DKIMVerified']) {
-            $this->info('Adding DKIM record to ' . $this->dnsProvider->getName());
+            $this->console->info('Adding DKIM record to ' . $this->dnsProvider->getName());
 
             $this->dnsProvider->addTXTRecord(
                 name: $this->getSubDomain($this->sendingDomain['DKIMPendingHost']),
@@ -119,9 +119,9 @@ class Postmark extends Plugin
 
     public function getServer()
     {
-        if ($this->confirm('Create new Postmark server?', true)) {
-            $name = $this->ask('Server name', $this->projectConfig->appName);
-            $color = $this->choice(
+        if ($this->console->confirm('Create new Postmark server?', true)) {
+            $name = $this->console->ask('Server name', $this->projectConfig->appName);
+            $color = $this->console->choice(
                 'Server color',
                 [
                     'Blue',
@@ -160,7 +160,7 @@ class Postmark extends Plugin
             fn ($server) => $server['Name'] === $this->projectConfig->appName
         );
 
-        $serverId = $this->choice(
+        $serverId = $this->console->choice(
             'Choose a Postmark server',
             $serverChoices->toArray(),
             $default ? "ID-{$default['ID']}" : null,
@@ -173,8 +173,8 @@ class Postmark extends Plugin
 
     public function getDomain()
     {
-        if ($this->confirm('Create new Postmark domain?', true)) {
-            $name = $this->ask('Domain name', "mail.{$this->projectConfig->domain}");
+        if ($this->console->confirm('Create new Postmark domain?', true)) {
+            $name = $this->console->ask('Domain name', "mail.{$this->projectConfig->domain}");
 
             return $this->http->client()->post('domains', [
                 'Name'         => $name,
@@ -197,7 +197,7 @@ class Postmark extends Plugin
             fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
         );
 
-        $domainId = $this->choice(
+        $domainId = $this->console->choice(
             'Choose a Postmark sender domain',
             $domainChoices->toArray(),
             $default ? "ID-{$default['ID']}" : null,

@@ -3,26 +3,19 @@
 namespace App\DeployMate;
 
 use App\DeployMate\Data\AddApiCredentialsPrompt;
-use Illuminate\Console\Concerns\InteractsWithIO;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http as HttpFacade;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class Http
 {
-    use InteractsWithIO;
     use InteractsWithConfig;
 
     protected $clients = [];
 
     public function __construct(
         protected Config $config,
-        InputInterface $input,
-        OutputInterface $output,
+        protected Console $console,
     ) {
-        $this->input = $input;
-        $this->output = $output;
     }
 
     public function createClient(
@@ -78,7 +71,7 @@ class Http
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
         if (!$this->getApiConfig($host)) {
-            $this->info("No config found for {$host}");
+            $this->console->info("No config found for {$host}");
             return $this->addNewCredentials($host, $addCredentialsPrompt);
         }
 
@@ -88,7 +81,7 @@ class Http
 
         $choices->push($addNewAccountText);
 
-        $result = $this->choice(
+        $result = $this->console->choice(
             'Select account',
             $choices->toArray(),
             $default ?? array_key_first($choices->toArray()),
@@ -111,8 +104,8 @@ class Http
 
         if (!$addCredentialsPrompt) {
             // We'll just assume they need a personal access token and proceed accordingly
-            $token = $this->secret('Token');
-            $accountName = $this->ask('Name (for your reference)');
+            $token = $this->console->secret('Token');
+            $accountName = $this->console->ask('Name (for your reference)');
             // TODO: Re-implement this, it was useful I think (maybe it's not common enough)
             // $accountName = $this->ask('Name (for your reference)', $this->getDefaultNewAccountName($token));
 
@@ -124,17 +117,17 @@ class Http
         }
 
         if ($addCredentialsPrompt->helpText) {
-            $this->info($addCredentialsPrompt->helpText);
-            $this->info($addCredentialsPrompt->url);
+            $this->console->info($addCredentialsPrompt->helpText);
+            $this->console->info($addCredentialsPrompt->url);
         } else {
-            $this->info('You can get your token from ' . $addCredentialsPrompt->url);
+            $this->console->info('You can get your token from ' . $addCredentialsPrompt->url);
         }
 
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
-            fn ($value) => [$value => $this->secret(ucwords($value))]
+            fn ($value) => [$value => $this->console->secret(ucwords($value))]
         )->toArray();
 
-        $accountName = $this->ask('Name (for your reference)');
+        $accountName = $this->console->ask('Name (for your reference)');
 
         $this->setApiConfig($host, $accountName, $value);
 

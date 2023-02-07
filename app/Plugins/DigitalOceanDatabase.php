@@ -24,8 +24,8 @@ class DigitalOceanDatabase extends Plugin
 
     public function setup($server): void
     {
-        $this->databaseName = $this->ask('Database', $this->projectConfig->isolatedUser);
-        $this->databaseUser = $this->ask('Database User', $this->databaseName);
+        $this->databaseName = $this->console->ask('Database', $this->projectConfig->isolatedUser);
+        $this->databaseUser = $this->console->ask('Database User', $this->databaseName);
 
         $this->http->createJsonClient(
             'https://api.digitalocean.com/v2/',
@@ -45,7 +45,7 @@ class DigitalOceanDatabase extends Plugin
         if ($dbs->count() === 1) {
             $db = $dbs->first();
         } else {
-            $dbName = $this->choice(
+            $dbName = $this->console->choice(
                 'Which database?',
                 $dbs->pluck('name')->sort()->values()->toArray(),
             );
@@ -93,6 +93,7 @@ class DigitalOceanDatabase extends Plugin
 
     protected function fixUserPermissions($db)
     {
+        // TODO: Move this to its own plugin
         $sqlUserStatements = collect([
             "REVOKE SELECT, INSERT, UPDATE, DELETE, REFERENCES, CREATE, DROP, ALTER, INDEX, TRIGGER, REPLICATION CLIENT, REPLICATION SLAVE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, RELOAD, PROCESS, CREATE TEMPORARY TABLES, LOCK TABLES, SHOW DATABASES, CREATE USER, GRANT OPTION, EVENT ON *.* FROM '{$this->databaseUser}'@'%';",
 
@@ -113,7 +114,7 @@ class DigitalOceanDatabase extends Plugin
         $existingUser = collect($db['users'])->firstWhere('name', $this->databaseUser);
 
         if ($existingUser) {
-            if (!$this->confirm('User already exists, do you want to continue?', true)) {
+            if (!$this->console->confirm('User already exists, do you want to continue?', true)) {
                 return false;
             }
 
@@ -139,7 +140,7 @@ class DigitalOceanDatabase extends Plugin
         $existingDatabase = collect($db['db_names'])->contains($this->databaseName);
 
         if ($existingDatabase) {
-            return $this->confirm('Database already exists, do you want to continue?', true);
+            return $this->console->confirm('Database already exists, do you want to continue?', true);
         }
 
         $this->http->client()->post(
