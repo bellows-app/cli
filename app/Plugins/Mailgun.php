@@ -7,7 +7,6 @@ use App\DeployMate\Plugin;
 use App\DeployMate\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class Mailgun extends Plugin
 {
@@ -16,6 +15,8 @@ class Mailgun extends Plugin
     protected string $domain;
 
     protected string $endpoint;
+
+    protected bool $verifyNewDomain = false;
 
     protected array $requiredComposerPackages = [
         'symfony/mailgun-mailer',
@@ -81,9 +82,7 @@ class Mailgun extends Plugin
             };
         });
 
-        $this->console->info('Verifying domain with Mailgun...');
-
-        $this->http->client()->put("domains/{$this->domain}/verify");
+        $this->verifyNewDomain = true;
     }
 
     protected function selectDomain()
@@ -102,6 +101,14 @@ class Mailgun extends Plugin
     protected function domainChoice($domain)
     {
         return "{$domain['name']} ({$domain['type']})";
+    }
+
+    public function wrapUp($server, $site): void
+    {
+        if ($this->verifyNewDomain) {
+            $this->console->info('Verifying domain with Mailgun...');
+            $this->http->client()->put("domains/{$this->domain}/verify");
+        }
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array
