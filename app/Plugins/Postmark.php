@@ -4,6 +4,7 @@ namespace App\Plugins;
 
 use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
+use App\DeployMate\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -95,7 +96,7 @@ class Postmark extends Plugin
             $this->console->info('Adding ReturnPath record to ' . $this->dnsProvider->getName());
 
             $this->dnsProvider->addCNAMERecord(
-                name: 'pm-bounces.' . $this->getSubdomain($this->sendingDomain['Name']),
+                name: 'pm-bounces.' . Domain::getSubdomain($this->sendingDomain['Name']),
                 value: $this->sendingDomain['ReturnPathDomainCNAMEValue'],
                 ttl: 1800,
             );
@@ -105,16 +106,11 @@ class Postmark extends Plugin
             $this->console->info('Adding DKIM record to ' . $this->dnsProvider->getName());
 
             $this->dnsProvider->addTXTRecord(
-                name: $this->getSubDomain($this->sendingDomain['DKIMPendingHost']),
+                name: Domain::getSubdomain($this->sendingDomain['DKIMPendingHost']),
                 value: $this->sendingDomain['DKIMPendingTextValue'],
                 ttl: 1800,
             );
         }
-    }
-
-    protected function getSubDomain(string $domain)
-    {
-        return collect(explode('.', $domain))->slice(0, -2)->implode('.');
     }
 
     public function getServer()

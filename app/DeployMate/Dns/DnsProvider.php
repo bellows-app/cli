@@ -4,6 +4,7 @@ namespace App\DeployMate\Dns;
 
 use App\DeployMate\Config;
 use App\DeployMate\Console;
+use App\DeployMate\Enums\DnsRecordType;
 use App\DeployMate\InteractsWithConfig;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -32,9 +33,7 @@ abstract class DnsProvider
 
     abstract public function addCNAMERecord(string $name, string $value, int $ttl): bool;
 
-    abstract public function addARecord(string $name, string $value, int $ttl): bool;
-
-    abstract public function addTXTRecord(string $name, string $value, int $ttl): bool;
+    abstract protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool;
 
     abstract protected function addNewCredentials(): void;
 
@@ -73,7 +72,7 @@ abstract class DnsProvider
 
         $this->console->line('Found account for this domain: ' . collect($config)->search($credentials));
 
-        $this->setClient(fn () => $this->getClient($credentials));
+        $this->setClient($this->getClient($credentials));
     }
 
     public static function matchByNameserver(string $nameserver): bool
@@ -86,8 +85,18 @@ abstract class DnsProvider
         $this->setApiConfig($this->apiHost, $name, $payload);
     }
 
-    protected function setClient($cb)
+    protected function setClient(PendingRequest $base)
     {
-        Http::macro('dnsProvider', $cb);
+        Http::macro('dnsProvider', fn () => $base);
+    }
+
+    public function addARecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::A, $name, $value, $ttl);
+    }
+
+    public function addTXTRecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
     }
 }

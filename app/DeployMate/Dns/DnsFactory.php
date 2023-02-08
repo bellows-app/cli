@@ -2,13 +2,14 @@
 
 namespace App\DeployMate\Dns;
 
+use App\DeployMate\Util\Domain;
 use Illuminate\Support\Str;
 
 class DnsFactory
 {
     public static function fromDomain(string $domain): ?DnsProvider
     {
-        $baseDomain = Str::of($domain)->explode('.')->slice(-2)->implode('.');
+        $baseDomain = Domain::getBaseDomain($domain);
         $nameservers = dns_get_record($baseDomain, DNS_NS);
 
         if (count($nameservers) === 0) {

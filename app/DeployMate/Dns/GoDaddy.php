@@ -55,16 +55,6 @@ class GoDaddy extends DnsProvider
         );
     }
 
-    public function addARecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::A, $name, $value, $ttl);
-    }
-
-    public function addTXTRecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
-    }
-
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
     {
         try {
