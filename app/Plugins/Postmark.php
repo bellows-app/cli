@@ -23,6 +23,10 @@ class Postmark extends Plugin
         'symfony/postmark-mailer',
     ];
 
+    protected $verifyReturnPath = false;
+
+    protected $verifyDKIM = false;
+
     public function setup($server): void
     {
         $this->http->createJsonClient(
@@ -100,6 +104,8 @@ class Postmark extends Plugin
                 value: $this->sendingDomain['ReturnPathDomainCNAMEValue'],
                 ttl: 1800,
             );
+
+            $this->verifyReturnPath = true;
         }
 
         if (!$this->sendingDomain['DKIMVerified']) {
@@ -110,6 +116,8 @@ class Postmark extends Plugin
                 value: $this->sendingDomain['DKIMPendingTextValue'],
                 ttl: 1800,
             );
+
+            $this->verifyDKIM = true;
         }
     }
 
@@ -145,26 +153,19 @@ class Postmark extends Plugin
             ])->json()['Servers']
         );
 
-        // This is dumb, why are we not just returning the ID as a number?
-        // Because this function won't return the ID as the choice answer if it's numeric.
-        // And no, casting it to a string doesn't work either.
-        $serverChoices = $servers->sortBy('Name')->mapWithKeys(
-            fn ($server) => ["ID-{$server['ID']}" => $server['Name']]
-        );
+        $serverChoices = $servers->sortBy('Name')->pluck('Name');
 
         $default = $servers->first(
             fn ($server) => $server['Name'] === $this->projectConfig->appName
         );
 
-        $serverId = $this->console->choice(
+        $serverChoice = $this->console->choice(
             'Choose a Postmark server',
             $serverChoices->toArray(),
-            $default ? "ID-{$default['ID']}" : null,
+            $default['Name'] ?? null,
         );
 
-        return $servers->first(
-            fn ($server) => (string) $server['ID'] === Str::replace('ID-', '', $serverId),
-        );
+        return $servers->first(fn ($server) => $server['Name'] === $serverChoice);
     }
 
     public function getDomain()
@@ -184,24 +185,34 @@ class Postmark extends Plugin
             ])->json()['Domains']
         );
 
-        // See comment above for the reasoning here
-        $domainChoices = $domains->sortBy('Name')->mapWithKeys(
-            fn ($domain) => ["ID-{$domain['ID']}" => $domain['Name']]
-        );
+        $domainChoices = $domains->sortBy('Name')->pluck('Name');
 
         $default = $domains->first(
             fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
         );
 
-        $domainId = $this->console->choice(
+        $domainChoice = $this->console->choice(
             'Choose a Postmark sender domain',
             $domainChoices->toArray(),
-            $default ? "ID-{$default['ID']}" : null,
+            $default['Name'] ?? null,
         );
 
-        $domainId = Str::replace('ID-', '', $domainId);
+        $domainId = $domains->first(fn ($domain) => $domain['Name'] === $domainChoice)['ID'];
 
         return $this->http->client()->get("domains/{$domainId}")->json();
+    }
+
+    public function wrapUp($server, $site): void
+    {
+        if ($this->verifyReturnPath) {
+            $this->console->info('Verifying Postmark ReturnPath record...');
+            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyReturnPath");
+        }
+
+        if ($this->verifyDKIM) {
+            $this->console->info('Verifying Postmark DKIM record...');
+            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyDkim ");
+        }
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array
