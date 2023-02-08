@@ -56,6 +56,7 @@ class Pusher extends Plugin
     public function setEnvironmentVariables($server, $site, array $envVars): array
     {
         return [
+            'BROADCAST_DRIVER'   => 'pusher',
             'PUSHER_APP_ID'      => $this->appConfig['app_id'],
             'PUSHER_APP_KEY'     => $this->appConfig['key'],
             'PUSHER_APP_SECRET'  => $this->appConfig['secret'],
