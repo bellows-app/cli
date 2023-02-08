@@ -84,7 +84,7 @@ class Http
         $result = $this->console->choice(
             'Select account',
             $choices->toArray(),
-            $default ?? array_key_first($choices->toArray()),
+            count($choices) === 2 ? array_key_first($choices->toArray()) : null,
         );
 
         if ($result === $addNewAccountText) {
