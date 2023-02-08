@@ -10,8 +10,6 @@ use Illuminate\Support\Arr;
 
 class Mailgun extends Plugin
 {
-    public $priority = 100;
-
     protected string $domain;
 
     protected string $endpoint;
