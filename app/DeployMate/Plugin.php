@@ -12,6 +12,8 @@ abstract class Plugin
     use InteractsWithConfig;
     use MakesEnabledDecisions;
 
+    public $priority = 0;
+
     public function __construct(
         protected ProjectConfig $projectConfig,
         protected Config $config,
