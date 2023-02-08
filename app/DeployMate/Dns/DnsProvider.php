@@ -4,12 +4,20 @@ namespace App\DeployMate\Dns;
 
 use App\DeployMate\Config;
 use App\DeployMate\Console;
+use App\DeployMate\InteractsWithConfig;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 abstract class DnsProvider
 {
-    protected $baseDomain;
+    use InteractsWithConfig;
+
+    protected string $baseDomain;
+
+    protected string $apiBaseUrl;
+
+    protected string $apiHost;
 
     public function __construct(
         protected Config $config,
@@ -17,11 +25,10 @@ abstract class DnsProvider
         protected Console $console,
     ) {
         $this->baseDomain = Str::of($domain)->explode('.')->slice(-2)->implode('.');
+        $this->apiHost = parse_url($this->apiBaseUrl, PHP_URL_HOST);
     }
 
     abstract public static function getNameServerDomain(): string;
-
-    abstract public function setCredentials(): void;
 
     abstract public function addCNAMERecord(string $name, string $value, int $ttl): bool;
 
@@ -29,9 +36,44 @@ abstract class DnsProvider
 
     abstract public function addTXTRecord(string $name, string $value, int $ttl): bool;
 
+    abstract protected function addNewCredentials(): void;
+
+    abstract protected function accountHasDomain(array $credentials): bool;
+
+    abstract protected function getClient(array $credentials): PendingRequest;
+
     public function getName()
     {
         return class_basename($this);
+    }
+
+    public function setCredentials(): void
+    {
+        $config = $this->getApiConfig($this->apiHost);
+
+        if (!$config) {
+            $this->addNewCredentials();
+            $this->setCredentials();
+            return;
+        }
+
+        $credentials = collect($config)->first(fn ($creds) => $this->accountHasDomain($creds));
+
+        if (!$credentials) {
+            $this->console->line('No account found for this domain.');
+
+            if (!$this->console->confirm('Do you want to add a new account?', true)) {
+                return;
+            }
+
+            $this->addNewCredentials();
+            $this->setCredentials();
+            return;
+        }
+
+        $this->console->line('Found account for this domain: ' . collect($config)->search($credentials));
+
+        $this->setClient(fn () => $this->getClient($credentials));
     }
 
     public static function matchByNameserver(string $nameserver): bool
@@ -39,18 +81,13 @@ abstract class DnsProvider
         return Str::contains($nameserver, static::getNameServerDomain());
     }
 
-    protected function getConfig()
+    protected function setConfig(string $name, array $payload)
     {
-        return $this->config->get('dns.' . $this->getName());
-    }
-
-    protected function setConfig(string $name, string|array $payload)
-    {
-        $this->config->set('dns.' . $this->getName() . '.' . $name, $payload);
+        $this->setApiConfig($this->apiHost, $name, $payload);
     }
 
     protected function setClient($cb)
     {
-        Http::macro('dns', $cb);
+        Http::macro('dnsProvider', $cb);
     }
 }

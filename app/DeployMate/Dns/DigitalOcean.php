@@ -3,80 +3,55 @@
 namespace App\DeployMate\Dns;
 
 use App\DeployMate\Enums\DnsRecordType;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class DigitalOcean extends DnsProvider
 {
+    protected string $apiBaseUrl = 'https://api.digitalocean.com/v2/';
+
     public static function getNameServerDomain(): string
     {
         return 'digitalocean.com';
     }
 
-    public function setCredentials(): void
-    {
-        $config = $this->getConfig();
-
-        if (!$config) {
-            $this->askForToken();
-            return;
-        }
-
-        $token = collect($config)->first(fn ($token) => $this->checkAccountForDomain($token));
-
-        if (!$token) {
-            $this->console->line('No account found for this domain.');
-
-            if (!$this->console->confirm('Do you want to add a new account?', true)) {
-                return;
-            }
-
-            $this->askForToken();
-            return;
-        }
-
-        $this->console->line('Found account for this domain: ' . collect($config)->search($token));
-
-        $this->setClient(fn () => $this->getClient($token));
-    }
-
-    protected function checkAccountForDomain(string $token): bool
+    protected function accountHasDomain(array $credentials): bool
     {
         try {
-            $this->getClient($token)->get("domains/{$this->baseDomain}")->throw();
+            $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
             return true;
         } catch (\Exception $e) {
             return false;
         }
     }
 
-    protected function askForToken()
+    protected function addNewCredentials(): void
     {
         $this->console->info('https://cloud.digitalocean.com/account/api/tokens');
+
         $token = $this->console->secret('Please enter your DigitalOcean API token');
         $name = $this->console->ask('Name', $this->getDefaultNewAccountName($token));
 
-        $this->setConfig($name, $token);
-
-        return $this->setCredentials();
+        $this->setConfig($name, compact('token'));
     }
 
-    protected function getClient(string $token)
+    protected function getClient(array $credentials): PendingRequest
     {
-        return Http::baseUrl('https://api.digitalocean.com/v2/')
-            ->withToken($token)
+        return Http::baseUrl($this->apiBaseUrl)
+            ->withToken($credentials['token'])
             ->acceptJson()
             ->asJson();
     }
 
     protected function getDefaultNewAccountName(string $token): ?string
     {
-        $result = $this->getClient($token)->get('account')->json();
+        $result = $this->getClient(compact('token'))->get('account')->json();
 
         $teamName = Arr::get($result, 'account.team.name');
 
-        return $teamName === 'My Team' ? null : $teamName;
+        return $teamName === 'My Team' ? null : Str::slug($teamName);
     }
 
     public function addCNAMERecord(string $name, string $value, int $ttl): bool
@@ -84,7 +59,8 @@ class DigitalOcean extends DnsProvider
         return $this->addRecord(
             DnsRecordType::CNAME,
             $name,
-            Str::of($value)->trim('.')->wrap('', '.')->toString(), // DigitalOcean requires a trailing dot
+            // Requires a trailing dot
+            Str::of($value)->trim('.')->wrap('', '.')->toString(),
             $ttl,
         );
     }
@@ -102,7 +78,7 @@ class DigitalOcean extends DnsProvider
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
     {
         try {
-            Http::dns()->post("domains/{$this->baseDomain}/records", [
+            Http::dnsProvider()->post("domains/{$this->baseDomain}/records", [
                 'type' => $type->value,
                 'name' => $name,
                 'data' => $value,

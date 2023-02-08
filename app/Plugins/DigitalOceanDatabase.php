@@ -6,6 +6,7 @@ use App\DeployMate\Data\DefaultEnabledDecision;
 use App\DeployMate\Data\AddApiCredentialsPrompt;
 use App\DeployMate\Plugin;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -88,7 +89,7 @@ class DigitalOceanDatabase extends Plugin
 
         $teamName = Arr::get($result, 'account.team.name');
 
-        return $teamName === 'My Team' ? null : $teamName;
+        return $teamName === 'My Team' ? null : Str::slug($teamName);
     }
 
     protected function fixUserPermissions($db)

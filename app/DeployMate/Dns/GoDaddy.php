@@ -3,54 +3,30 @@
 namespace App\DeployMate\Dns;
 
 use App\DeployMate\Enums\DnsRecordType;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class GoDaddy extends DnsProvider
 {
+    protected string $apiBaseUrl = 'https://api.godaddy.com/v1/';
+
     public static function getNameServerDomain(): string
     {
         return 'domaincontrol.com';
     }
 
-    public function setCredentials(): void
-    {
-        $config = $this->getConfig();
-
-        if (!$config) {
-            $this->askForToken();
-            return;
-        }
-
-        $credentials = collect($config)->first(fn ($credentials) => $this->checkAccountForDomain($credentials['key'], $credentials['secret']));
-
-        if (!$credentials) {
-            $this->console->line('No account found for this domain.');
-
-            if (!$this->console->confirm('Do you want to add a new account?', true)) {
-                return;
-            }
-
-            $this->askForToken();
-            return;
-        }
-
-        $this->console->line('Found account for this domain: ' . collect($config)->search($credentials));
-
-        $this->setClient(fn () => $this->getClient($credentials['key'], $credentials['secret']));
-    }
-
-    protected function checkAccountForDomain(string $key, string $secret): bool
+    protected function accountHasDomain(array $credentials): bool
     {
         try {
-            $this->getClient($key, $secret)->get("domains/{$this->baseDomain}")->throw();
+            $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
             return true;
         } catch (\Exception $e) {
             return false;
         }
     }
 
-    protected function askForToken()
+    protected function addNewCredentials(): void
     {
         $this->console->info('https://developer.godaddy.com/keys');
         $key = $this->console->secret('Please enter your GoDaddy key');
@@ -58,25 +34,23 @@ class GoDaddy extends DnsProvider
         $name = $this->console->ask('Name');
 
         $this->setConfig($name, compact('key', 'secret'));
-
-        return $this->setCredentials();
     }
 
-    protected function getClient(string $key, string $secret)
+    protected function getClient(array $credentials): PendingRequest
     {
-        return Http::baseUrl('https://api.godaddy.com/v1/')
-            ->withToken("{$key}:{$secret}", 'sso-key')
+        return Http::baseUrl($this->apiBaseUrl)
+            ->withToken("{$credentials['key']}:{$credentials['secret']}", 'sso-key')
             ->acceptJson()
             ->asJson();
     }
-
 
     public function addCNAMERecord(string $name, string $value, int $ttl): bool
     {
         return $this->addRecord(
             DnsRecordType::CNAME,
             $name,
-            Str::of($value)->trim('.')->wrap('', '.')->toString(), // DigitalOcean requires a trailing dot
+            // Requires a trailing dot
+            Str::of($value)->trim('.')->wrap('', '.')->toString(),
             $ttl,
         );
     }
@@ -94,7 +68,7 @@ class GoDaddy extends DnsProvider
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
     {
         try {
-            Http::dns()->patch("domains/{$this->baseDomain}/records", [
+            Http::dnsProvider()->patch("domains/{$this->baseDomain}/records", [
                 [
                     "data" => $value,
                     "name" => $name,
