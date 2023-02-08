@@ -2,15 +2,15 @@
 
 namespace App\Commands;
 
-use App\DeployMate\Config;
-use App\DeployMate\Console;
-use App\DeployMate\Data\Daemon;
-use App\DeployMate\Data\Job;
-use App\DeployMate\Plugin;
-use App\DeployMate\Data\ProjectConfig;
-use App\DeployMate\Data\Worker;
-use App\DeployMate\Dns\DnsFactory;
-use App\DeployMate\Dns\DnsProvider;
+use App\Bellows\Config;
+use App\Bellows\Console;
+use App\Bellows\Data\Daemon;
+use App\Bellows\Data\Job;
+use App\Bellows\Plugin;
+use App\Bellows\Data\ProjectConfig;
+use App\Bellows\Data\Worker;
+use App\Bellows\Dns\DnsFactory;
+use App\Bellows\Dns\DnsProvider;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use HaydenPierce\ClassFinder\ClassFinder;

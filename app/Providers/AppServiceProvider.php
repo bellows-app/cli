@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\DeployMate\Config;
-use App\DeployMate\Console;
-use App\DeployMate\Data\ProjectConfig;
+use App\Bellows\Config;
+use App\Bellows\Console;
+use App\Bellows\Data\ProjectConfig;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

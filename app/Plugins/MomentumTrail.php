@@ -2,7 +2,7 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Plugin;
+use App\Bellows\Plugin;
 
 class MomentumTrail extends Plugin
 {

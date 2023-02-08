@@ -2,7 +2,7 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Plugin;
+use App\Bellows\Plugin;
 use Illuminate\Support\Str;
 
 class Hashids extends Plugin

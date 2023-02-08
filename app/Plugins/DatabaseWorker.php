@@ -2,11 +2,11 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\DefaultEnabledDecision;
-use App\DeployMate\Data\Job;
-use App\DeployMate\Data\Worker;
-use App\DeployMate\Enums\JobFrequency;
-use App\DeployMate\Plugin;
+use App\Bellows\Data\DefaultEnabledDecision;
+use App\Bellows\Data\Job;
+use App\Bellows\Data\Worker;
+use App\Bellows\Enums\JobFrequency;
+use App\Bellows\Plugin;
 
 class DatabaseWorker extends Plugin
 {

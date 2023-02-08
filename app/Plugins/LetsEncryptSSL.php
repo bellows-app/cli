@@ -2,8 +2,8 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\DefaultEnabledDecision;
-use App\DeployMate\Plugin;
+use App\Bellows\Data\DefaultEnabledDecision;
+use App\Bellows\Plugin;
 use Illuminate\Support\Facades\Http;
 
 class LetsEncryptSSL extends Plugin

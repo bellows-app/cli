@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\AddApiCredentialsPrompt;
-use App\DeployMate\Plugin;
-use App\DeployMate\Util\Domain;
+use App\Bellows\Data\AddApiCredentialsPrompt;
+use App\Bellows\Plugin;
+use App\Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 

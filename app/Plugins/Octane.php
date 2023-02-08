@@ -2,7 +2,7 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Plugin;
+use App\Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;

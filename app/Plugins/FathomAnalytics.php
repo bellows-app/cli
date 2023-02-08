@@ -2,8 +2,8 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\AddApiCredentialsPrompt;
-use App\DeployMate\Plugin;
+use App\Bellows\Data\AddApiCredentialsPrompt;
+use App\Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Str;
 

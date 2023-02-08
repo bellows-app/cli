@@ -2,8 +2,8 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\Daemon;
-use App\DeployMate\Plugin;
+use App\Bellows\Data\Daemon;
+use App\Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;

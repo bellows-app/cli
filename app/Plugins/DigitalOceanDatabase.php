@@ -2,9 +2,9 @@
 
 namespace App\Plugins;
 
-use App\DeployMate\Data\DefaultEnabledDecision;
-use App\DeployMate\Data\AddApiCredentialsPrompt;
-use App\DeployMate\Plugin;
+use App\Bellows\Data\DefaultEnabledDecision;
+use App\Bellows\Data\AddApiCredentialsPrompt;
+use App\Bellows\Plugin;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
