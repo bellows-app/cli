@@ -13,6 +13,7 @@ use App\DeployMate\Dns\DnsFactory;
 use App\DeployMate\Dns\DnsProvider;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
+use HaydenPierce\ClassFinder\ClassFinder;
 use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
@@ -147,7 +148,11 @@ class Deploy extends Command
         $this->info('Loading plugins...');
 
         /** @var \Illuminate\Support\Collection<\App\ForgePlugins\BasePlugin> */
-        $plugins = collect(config('forge.plugins'))->map(fn (string $plugin) => app($plugin));
+        $plugins = collect(ClassFinder::getClassesInNamespace('App\Plugins'))
+            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
+            ->values()
+            ->map(fn (string $plugin) => app($plugin))
+            ->sortByDesc(fn ($plugin) => $plugin->priority);
 
         $autoDecision = $plugins->filter(fn ($plugin) => $plugin->hasDefaultEnabled());
 
