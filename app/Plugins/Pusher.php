@@ -25,17 +25,32 @@ class Pusher extends Plugin
             ),
         );
 
+        $appName = config('app.name');
+
+        $this->console->info("Pusher API limitations don't allow {$appName} to create an app for you, if you'd like to create one head to https://dashboard.pusher.com/channels then refresh the list below.");
+
+        $this->presentChoices();
+    }
+
+    protected function presentChoices()
+    {
         $apps = collect($this->http->client()->get('apps.json')->json());
 
-        $appName = $this->console->choice('Which app do you want to use?', $apps->pluck('name')->toArray());
+        $refreshLabel = 'Refresh App List';
+
+        $appName = $this->console->choice('Which app do you want to use?', $apps->pluck('name')->concat([$refreshLabel])->toArray());
+
+        if ($appName === $refreshLabel) {
+            $this->presentChoices();
+
+            return;
+        }
 
         $app = $apps->first(fn ($app) => $app['name'] === $appName);
 
         $this->appConfig = $this->http->client()->get("apps/{$app['id']}/tokens.json")->json()[0];
 
         $this->appConfig['cluster'] = $app['cluster'];
-
-        // TODO: Notify them that we cannot currently create an app, give them a direct link to create it, and refresh list option?
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array
