@@ -92,11 +92,28 @@ abstract class DnsProvider
 
     public function addARecord(string $name, string $value, int $ttl): bool
     {
-        return $this->addRecord(DnsRecordType::A, $name, $value, $ttl);
+        return $this->addRecord(DnsRecordType::A, $name ? $name : '@', $value, $ttl);
     }
 
     public function addTXTRecord(string $name, string $value, int $ttl): bool
     {
         return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
     }
+
+    public function getARecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::A, $name);
+    }
+
+    public function getTXTRecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::TXT, $name);
+    }
+
+    public function getCNAMERecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::CNAME, $name);
+    }
+
+    abstract protected function getRecord(DnsRecordType $type, string $name): ?string;
 }

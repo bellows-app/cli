@@ -3,7 +3,6 @@
 namespace App\Bellows\Dns;
 
 use App\Bellows\Util\Domain;
-use Illuminate\Support\Str;
 
 class DnsFactory
 {

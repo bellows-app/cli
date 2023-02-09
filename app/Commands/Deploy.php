@@ -120,7 +120,7 @@ class Deploy extends Command
         if (!$dnsProvider) {
             $this->warn('Unsupported DNS provider for ' . $domain);
         } else {
-            $this->info('Using DNS provider: ' . $dnsProvider->getName());
+            $this->info('Detected DNS provider: ' . $dnsProvider->getName());
             $dnsProvider->setCredentials();
         }
 
@@ -165,7 +165,7 @@ class Deploy extends Command
             ])->toArray(),
         );
 
-        $defaultsAreGood = $autoDecision->count() > 0 ? $this->confirm('Continue?', true) : false;
+        $defaultsAreGood = $autoDecision->count() > 0 ? $this->confirm('Continue with defaults?', true) : false;
 
         $activePlugins = $plugins->filter(function (Plugin $p) use ($server, $defaultsAreGood) {
             $enabled = $defaultsAreGood && $p->hasDefaultEnabled()

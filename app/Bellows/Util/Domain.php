@@ -15,4 +15,11 @@ class Domain
     {
         return Str::of($domain)->explode('.')->slice(0, -2)->implode('.');
     }
+
+    public static function getFullDomain(string $subdomain, string $domain): string
+    {
+        $domain = self::getBaseDomain($domain);
+
+        return ltrim("{$subdomain}.{$domain}", '.');
+    }
 }

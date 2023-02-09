@@ -29,8 +29,8 @@ class GoDaddy extends DnsProvider
     protected function addNewCredentials(): void
     {
         $this->console->info('https://developer.godaddy.com/keys');
-        $key = $this->console->secret('Please enter your GoDaddy key');
-        $secret = $this->console->secret('Please enter your GoDaddy secret');
+        $key = $this->console->secret('Your GoDaddy key');
+        $secret = $this->console->secret('Your GoDaddy secret');
         $name = $this->console->ask('Name');
 
         $this->setConfig($name, compact('key', 'secret'));
@@ -58,12 +58,27 @@ class GoDaddy extends DnsProvider
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
     {
         try {
+            if ($this->getFullRecord($type, $name)) {
+                $this->console->info("Updating existing {$type->value} record for {$name} to {$value}");
+
+                Http::dnsProvider()->put("domains/{$this->baseDomain}/records/{$type->value}/{$name}", [
+                    [
+                        'data' => $value,
+                        'ttl'  => $ttl,
+                    ],
+                ]);
+
+                return true;
+            }
+
+            $this->console->info("Adding new {$type->value} record for {$name} to {$value}");
+
             Http::dnsProvider()->patch("domains/{$this->baseDomain}/records", [
                 [
-                    "data" => $value,
-                    "name" => $name,
-                    "ttl"  => $ttl,
-                    "type" => $type->value,
+                    'data' => $value,
+                    'name' => $name,
+                    'ttl'  => $ttl,
+                    'type' => $type->value,
                 ]
             ]);
 
@@ -71,6 +86,22 @@ class GoDaddy extends DnsProvider
         } catch (\Exception $e) {
             $this->console->error($e->getMessage());
             return false;
+        }
+    }
+
+    protected function getRecord(DnsRecordType $type, string $name): ?string
+    {
+        return $this->getFullRecord($type, $name)['data'] ?? null;
+    }
+
+    protected function getFullRecord(DnsRecordType $type, string $name): ?array
+    {
+        try {
+            $response = Http::dnsProvider()->get("domains/{$this->baseDomain}/records/{$type->value}/{$name}")->throw()->json();
+
+            return $response[0] ?? null;
+        } catch (\Exception $e) {
+            return null;
         }
     }
 }
