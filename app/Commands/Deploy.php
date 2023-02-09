@@ -47,7 +47,7 @@ class Deploy extends Command
         $console->setOutput($this->output);
 
         if (!$config->get('forge.token')) {
-            $this->info('No Forge token found! You can get one here:');
+            $this->info('Looks like we need a Forge token, you can get one here:');
             $this->info('https://forge.laravel.com/user-profile/api');
 
             $token = $this->secret('Forge API Token');
@@ -348,7 +348,8 @@ class Deploy extends Command
 
     protected function determinePhpVersion($projectDir)
     {
-        $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortBy('version', SORT_REGULAR, true);
+        $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortByDesc('version');
+
         $composerJson = file_get_contents($projectDir . '/composer.json');
         $composerJson = json_decode($composerJson, true);
 
@@ -362,11 +363,57 @@ class Deploy extends Command
         ) : $phpVersions->first();
 
         if (!$phpVersion) {
-            // TODO: Offer to install it for them if it's available to install
-            throw new \Exception('No PHP version on server found that matches the required version in composer.json');
+            $available = collect([
+                'php82' => '8.2',
+                'php81' => '8.1',
+                'php80' => '8.0',
+                'php74' => '7.4',
+                'php73' => '7.3',
+                'php72' => '7.2',
+                'php71' => '7.1',
+                'php70' => '7.0',
+                'php56' => '5.6',
+            ]);
+
+            $toInstall = $available->first(
+                fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
+            );
+
+            if (!$toInstall || !$this->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
+                throw new \Exception('No PHP version on server found that matches the required version in composer.json');
+            }
+
+            $phpVersion = $this->installPHPVersion($toInstall, $available->search($toInstall));
         }
 
         return [$phpVersion['version'], $phpVersion['binary_name']];
+    }
+
+    protected function installPHPVersion($name, $version)
+    {
+        $this->info("Installing PHP {$name} (this will take a minute or two)...");
+        Http::forgeServer()->post('php', ['version' => $version]);
+
+        $this->newLine();
+
+        $bar = $this->output->createProgressBar(0);
+        $bar->start();
+
+        do {
+            $phpVersion = collect(Http::forgeServer()->get('php')->json())->first(
+                fn ($p) => $p['version'] === $version
+            );
+            $bar->advance();
+            sleep(2);
+        } while ($phpVersion['status'] !== 'installed');
+
+        $bar->finish();
+
+        $this->newLine();
+
+        $this->info("PHP {$name} installed successfully!");
+
+        return $phpVersion;
     }
 
     protected function updateEnvKeyValue($key, $value, $quote = false)
