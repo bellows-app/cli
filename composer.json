@@ -27,6 +27,7 @@
         "guzzlehttp/guzzle": "^7.4",
         "haydenpierce/class-finder": "^0.5.0",
         "illuminate/http": "^9.0",
+        "illuminate/validation": "^9.51",
         "laravel-zero/framework": "^9.2",
         "nunomaduro/termwind": "^1.14",
         "spatie/laravel-data": "^3.0",
