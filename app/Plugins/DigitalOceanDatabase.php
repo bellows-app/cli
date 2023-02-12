@@ -46,12 +46,11 @@ class DigitalOceanDatabase extends Plugin
         if ($dbs->count() === 1) {
             $db = $dbs->first();
         } else {
-            $dbName = $this->console->choice(
-                'Which database?',
-                $dbs->pluck('name')->sort()->values()->toArray(),
+            $db = $this->console->choiceFromCollection(
+                'Choose a database',
+                $dbs,
+                'name'
             );
-
-            $db = $dbs->firstWhere('name', $dbName);
         }
 
         if (!$this->setUser($db) || !$this->setDatabase($db)) {
@@ -157,6 +156,7 @@ class DigitalOceanDatabase extends Plugin
     public function setEnvironmentVariables($server, $site, array $envVars): array
     {
         return [
+            'DB_CONNECTION'        => 'mysql',
             'DB_DATABASE'          => $this->databaseName,
             'DB_USERNAME'          => $this->databaseUser,
             'DB_HOST'              => $this->host,
