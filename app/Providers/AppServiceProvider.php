@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Bellows\Config;
 use App\Bellows\Console;
-use App\Bellows\Data\ProjectConfig;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

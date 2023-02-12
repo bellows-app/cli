@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\LaravelData\LaravelDataServiceProvider;
+
 return [
 
     /*
@@ -68,6 +70,7 @@ return [
 
     'providers' => [
         App\Providers\AppServiceProvider::class,
+        LaravelDataServiceProvider::class,
     ],
 
 ];
