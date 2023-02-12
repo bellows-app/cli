@@ -3,6 +3,7 @@
 namespace App\Plugins;
 
 use App\Bellows\Data\DefaultEnabledDecision;
+use App\Bellows\Data\Job;
 use App\Bellows\Enums\JobFrequency;
 use App\Bellows\Plugin;
 
@@ -18,13 +19,13 @@ class RunSchedule extends Plugin
         return true;
     }
 
-    public function jobs($server, $site): array
+    public function jobs(): array
     {
         return [
-            [
-                'command'   => $this->artisan->forJob('schedule:run'),
-                'frequency' => JobFrequency::MINUTELY->value,
-            ],
+            new Job(
+                command: $this->artisan->forJob('schedule:run'),
+                frequency: JobFrequency::MINUTELY,
+            ),
         ];
     }
 }

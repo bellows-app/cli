@@ -27,7 +27,7 @@ class Postmark extends Plugin
 
     protected $verifyDKIM = false;
 
-    public function setup($server): void
+    public function setup(): void
     {
         $this->http->createJsonClient(
             'https://api.postmarkapp.com/',
@@ -188,7 +188,7 @@ class Postmark extends Plugin
         return $this->http->client()->get("domains/{$domainId}")->json();
     }
 
-    public function wrapUp($server, $site): void
+    public function wrapUp(): void
     {
         if ($this->verifyReturnPath) {
             $this->console->info('Verifying Postmark ReturnPath record...');
@@ -201,7 +201,7 @@ class Postmark extends Plugin
         }
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'MAIL_MAILER'                => 'postmark',

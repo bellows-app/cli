@@ -12,7 +12,7 @@ class BugsnagJS extends Bugsnag
         '@bugsnag/js',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $this->bugsnagKey = $this->env->get('BUGSNAG_JS_API_KEY');
 
@@ -36,7 +36,7 @@ class BugsnagJS extends Bugsnag
         $this->bugsnagKey = $project['api_key'];
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         if (!$this->bugsnagKey) {
             return [];

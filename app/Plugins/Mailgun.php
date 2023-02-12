@@ -21,7 +21,7 @@ class Mailgun extends Plugin
         'symfony/mailgun-mailer',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $region = $this->console->choice('Which region is your Mailgun account in?', [
             'US',
@@ -104,7 +104,7 @@ class Mailgun extends Plugin
     }
 
 
-    public function wrapUp($server, $site): void
+    public function wrapUp(): void
     {
         if ($this->verifyNewDomain) {
             $this->console->info('Verifying domain with Mailgun...');
@@ -112,7 +112,7 @@ class Mailgun extends Plugin
         }
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'MAILGUN_DOMAIN'   => $this->domain,

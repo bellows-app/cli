@@ -16,7 +16,7 @@ class InertiaServerSideRendering extends Plugin
         '@vue/server-renderer',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $defaultSSRPort = 13716;
 
@@ -33,7 +33,7 @@ class InertiaServerSideRendering extends Plugin
         $this->ssrPort = $highestSSRPortInUse + 1;
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return  [
             'SSR_PORT'      => $this->ssrPort,
@@ -41,7 +41,7 @@ class InertiaServerSideRendering extends Plugin
         ];
     }
 
-    public function daemons($server, $site): array
+    public function daemons(): array
     {
         return [
             new Daemon(
@@ -50,7 +50,7 @@ class InertiaServerSideRendering extends Plugin
         ];
     }
 
-    public function updateDeployScript($server, $site, string $deployScript): string
+    public function updateDeployScript(string $deployScript): string
     {
         return $this->deployScript->addBeforePHPReload(
             $deployScript,

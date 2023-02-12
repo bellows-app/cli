@@ -5,6 +5,7 @@ namespace App\Commands;
 use App\Bellows\Config;
 use App\Bellows\Console;
 use App\Bellows\Data\Daemon;
+use App\Bellows\Data\ForgeServer;
 use App\Bellows\Data\Job;
 use App\Bellows\Plugin;
 use App\Bellows\Data\ProjectConfig;
@@ -14,6 +15,8 @@ use App\Bellows\Dns\DnsProvider;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
 use HaydenPierce\ClassFinder\ClassFinder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
@@ -35,6 +38,8 @@ class Deploy extends Command
     protected $description = 'Deploy the current repo to a Forge server';
 
     protected string $siteEnv;
+
+    protected Collection $activePlugins;
 
     /**
      * Execute the console command.
@@ -112,6 +117,8 @@ class Deploy extends Command
 
         $server = $servers->first(fn ($s) => $s['name'] === $serverName);
 
+        App::instance(ForgeServer::class, ForgeServer::from($server));
+
         Http::macro(
             'forgeServer',
             fn () =>  Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}")
@@ -143,7 +150,7 @@ class Deploy extends Command
             $dnsProvider->setCredentials();
         }
 
-        app()->instance(DnsProvider::class, $dnsProvider);
+        App::instance(DnsProvider::class, $dnsProvider);
 
         $this->info('Configuring PHP version...');
 
@@ -151,7 +158,7 @@ class Deploy extends Command
 
         $this->line('PHP Version: ' . $phpVersionBinary);
 
-        $projectConfig = new ProjectConfig(
+        App::instance(ProjectConfig::class, new ProjectConfig(
             isolatedUser: $isolatedUser,
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
@@ -160,47 +167,11 @@ class Deploy extends Command
             projectDirectory: $dir,
             domain: $domain,
             appName: $appName,
-        );
-
-        app()->instance(ProjectConfig::class, $projectConfig);
+        ));
 
         $this->info('Loading plugins...');
 
-        /** @var \Illuminate\Support\Collection<\App\ForgePlugins\BasePlugin> */
-        $plugins = collect(ClassFinder::getClassesInNamespace('App\Plugins'))
-            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
-            ->values()
-            ->map(fn (string $plugin) => app($plugin))
-            ->sortByDesc(fn ($plugin) => $plugin->priority);
-
-        $autoDecision = $plugins->filter(fn ($plugin) => $plugin->hasDefaultEnabled());
-
-        $this->table(
-            ['Plugin', 'Enabled', 'Reason'],
-            $autoDecision->map(fn (Plugin $p) => [
-                get_class($p),
-                $p->getDefaultEnabled()->enabled ? '✓' : '',
-                $p->getDefaultEnabled()->reason,
-            ])->toArray(),
-        );
-
-        $defaultsAreGood = $autoDecision->count() > 0 ? $this->confirm('Continue with defaults?', true) : false;
-
-        $activePlugins = $plugins->filter(function (Plugin $p) use ($server, $defaultsAreGood) {
-            $enabled = $defaultsAreGood && $p->hasDefaultEnabled()
-                ? $p->getDefaultEnabled()->enabled
-                : $p->enabled();
-
-            if (!$enabled) {
-                return false;
-            }
-
-            $this->info("Configuring {$p->getName()} plugin...");
-
-            $p->setup($server);
-
-            return true;
-        })->values();
+        $this->activePlugins = $this->getActivePlugins();
 
         $baseParams = [
             'domain'       => $domain,
@@ -215,7 +186,7 @@ class Deploy extends Command
 
         $siteResponse = Http::forgeServer()->post('sites', array_merge(
             $baseParams,
-            ...$activePlugins->map(fn (Plugin $p) => $p->createSiteParams($baseParams))->toArray(),
+            ...$this->callMethodOnPlugins('createSiteParams', [], [])->toArray(),
         ))->json();
 
         $site = $siteResponse['site'];
@@ -246,9 +217,7 @@ class Deploy extends Command
             'git',
             array_merge(
                 $baseRepoParams,
-                ...$activePlugins->map(
-                    fn (Plugin $p) => $p->installRepoParams($server, $site, $baseRepoParams)
-                )->toArray()
+                ...$this->callMethodOnPlugins('installRepoParams', $baseRepoParams, [])->toArray(),
             )
         );
 
@@ -285,20 +254,31 @@ class Deploy extends Command
 
         $parsedEnv = DotEnv::parse($this->siteEnv);
 
-        $activePlugins->each(
-            fn (Plugin $p) => collect($p->setEnvironmentVariables($server, $site, $parsedEnv))->each(
-                fn ($v, $k) => $this->updateEnvKeyValue($k, is_array($v) ? $v[0] : $v, is_array($v))
-            )
+        /** @var Plugin $plugin */
+        // foreach ($activePlugins as $plugin) {
+        // $parsedEnv = array_merge($parsedEnv, $plugin->setEnvironmentVariables($parsedEnv));
+        // }
+
+        // TODO: Make sure this is cumulative (i.e. if a plugin adds a variable, it should be available to the next plugin)
+        $this->activePlugins->each(
+            fn (Plugin $p) => collect($this->callMethodOnPlugin($p, 'setEnvironmentVariables', ['envVars' => $parsedEnv], []))
+                // ->filter(fn ($v, $k) => $v === false && $k === 0)
+                ->ray()
+                ->each(
+                    fn ($v, $k) => $this->updateEnvKeyValue($k, is_array($v) ? $v[0] : $v, is_array($v))
+                )
         );
 
         Http::forgeSite()->put('env', ['content' => $this->siteEnv]);
 
         $this->title('Updating Deployment Script');
 
-        $deployScript = Http::forgeSite()->get('deployment/script');
+        $deployScript = (string) Http::forgeSite()->get('deployment/script');
 
-        foreach ($activePlugins as $plugin) {
-            $deployScript = $plugin->updateDeployScript($server, $site, $deployScript);
+        ray($deployScript);
+
+        foreach ($this->activePlugins as $plugin) {
+            $deployScript = $this->callMethodOnPlugin($plugin, 'updateDeployScript', ['deployScript' => $deployScript], $deployScript);
         }
 
         ray($deployScript);
@@ -307,50 +287,45 @@ class Deploy extends Command
 
         $this->title('Creating Deamons');
 
-        $activePlugins->each(
-            fn (Plugin $p) => collect($p->daemons($server, $site))->each(
-                fn (Daemon $daemon) => Http::forgeServer()->post(
-                    'daemons',
-                    [
-                        'command'   => $daemon->command,
-                        'user'      => $daemon->user ?: $isolatedUser,
-                        'directory' => $daemon->directory ?: "/home/{$isolatedUser}/{$domain}",
-                    ],
-                )
+        // Double check that this is cool....
+        $this->callMethodOnPlugins('daemons', [], [])->flatMap(fn ($r) => $r)->ray()->each(
+            fn (Daemon $daemon) => Http::forgeServer()->post(
+                'daemons',
+                [
+                    'command'   => $daemon->command,
+                    'user'      => $daemon->user ?: $isolatedUser,
+                    'directory' => $daemon->directory ?: "/home/{$isolatedUser}/{$domain}",
+                ],
             )
         );
 
         $this->title('Creating Workers');
 
-        $activePlugins->each(
-            fn (Plugin $p) => collect($p->workers($server, $site))->each(
-                fn (Worker $worker) => Http::forgeServer()->post(
-                    'workers',
-                    array_merge(
-                        ['php_version'  => $phpVersion],
-                        $worker->toArray()
-                    ),
-                )
+        $this->callMethodOnPlugins('workers', [], [])->flatMap(fn ($r) => $r)->ray()->each(
+            fn (Worker $worker) => Http::forgeServer()->post(
+                'workers',
+                array_merge(
+                    ['php_version'  => $phpVersion],
+                    $worker->toArray()
+                ),
             )
         );
 
         $this->title('Creating Scheduled Jobs');
 
-        $activePlugins->each(
-            fn (Plugin $p) => collect($p->jobs($server, $site))->each(
-                fn (Job $job) => Http::forgeServer()->post(
-                    'jobs',
-                    array_merge(
-                        ['user' => $isolatedUser],
-                        $job->toArray()
-                    ),
-                )
+        $this->callMethodOnPlugins('jobs', [], [])->flatMap(fn ($r) => $r)->ray()->each(
+            fn (Job $job) => Http::forgeServer()->post(
+                'jobs',
+                array_merge(
+                    ['user' => $isolatedUser],
+                    $job->toArray()
+                ),
             )
         );
 
         $this->title('Wrapping Up');
 
-        $activePlugins->each(fn (Plugin $p) => $p->wrapUp($server, $site));
+        $this->callMethodOnPlugins('wrapUp');
 
         $this->info('Site created successfully!');
         $this->info(
@@ -477,5 +452,62 @@ class Deploy extends Command
         $this->siteEnv = Str::replaceFirst($match, "{$match}\n{$key}={$value}", $this->siteEnv);
 
         return $this->siteEnv;
+    }
+
+    protected function callMethodOnPlugins(string $method, array $args = [], $defaultReturn = false)
+    {
+        return $this->activePlugins->map(fn (Plugin $p) => $this->callMethodOnPlugin($p, $method, $args, $defaultReturn));
+    }
+
+    protected function callMethodOnPlugin(Plugin $plugin, string $method, array $args = [], $defaultReturn = false)
+    {
+        if (!method_exists($plugin, $method)) {
+            return $defaultReturn;
+        }
+
+        return App::call([$plugin, $method], $args);
+    }
+
+    protected function getActivePlugins()
+    {
+        $plugins = collect(ClassFinder::getClassesInNamespace('App\Plugins'))
+            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
+            ->values()
+            ->map(fn (string $plugin) => app($plugin))
+            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
+
+        $autoDecision = $plugins->filter(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision())->sortByDesc(
+            fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled
+        );
+
+        $this->table(
+            ['', 'Plugin', 'Reason'],
+            $autoDecision->map(fn (Plugin $p) => [
+                $p->getDefaultEnabled()->enabled ? '<info>✓</info>' : '<warning>✗</warning>',
+                get_class($p),
+                $p->getDefaultEnabled()->reason,
+            ])->toArray(),
+        );
+
+        $defaultsAreGood = $autoDecision->count() > 0 ? $this->confirm('Continue with defaults?', true) : false;
+
+        return $plugins->filter(function (Plugin $p) use ($defaultsAreGood) {
+            // Usually I would filter()->filter() but I want to keep the context of what is being asked of the user here
+            // So if there is a "Do you want to enable ____?" then just answer questions via the setup method instead of
+            // prompting if the plugin should be enabled and then later asking how it should be configured
+            $enabled = $defaultsAreGood && $p->hasADefaultEnabledDecision()
+                ? $p->getDefaultEnabled()->enabled
+                : $p->enabled();
+
+            if (!$enabled) {
+                return false;
+            }
+
+            $this->info("Configuring {$p->getName()} plugin...");
+
+            $this->callMethodOnPlugin($p, 'setup');
+
+            return true;
+        })->values();
     }
 }

@@ -14,7 +14,7 @@ class Ably extends Plugin
         'ably/ably-php',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $this->http->createJsonClient(
             'https://control.ably.net/v1/',
@@ -57,7 +57,7 @@ class Ably extends Plugin
         )['key'];
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         if (!isset($this->key)) {
             return [];

@@ -37,7 +37,7 @@ class CompileAssets extends Plugin
         return collect($this->lockFiles)->first(fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file));
     }
 
-    public function updateDeployScript($server, $site, string $deployScript): string
+    public function updateDeployScript(string $deployScript): string
     {
         $lockFile = $this->getLockFile();
 

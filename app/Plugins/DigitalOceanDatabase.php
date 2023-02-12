@@ -18,12 +18,7 @@ class DigitalOceanDatabase extends Plugin
     protected string $databaseName;
     protected string $databaseUser;
 
-    public function isEnabledByDefault(): DefaultEnabledDecision
-    {
-        return $this->enabledByDefault('There is a good chance you are using a DigitalOcean database');
-    }
-
-    public function setup($server): void
+    public function setup(): void
     {
         $this->databaseName = $this->console->ask('Database', $this->projectConfig->isolatedUser);
         $this->databaseUser = $this->console->ask('Database User', $this->databaseName);
@@ -54,7 +49,7 @@ class DigitalOceanDatabase extends Plugin
         }
 
         if (!$this->setUser($db) || !$this->setDatabase($db)) {
-            $this->setup($server);
+            $this->setup();
             return;
         }
 
@@ -153,7 +148,7 @@ class DigitalOceanDatabase extends Plugin
         return true;
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'DB_CONNECTION'        => 'mysql',

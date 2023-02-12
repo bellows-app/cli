@@ -18,7 +18,7 @@ class Octane extends Plugin
         'laravel/octane',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $defaultOctanePort = 8000;
 
@@ -49,7 +49,7 @@ class Octane extends Plugin
         ];
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return  array_merge([
             'OCTANE_SERVER' => $this->octaneServer,
@@ -59,7 +59,7 @@ class Octane extends Plugin
         ] : []);
     }
 
-    public function daemons($server, $site): array
+    public function daemons(): array
     {
         return [
             $this->artisan->forDaemon("octane:start --port={$this->octanePort} --no-interaction"),

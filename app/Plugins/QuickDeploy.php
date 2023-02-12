@@ -12,7 +12,7 @@ class QuickDeploy extends Plugin
         return $this->console->confirm('Enable quick deploy?', true);
     }
 
-    public function wrapUp($server, $site): void
+    public function wrapUp(): void
     {
         Http::forgeSite()->post('deployment');
     }

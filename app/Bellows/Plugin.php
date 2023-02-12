@@ -28,62 +28,57 @@ abstract class Plugin
     ) {
     }
 
-    public function setup($server): void
-    {
-        //
-    }
+    // public function setup(): void
+    // {
+    //     //
+    // }
 
-    public function createSiteParams(array $params): array
-    {
-        return [];
-    }
+    // public function createSiteParams(array $params): array
+    // {
+    //     return [];
+    // }
 
-    public function installRepoParams($server, $site, array $baseParams): array
-    {
-        return [];
-    }
+    // public function installRepoParams(array $baseParams): array
+    // {
+    //     return [];
+    // }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
-    {
-        return [];
-    }
+    // public function setEnvironmentVariables(array $envVars): array
+    // {
+    //     return [];
+    // }
 
-    public function updateDeployScript($server, $site, string $deployScript): string
-    {
-        return $deployScript;
-    }
+    // public function updateDeployScript(string $deployScript): string
+    // {
+    //     return $deployScript;
+    // }
 
     /**
      * @return \App\Bellows\Data\Worker[]
      */
-    public function workers($server, $site): array
-    {
-        return [];
-    }
+    // public function workers(): array
+    // {
+    //     return [];
+    // }
 
     /**
      * @return \App\Bellows\Data\Job[]
      */
-    public function jobs($server, $site): array
-    {
-        return [];
-    }
+    // public function jobs(): array
+    // {
+    //     return [];
+    // }
 
     /**
      * @return \App\Bellows\Data\Daemon[]
      */
-    public function daemons($server, $site): array
-    {
-        return [];
-    }
+    // public function daemons(): array
+    // {
+    //     return [];
+    // }
 
-    public function wrapUp($server, $site): void
-    {
-        //
-    }
-
-    protected function getDefaultNewAccountName(string $token): ?string
-    {
-        return null;
-    }
+    // public function wrapUp(): void
+    // {
+    //     //
+    // }
 }

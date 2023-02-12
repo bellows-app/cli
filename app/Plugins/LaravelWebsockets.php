@@ -10,7 +10,7 @@ class LaravelWebsockets extends Plugin
         'beyondcode/laravel-websockets',
     ];
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'BROADCAST_DRIVER' => 'pusher',

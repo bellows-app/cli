@@ -3,11 +3,14 @@
 namespace App\Plugins;
 
 use App\Bellows\Plugin;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class SecurityRules extends Plugin
 {
+    protected Collection $securityRules;
+
     public function enabled(): bool
     {
         return $this->console->confirm(
@@ -16,9 +19,9 @@ class SecurityRules extends Plugin
         );
     }
 
-    public function wrapUp($server, $site): void
+    public function setup(): void
     {
-        $this->console->info('Setting up security rules (basic auth)...');
+        $this->securityRules = collect();
 
         do {
             $groupName = $this->console->ask('Security rule group name', 'Restricted Access');
@@ -38,14 +41,21 @@ class SecurityRules extends Plugin
                 ]);
             } while ($this->console->confirm('Add another user?'));
 
-            Http::forgeServer()->post(
-                'security-rules',
-                [
-                    'name'        => $groupName,
-                    'path'        => $path,
-                    'credentials' => $credentials->toArray(),
-                ]
-            );
+            $this->securityRules->push([
+                'name' => $groupName,
+                'path' => $path,
+                'credentials' => $credentials,
+            ]);
         } while ($this->console->confirm('Add another security rule group?'));
+    }
+
+    public function wrapUp()
+    {
+        if ($this->securityRules->isEmpty()) {
+            return;
+        }
+
+        $this->console->info('Setting up security rules (basic auth)...');
+        $this->securityRules->each(fn ($rule) => Http::forgeSite()->post('security-rules', $rule));
     }
 }

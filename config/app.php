@@ -1,6 +1,7 @@
 <?php
 
 use Spatie\LaravelData\LaravelDataServiceProvider;
+use Spatie\LaravelRay\RayServiceProvider;
 
 return [
 
@@ -71,6 +72,7 @@ return [
     'providers' => [
         App\Providers\AppServiceProvider::class,
         LaravelDataServiceProvider::class,
+        RayServiceProvider::class,
     ],
 
 ];

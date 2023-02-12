@@ -17,7 +17,7 @@ class LetsEncryptSSL extends Plugin
         return $this->enabledByDefault('You probably want to secure your site');
     }
 
-    public function wrapUp($server, $site): void
+    public function wrapUp(): void
     {
         Http::forgeSite()->post(
             'certificates/letsencrypt',
@@ -27,7 +27,7 @@ class LetsEncryptSSL extends Plugin
         );
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'APP_URL' => "https://{$this->projectConfig->domain}",

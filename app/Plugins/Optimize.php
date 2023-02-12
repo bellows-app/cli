@@ -12,11 +12,8 @@ class Optimize extends Plugin
         return $this->enabledByDefault('You probably want to optimize your application');
     }
 
-    public function updateDeployScript(
-        $server,
-        $site,
-        string $deployScript
-    ): string {
+    public function updateDeployScript(string $deployScript): string
+    {
         return $this->deployScript->addBeforePHPReload($deployScript, [
             $this->artisan->inDeployScript('config:cache'),
             $this->artisan->inDeployScript('route:cache'),

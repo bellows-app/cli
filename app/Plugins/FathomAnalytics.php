@@ -15,11 +15,10 @@ class FathomAnalytics extends Plugin
     {
         return $this->console->confirm(
             'Do you want to enable Fathom Analytics?',
-            !Str::contains($this->projectConfig->domain, ['dev.', 'staging.'])
         );
     }
 
-    public function setup($server): void
+    public function setup(): void
     {
         $this->http->createJsonClient(
             'https://api.usefathom.com/v1/',
@@ -54,7 +53,7 @@ class FathomAnalytics extends Plugin
         )['id'];
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'FATHOM_SITE_ID' => $this->siteId,

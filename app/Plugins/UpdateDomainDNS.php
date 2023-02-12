@@ -3,6 +3,7 @@
 namespace App\Plugins;
 
 use App\Bellows\Data\DefaultEnabledDecision;
+use App\Bellows\Data\ForgeServer;
 use App\Bellows\Plugin;
 use App\Bellows\Util\Domain;
 use Illuminate\Support\Collection;
@@ -18,8 +19,8 @@ class UpdateDomainDNS extends Plugin
             return $this->disabledByDefault('No DNS provider found for your domain');
         }
 
-        // TODO: We should pass this in as an argument? Don't love this.
-        $server = Http::forgeServer()->get('/')->json();
+        // TODO: Would love to inject this but abstract method arguments?
+        $server = app(ForgeServer::class);
 
         $needsUpdating = $this->getDomainsToCheck()->first(
             fn ($subdomain) => $this->dnsProvider->getARecord($subdomain) !== $server['server']['ip_address']
@@ -34,6 +35,10 @@ class UpdateDomainDNS extends Plugin
 
     public function enabled(): bool
     {
+        if (!$this->isEnabledByDefault()->enabled) {
+            return false;
+        }
+
         // If we got this far, something needs updating, default to true
         $domains = $this->getDomainsToCheck()->map(
             fn ($subdomain) => Domain::getFullDomain($subdomain, $this->projectConfig->domain)
@@ -56,8 +61,10 @@ class UpdateDomainDNS extends Plugin
         return collect([Domain::getSubdomain($this->projectConfig->domain)]);
     }
 
-    public function setup($server): void
+    public function setup(): void
     {
+        $server = app(ForgeServer::class);
+
         $this->console->info('Updating DNS records...');
 
         $this->getDomainsToCheck()

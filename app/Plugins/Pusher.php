@@ -14,7 +14,7 @@ class Pusher extends Plugin
         'pusher/pusher-php-server',
     ];
 
-    public function setup($server): void
+    public function setup(): void
     {
         $this->http->createJsonClient(
             'https://cli.pusher.com/',
@@ -53,7 +53,7 @@ class Pusher extends Plugin
         $this->appConfig['cluster'] = $app['cluster'];
     }
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'BROADCAST_DRIVER'   => 'pusher',

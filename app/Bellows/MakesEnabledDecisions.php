@@ -25,7 +25,7 @@ trait MakesEnabledDecisions
             return false;
         }
 
-        return $this->confirm(
+        return $this->console->confirm(
             'Enable ' . $this->getName() . '?',
             $this->getDefaultEnabled()->enabled ?? false
         );
@@ -113,7 +113,7 @@ trait MakesEnabledDecisions
         return new DisabledByDefault($reason);
     }
 
-    public function hasDefaultEnabled()
+    public function hasADefaultEnabledDecision()
     {
         $this->getDefaultEnabled();
 

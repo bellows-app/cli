@@ -10,7 +10,7 @@ class MomentumTrail extends Plugin
         'based/momentum-trail',
     ];
 
-    public function updateDeployScript($server, $site, string $deployScript): string
+    public function updateDeployScript(string $deployScript): string
     {
         return $this->deployScript->addAfterComposerInstall(
             $deployScript,

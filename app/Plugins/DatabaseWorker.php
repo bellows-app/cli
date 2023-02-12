@@ -15,17 +15,17 @@ class DatabaseWorker extends Plugin
         return $this->enabledByDefault('You probably want to run a database worker');
     }
 
-    public function jobs($server, $site): array
+    public function jobs(): array
     {
         return [
             new Job(
                 command: $this->artisan->forJob('queue:restart'),
-                frequency: JobFrequency::NIGHTLY->value,
+                frequency: JobFrequency::NIGHTLY,
             ),
         ];
     }
 
-    public function workers($server, $site): array
+    public function workers(): array
     {
         return [
             new Worker(

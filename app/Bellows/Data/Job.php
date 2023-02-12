@@ -11,7 +11,7 @@ class Job extends Data
     public function __construct(
         public string $command,
         #[Enum(JobFrequency::class)]
-        public string $frequency,
+        public JobFrequency $frequency,
     ) {
     }
 }

@@ -12,7 +12,7 @@ class Hashids extends Plugin
         'vinkla/hashids',
     ];
 
-    public function setEnvironmentVariables($server, $site, array $envVars): array
+    public function setEnvironmentVariables(array $envVars): array
     {
         return [
             'HASH_IDS_SALT' => Str::random(16),
