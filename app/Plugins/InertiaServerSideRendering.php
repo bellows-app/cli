@@ -52,9 +52,8 @@ class InertiaServerSideRendering extends Plugin
 
     public function updateDeployScript($server, $site, string $deployScript): string
     {
-        return $this->deployScript->addAfterLine(
+        return $this->deployScript->addBeforePHPReload(
             $deployScript,
-            $this->artisan->inDeployScript('event:cache'),
             $this->artisan->inDeployScript('inertia:stop-ssr'),
         );
     }
