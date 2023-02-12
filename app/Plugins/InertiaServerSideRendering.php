@@ -55,7 +55,7 @@ class InertiaServerSideRendering extends Plugin
         return $this->deployScript->addAfterLine(
             $deployScript,
             $this->artisan->inDeployScript('event:cache'),
-            $this->artisan->inDeployScript('inertia:start-ssr'),
+            $this->artisan->inDeployScript('inertia:stop-ssr'),
         );
     }
 }
