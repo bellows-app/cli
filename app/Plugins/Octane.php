@@ -6,10 +6,13 @@ use App\Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class Octane extends Plugin
 {
     protected int $octanePort;
+
+    protected string $octaneServer;
 
     protected array $requiredComposerPackages = [
         'laravel/octane',
@@ -31,6 +34,11 @@ class Octane extends Plugin
             ->max() ?: $defaultOctanePort - 1;
 
         $this->octanePort = $highestOctanePortInUse + 1;
+
+        $this->octaneServer = $this->console->choice('Which server would you like to use for Octane?', [
+            'swoole',
+            'roadrunner',
+        ], $this->env->get('OCTANE_SERVER') ?? 'swoole');
     }
 
     public function createSiteParams(array $params): array
@@ -43,11 +51,12 @@ class Octane extends Plugin
 
     public function setEnvironmentVariables($server, $site, array $envVars): array
     {
-        return  [
-            'OCTANE_SERVER' => 'swoole',
-            'OCTANE_HTTPS'  => 'true',
+        return  array_merge([
+            'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
-        ];
+        ], Str::startsWith($envVars['APP_URL'], 'https://') ? [
+            'OCTANE_HTTPS' => 'true',
+        ] : []);
     }
 
     public function daemons($server, $site): array
