@@ -72,7 +72,19 @@ class Deploy extends Command
 
         $forgeApiUrl = 'https://forge.laravel.com/api/v1';
 
+        // TODO: check if this is a git repo
         $repoUrl = exec('git config --get remote.origin.url');
+
+        $branches = collect(explode(PHP_EOL, shell_exec('git branch -a')))->map(fn ($b) => trim($b))->filter();
+
+        $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
+
+        $devBranch = $branches->first(fn ($b) => in_array($b, ['develop', 'dev', 'development']));
+
+        $branchChoices = $branches->map(
+            fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
+        )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
+
         $defaultRepo = collect(explode(':', $repoUrl))->map(
             fn ($p) => Str::replace('.git', '', $p)
         )->last();
@@ -111,9 +123,16 @@ class Deploy extends Command
 
         $appName      = $this->ask('App Name', $localEnv['APP_NAME']);
         $domain       = $this->ask('Domain', Str::replace('.test', '.com', $host));
-        $isolatedUser = $this->ask('Isolated User', Str::of($host)->replace('.test', '')->replace('.', '_')->toString());
+        $isolatedUser = $this->ask(
+            'Isolated User',
+            Str::of($host)->replace('.test', '')->replace('.', '_')->toString()
+        );
         $repo         = $this->ask('Repo', $defaultRepo);
-        $repoBranch   = $this->ask('Repo Branch', Str::contains($domain, 'dev.') ? 'develop' : 'main');
+        $repoBranch   = $this->anticipate(
+            'Repo Branch',
+            $branchChoices,
+            Str::contains($domain, 'dev.') ? $devBranch : $mainBranch
+        );
 
         $dnsProvider = DnsFactory::fromDomain($domain);
 
