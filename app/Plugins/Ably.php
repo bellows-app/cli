@@ -8,8 +8,6 @@ use Illuminate\Http\Client\PendingRequest;
 
 class Ably extends Plugin
 {
-    public $priority = 100;
-
     protected string $key;
 
     protected array $requiredComposerPackages = [

@@ -9,8 +9,6 @@ use Illuminate\Support\Str;
 
 class FathomAnalytics extends Plugin
 {
-    public $priority = 100;
-
     protected $siteId;
 
     public function enabled(): bool
