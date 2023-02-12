@@ -36,8 +36,8 @@ class Octane extends Plugin
         $this->octanePort = $highestOctanePortInUse + 1;
 
         $this->octaneServer = $this->console->choice('Which server would you like to use for Octane?', [
-            'swoole',
             'roadrunner',
+            'swoole',
         ], $this->env->get('OCTANE_SERVER') ?? 'swoole');
     }
 
