@@ -14,15 +14,27 @@ class Npm extends PackageManager
 
     public function packageIsInstalled(string $package): bool
     {
-        $npmJson = file_get_contents($this->config->projectDirectory . '/package.json');
-        $npmJson = json_decode($npmJson, true);
+        $json = $this->getPackageJson();
 
-        return Arr::get($npmJson, 'dependencies.' . $package) || Arr::get($npmJson, 'devDependencies.' . $package);
+        return Arr::get($json, 'dependencies.' . $package) || Arr::get($json, 'devDependencies.' . $package);
     }
 
     public function installPackage(string $package): void
     {
         $this->console->info("Installing {$package}...");
         exec("cd {$this->config->projectDirectory} && yarn add {$package}");
+    }
+
+    public function hasScriptCommand(string $command): bool
+    {
+        return Arr::get($this->getPackageJson(), 'scripts.' . $command);
+    }
+
+    protected function getPackageJson(): array
+    {
+        $file = file_get_contents($this->config->projectDirectory . '/package.json');
+        $json = json_decode($file, true);
+
+        return $json;
     }
 }
