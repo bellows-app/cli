@@ -31,10 +31,9 @@ class BugsnagPHP extends Bugsnag
             return;
         }
 
-        if ($this->console->confirm('Use existing Bugsnag PHP Project?', true)) {
-            $project = $this->selectFromExistingProjects($type);
-            $this->bugsnagKey = $project['api_key'];
-        }
+        // TODO: Provide a way to bail if need be
+        $project = $this->selectFromExistingProjects($type);
+        $this->bugsnagKey = $project['api_key'];
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

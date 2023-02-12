@@ -25,7 +25,6 @@ class UpdateDomainDNS extends Plugin
             fn ($subdomain) => $this->dnsProvider->getARecord($subdomain) !== $server['server']['ip_address']
         );
 
-
         if ($needsUpdating === null) {
             return $this->disabledByDefault('DNS records are up to date');
         }
