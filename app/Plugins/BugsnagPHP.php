@@ -28,6 +28,7 @@ class BugsnagPHP extends Bugsnag
         if ($this->console->confirm('Create Bugsnag PHP Project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
+            return;
         }
 
         if ($this->console->confirm('Use existing Bugsnag PHP Project?', true)) {
