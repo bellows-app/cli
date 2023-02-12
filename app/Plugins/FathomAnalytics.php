@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class FathomAnalytics extends Plugin
 {
+    public $priority = 100;
+
     protected $siteId;
 
     public function enabled(): bool
@@ -46,11 +48,12 @@ class FathomAnalytics extends Plugin
             $this->http->client()->get('sites', ['limit' => 100])->json()['data']
         );
 
-        $siteChoices = $sites->sortBy('name')->mapWithKeys(fn ($site) => [$site['id'] => $site['name']]);
-
-        $default = $sites->first(fn ($site) => $site['name'] === $this->projectConfig->appName);
-
-        $this->siteId = $this->console->choice('Choose a site', $siteChoices->toArray(), $default['id'] ?? null);
+        $this->siteId = $this->console->choiceFromCollection(
+            'Choose a site',
+            $sites,
+            'name',
+            $this->projectConfig->appName,
+        )['id'];
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

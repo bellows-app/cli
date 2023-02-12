@@ -8,6 +8,8 @@ use Illuminate\Http\Client\PendingRequest;
 
 class Ably extends Plugin
 {
+    public $priority = 100;
+
     protected string $key;
 
     protected array $requiredComposerPackages = [
@@ -39,16 +41,22 @@ class Ably extends Plugin
         } else {
             $apps = collect($this->http->client()->get("accounts/{$accountId}/apps")->json());
 
-            $appName = $this->console->choice('Which app do you want to use?', $apps->pluck('name')->toArray());
-
-            $app = $apps->first(fn ($app) => $app['name'] === $appName);
+            $app = $this->console->choiceFromCollection(
+                'Which app do you want to use?',
+                $apps,
+                'name',
+                $this->projectConfig->appName,
+            );
         }
 
         $keys = collect($this->http->client()->get("apps/{$app['id']}/keys")->json());
 
-        $key = $this->console->choice('Which key do you want to use?', $keys->pluck('name')->toArray());
-
-        $this->key = $keys->first(fn ($k) => $k['name'] === $key)['key'];
+        $this->key = $this->console->choiceFromCollection(
+            'Which key do you want to use?',
+            $keys,
+            'name',
+            $this->projectConfig->appName,
+        )['key'];
     }
 
     public function setEnvironmentVariables($server, $site, array $envVars): array

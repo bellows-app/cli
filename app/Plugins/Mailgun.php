@@ -7,6 +7,7 @@ use App\Bellows\Plugin;
 use App\Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class Mailgun extends Plugin
 {
@@ -87,19 +88,21 @@ class Mailgun extends Plugin
     {
         $response = $this->http->client()->get('domains')->json();
 
-        $domainChoices = collect($response['items'])->map(fn ($domain) => $this->domainChoice($domain))->toArray();
+        $domainChoices = collect($response['items'])->map(fn ($domain) => array_merge(
+            $domain,
+            ['custom_key' => "{$domain['name']} ({$domain['type']})"]
+        ));
 
-        $domainChoice = $this->console->choice('Which domain do you want to use?', $domainChoices);
-
-        $domain = collect($response['items'])->first(fn ($domain) => $this->domainChoice($domain) === $domainChoice);
+        $domain = $this->console->choiceFromCollection(
+            'Which domain do you want to use?',
+            $domainChoices,
+            'custom_key',
+            fn ($domain) => Str::contains($domain['name'], $this->projectConfig->domain),
+        );
 
         $this->domain = $domain['name'];
     }
 
-    protected function domainChoice($domain)
-    {
-        return "{$domain['name']} ({$domain['type']})";
-    }
 
     public function wrapUp($server, $site): void
     {

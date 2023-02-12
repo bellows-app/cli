@@ -153,19 +153,12 @@ class Postmark extends Plugin
             ])->json()['Servers']
         );
 
-        $serverChoices = $servers->sortBy('Name')->pluck('Name');
-
-        $default = $servers->first(
-            fn ($server) => $server['Name'] === $this->projectConfig->appName
-        );
-
-        $serverChoice = $this->console->choice(
+        return $this->console->choiceFromCollection(
             'Choose a Postmark server',
-            $serverChoices->toArray(),
-            $default['Name'] ?? null,
+            $servers->sortBy('Name'),
+            'Name',
+            $this->projectConfig->appName,
         );
-
-        return $servers->first(fn ($server) => $server['Name'] === $serverChoice);
     }
 
     public function getDomain()
@@ -185,19 +178,12 @@ class Postmark extends Plugin
             ])->json()['Domains']
         );
 
-        $domainChoices = $domains->sortBy('Name')->pluck('Name');
-
-        $default = $domains->first(
-            fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
-        );
-
-        $domainChoice = $this->console->choice(
+        $domainId = $this->console->choiceFromCollection(
             'Choose a Postmark sender domain',
-            $domainChoices->toArray(),
-            $default['Name'] ?? null,
-        );
-
-        $domainId = $domains->first(fn ($domain) => $domain['Name'] === $domainChoice)['ID'];
+            $domains->sortBy('Name'),
+            'Name',
+            fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
+        )['ID'];
 
         return $this->http->client()->get("domains/{$domainId}")->json();
     }

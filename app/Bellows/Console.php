@@ -3,6 +3,7 @@
 namespace App\Bellows;
 
 use Illuminate\Console\Concerns\InteractsWithIO;
+use Illuminate\Support\Collection;
 
 class Console
 {
@@ -17,5 +18,51 @@ class Console
         }
 
         return $this->baseChoice($question, $choices, $default, $attempts, $multiple);
+    }
+
+    public function choiceFromCollection(
+        $question,
+        Collection $collection,
+        string $labelKey,
+        array|string|callable $default = null,
+        $attempts = null,
+        $multiple = false
+    ) {
+        $default = $this->determinDefaultFromCollection($default, $collection, $labelKey);
+
+        $result = $this->choice(
+            $question,
+            $collection->pluck($labelKey)->toArray(),
+            $default,
+            $attempts,
+            $multiple
+        );
+
+        if ($multiple) {
+            return $collection->whereIn($labelKey, $result);
+        }
+
+        return $collection->firstWhere($labelKey, $result);
+    }
+
+    protected function determinDefaultFromCollection($default, Collection $collection, string $labelKey)
+    {
+        if ($default === null) {
+            return null;
+        }
+
+        if (is_callable($default)) {
+            return $collection->first(fn ($item) => $default($item))[$labelKey] ?? null;
+        }
+
+        if (!is_array($default)) {
+            $default = [$labelKey, $default];
+        }
+
+        [$keyToFind, $value] = $default;
+
+        return $collection->first(
+            fn ($item) => $item[$keyToFind] === $value
+        )[$keyToFind] ?? null;
     }
 }

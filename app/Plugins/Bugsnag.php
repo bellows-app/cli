@@ -44,15 +44,13 @@ abstract class Bugsnag extends Plugin
 
         $choices = $result->sortBy('name')->mapWithKeys(fn ($project) => [
             $project['id'] => $project['name'],
-        ])->toArray();
+        ]);
 
-        $choice = $this->console->choice(
-            'Select a project',
+        return $this->console->choiceFromCollection(
+            'Select a Bugsnag project',
             $choices,
-            $result->pluck('name')->contains($this->projectConfig->appName)
-                ? $this->projectConfig->appName : null
+            'name',
+            $this->projectConfig->appName,
         );
-
-        return $result->first(fn ($project) => $project['id'] === $choice);
     }
 }
