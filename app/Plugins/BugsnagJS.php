@@ -36,7 +36,7 @@ class BugsnagJS extends Bugsnag
         $this->bugsnagKey = $project['api_key'];
     }
 
-    public function setEnvironmentVariables(array $envVars): array
+    public function setEnvironmentVariables(): array
     {
         if (!$this->bugsnagKey) {
             return [];

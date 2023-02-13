@@ -49,14 +49,17 @@ class Octane extends Plugin
         ];
     }
 
-    public function setEnvironmentVariables(array $envVars): array
+    public function setEnvironmentVariables(): array
     {
         return  array_merge([
             'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
-        ], Str::startsWith($envVars['APP_URL'], 'https://') ? [
-            'OCTANE_HTTPS' => 'true',
-        ] : []);
+        ]);
+
+        // TODO: Re-implement this when we determine SSL situation
+        // Str::startsWith($envVars['APP_URL'], 'https://') ? [
+        //     'OCTANE_HTTPS' => 'true',
+        // ] : []
     }
 
     public function daemons(): array

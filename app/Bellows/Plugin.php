@@ -2,6 +2,7 @@
 
 namespace App\Bellows;
 
+use App\Bellows\Data\ForgeServer;
 use App\Bellows\Data\ProjectConfig;
 use App\Bellows\Dns\DnsProvider;
 use App\Bellows\PackageManagers\Composer;
@@ -24,61 +25,62 @@ abstract class Plugin
         protected DeployScript $deployScript,
         protected Artisan $artisan,
         protected Env $env,
+        protected ForgeServer $forgeServer,
         protected ?DnsProvider $dnsProvider = null,
     ) {
     }
 
-    // public function setup(): void
-    // {
-    //     //
-    // }
+    public function setup(): void
+    {
+        //
+    }
 
-    // public function createSiteParams(array $params): array
-    // {
-    //     return [];
-    // }
+    public function createSiteParams(array $params): array
+    {
+        return [];
+    }
 
-    // public function installRepoParams(array $baseParams): array
-    // {
-    //     return [];
-    // }
+    public function installRepoParams(array $baseParams): array
+    {
+        return [];
+    }
 
-    // public function setEnvironmentVariables(array $envVars): array
-    // {
-    //     return [];
-    // }
+    public function setEnvironmentVariables(): array
+    {
+        return [];
+    }
 
-    // public function updateDeployScript(string $deployScript): string
-    // {
-    //     return $deployScript;
-    // }
+    public function updateDeployScript(string $deployScript): string
+    {
+        return $deployScript;
+    }
 
     /**
      * @return \App\Bellows\Data\Worker[]
      */
-    // public function workers(): array
-    // {
-    //     return [];
-    // }
+    public function workers(): array
+    {
+        return [];
+    }
 
     /**
      * @return \App\Bellows\Data\Job[]
      */
-    // public function jobs(): array
-    // {
-    //     return [];
-    // }
+    public function jobs(): array
+    {
+        return [];
+    }
 
     /**
      * @return \App\Bellows\Data\Daemon[]
      */
-    // public function daemons(): array
-    // {
-    //     return [];
-    // }
+    public function daemons(): array
+    {
+        return [];
+    }
 
-    // public function wrapUp(): void
-    // {
-    //     //
-    // }
+    public function wrapUp(): void
+    {
+        //
+    }
 }

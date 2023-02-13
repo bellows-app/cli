@@ -53,7 +53,7 @@ class FathomAnalytics extends Plugin
         )['id'];
     }
 
-    public function setEnvironmentVariables(array $envVars): array
+    public function setEnvironmentVariables(): array
     {
         return [
             'FATHOM_SITE_ID' => $this->siteId,

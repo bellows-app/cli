@@ -148,7 +148,7 @@ class DigitalOceanDatabase extends Plugin
         return true;
     }
 
-    public function setEnvironmentVariables(array $envVars): array
+    public function setEnvironmentVariables(): array
     {
         return [
             'DB_CONNECTION'        => 'mysql',

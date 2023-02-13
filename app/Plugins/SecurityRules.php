@@ -49,7 +49,7 @@ class SecurityRules extends Plugin
         } while ($this->console->confirm('Add another security rule group?'));
     }
 
-    public function wrapUp()
+    public function wrapUp(): void
     {
         if ($this->securityRules->isEmpty()) {
             return;

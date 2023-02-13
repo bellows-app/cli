@@ -3,11 +3,9 @@
 namespace App\Plugins;
 
 use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Data\ForgeServer;
 use App\Bellows\Plugin;
 use App\Bellows\Util\Domain;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 
 class UpdateDomainDNS extends Plugin
 {
@@ -19,11 +17,8 @@ class UpdateDomainDNS extends Plugin
             return $this->disabledByDefault('No DNS provider found for your domain');
         }
 
-        // TODO: Would love to inject this but abstract method arguments?
-        $server = app(ForgeServer::class);
-
         $needsUpdating = $this->getDomainsToCheck()->first(
-            fn ($subdomain) => $this->dnsProvider->getARecord($subdomain) !== $server['server']['ip_address']
+            fn ($subdomain) => $this->dnsProvider->getARecord($subdomain) !== $this->forgeServer->ip_address,
         );
 
         if ($needsUpdating === null) {
@@ -63,8 +58,6 @@ class UpdateDomainDNS extends Plugin
 
     public function setup(): void
     {
-        $server = app(ForgeServer::class);
-
         $this->console->info('Updating DNS records...');
 
         $this->getDomainsToCheck()
@@ -76,18 +69,18 @@ class UpdateDomainDNS extends Plugin
                 ],
             )
             ->filter(
-                fn ($config) => $config['ip_address'] && $config['ip_address'] !== $server['ip_address']
+                fn ($config) => $config['ip_address'] && $config['ip_address'] !== $this->forgeServer->ip_address
                     ? $this->console->confirm(
-                        "DNS record for [{$config['domain']}] currently points to [{$config['ip_address']}]. Update to [{$server['ip_address']}]?",
+                        "DNS record for [{$config['domain']}] currently points to [{$config['ip_address']}]. Update to [{$this->forgeServer->ip_address}]?",
                         true
                     )
                     : true,
             )
-            ->filter(fn ($config) => $config['ip_address'] !== $server['ip_address'])
+            ->filter(fn ($config) => $config['ip_address'] !== $this->forgeServer->ip_address)
             ->each(
                 fn ($config) => $this->dnsProvider->addARecord(
                     $config['subdomain'],
-                    $server['ip_address'],
+                    $this->forgeServer->ip_address,
                     1800,
                 )
             );
