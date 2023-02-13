@@ -53,19 +53,6 @@ class Deploy extends Command
             $config->set('forge.token', $token);
         }
 
-        // $this->task(
-        //     'What is this exactly',
-        //     function () {
-
-        //         $this->newLine();
-
-        //         $this->line('hm what now');
-        //         $this->info('difference?');
-
-        //         return true;
-        //     }
-        // );
-
         $dir = rtrim(getcwd(), '/');
 
         $forgeApiUrl = 'https://forge.laravel.com/api/v1';
