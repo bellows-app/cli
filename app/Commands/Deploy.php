@@ -11,6 +11,9 @@ use App\Bellows\Dns\DnsProvider;
 use App\Bellows\PluginManager;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
+use Exception;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
@@ -34,6 +37,12 @@ class Deploy extends Command
 
     protected string $siteEnv;
 
+    protected $defaultLongProcessMessages = [
+        3 => 'One moment...',
+        6 => 'Hang in there...',
+        9 => 'Wrapping up...',
+    ];
+
     /**
      * Execute the console command.
      *
@@ -43,6 +52,19 @@ class Deploy extends Command
     {
         $console->setInput($this->input);
         $console->setOutput($this->output);
+
+        // $phpVersion = $this->withSpinner(
+        //     title: 'Wat',
+        //     task: function () {
+        //         ray('hi i got here');
+        //         sleep(5);
+        //         ray('.....and i am done');
+
+        //         return 'this is from the main task';
+        //     },
+        // );
+
+        // die();
 
         if (!$config->get('forge.token')) {
             $this->info('Looks like we need a Forge token, you can get one here:');
@@ -57,29 +79,28 @@ class Deploy extends Command
 
         $forgeApiUrl = 'https://forge.laravel.com/api/v1';
 
-        // TODO: check if this is a git repo
-        $repoUrl = exec('git config --get remote.origin.url');
-
-        $branches = collect(explode(PHP_EOL, shell_exec('git branch -a')))->map(fn ($b) => trim($b))->filter();
-
-        $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
-
-        $devBranch = $branches->first(fn ($b) => in_array($b, ['develop', 'dev', 'development']));
-
-        $branchChoices = $branches->map(
-            fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
-        )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
-
-        $defaultRepo = collect(explode(':', $repoUrl))->map(
-            fn ($p) => Str::replace('.git', '', $p)
-        )->last();
-
         Http::macro(
             'forge',
             fn () => Http::baseUrl($forgeApiUrl)
                 ->withToken($config->get('forge.token'))
                 ->acceptJson()
                 ->asJson()
+                ->retry(
+                    3,
+                    100,
+                    function (
+                        Exception $exception,
+                        PendingRequest $request
+                    ) {
+                        if ($exception instanceof RequestException && $exception->response->status() === 429) {
+                            sleep($exception->response->header('retry-after') + 1);
+
+                            return true;
+                        }
+
+                        return false;
+                    }
+                )
         );
 
         $servers = collect(
@@ -88,11 +109,7 @@ class Deploy extends Command
 
         $serverName = $this->choice(
             'Which server?',
-            $servers->pluck('name')
-                // JUST FOR DEMO
-                // ->filter(fn ($s) => in_array($s, ['projects', 'joe-codes', 'batzen', 'blip-tester']))
-                ->values()
-                ->toArray()
+            $servers->pluck('name')->values()->toArray()
         );
 
         $server = $servers->first(fn ($s) => $s['name'] === $serverName);
@@ -114,12 +131,8 @@ class Deploy extends Command
             'Isolated User',
             Str::of($host)->replace('.test', '')->replace('.', '_')->toString()
         );
-        $repo         = $this->ask('Repo', $defaultRepo);
-        $repoBranch   = $this->anticipate(
-            'Repo Branch',
-            $branchChoices,
-            Str::contains($domain, 'dev.') ? $devBranch : $mainBranch
-        );
+
+        [$repo, $repoBranch] = $this->getGitInfo($dir, $domain);
 
         $dnsProvider = DnsFactory::fromDomain($domain);
 
@@ -130,15 +143,9 @@ class Deploy extends Command
             $dnsProvider->setCredentials();
         }
 
-        ray($dnsProvider);
-
         App::instance(DnsProvider::class, $dnsProvider);
 
-        $this->info('Configuring PHP version...');
-
         [$phpVersion, $phpVersionBinary] = $this->determinePhpVersion($dir);
-
-        $this->line('PHP Version: ' . $phpVersionBinary);
 
         App::instance(ProjectConfig::class, new ProjectConfig(
             isolatedUser: $isolatedUser,
@@ -164,27 +171,34 @@ class Deploy extends Command
             'php_version'  => $phpVersion,
         ];
 
-        $this->title('Creating Site');
-
-        $siteResponse = Http::forgeServer()->post('sites', array_merge(
+        $createSiteParams = array_merge(
             $baseParams,
             ...App::call([$pluginManager, 'createSiteParams'], ['params' => $baseParams])
-        ))->json();
+        );
 
-        $site = $siteResponse['site'];
+        // TODO: Check if site exists
+        $site = $this->withSpinner(
+            title: 'Creating Site',
+            task: function () use ($createSiteParams, $forgeApiUrl, $server) {
+                $siteResponse = Http::forgeServer()->post('sites', $createSiteParams)->json();
+
+                $site = $siteResponse['site'];
+
+                while ($site['status'] !== 'installed') {
+                    sleep(2);
+
+                    $site = Http::forgeServer()->get("sites/{$site['id']}")->json()['site'];
+                }
+
+                return $site;
+            },
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
 
         Http::macro(
             'forgeSite',
             fn () => Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}/sites/{$site['id']}")
         );
-
-        while ($site['status'] !== 'installed') {
-            $this->info('Waiting for site to be created... Status: ' . $site['status']);
-
-            sleep(2);
-
-            $site = Http::forgeSite()->get('')->json()['site'];
-        }
 
         $baseRepoParams = [
             'provider'   => 'github',
@@ -193,26 +207,24 @@ class Deploy extends Command
             'composer'   => true,
         ];
 
-        $this->title('Installing Repository');
-
-        Http::forgeSite()->post(
-            'git',
-            array_merge(
-                $baseRepoParams,
-                ...App::call([$pluginManager, 'installRepoParams'], ['baseParams' => $baseRepoParams])
-            )
+        $installRepoParams = array_merge(
+            $baseRepoParams,
+            ...App::call([$pluginManager, 'installRepoParams'], ['baseParams' => $baseRepoParams])
         );
 
-        while ($site['repository_status'] !== 'installed') {
-            $this->info(
-                'Waiting for repo to be installed... '
-                    . ($site['repository_status'] ? 'Status: ' . $site['repository_status'] : '')
-            );
+        $this->withSpinner(
+            title: 'Installing Repository',
+            task: function () use ($installRepoParams, $site) {
+                Http::forgeSite()->post('git', $installRepoParams);
 
-            sleep(2);
+                while ($site['repository_status'] !== 'installed') {
+                    sleep(2);
 
-            $site = Http::forgeSite()->get('')->json()['site'];
-        }
+                    $site = Http::forgeSite()->get('')->json()['site'];
+                }
+            },
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
 
         $this->title('Updating Environment Variables');
 
@@ -270,79 +282,123 @@ class Deploy extends Command
 
         $this->newLine();
 
-        if ($this->confirm('Open site in Forge?')) {
+        if ($this->confirm('Open site in Forge?', true)) {
             exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application");
         }
     }
 
+    protected function getGitInfo(string $dir, string $domain): array
+    {
+        if (!is_dir($dir . '/.git')) {
+            $this->warn('Git repository not detected! Are you sure you are in the right directory?');
+
+            return [
+                $this->ask('Repository'),
+                $this->ask('Repository Branch'),
+            ];
+        }
+
+        $repoUrl = exec('git config --get remote.origin.url');
+
+        $branches = collect(explode(PHP_EOL, shell_exec('git branch -a')))->map(fn ($b) => trim($b))->filter();
+
+        $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
+
+        $devBranch = $branches->first(fn ($b) => in_array($b, ['develop', 'dev', 'development']));
+
+        $branchChoices = $branches->map(
+            fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
+        )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
+
+        $defaultRepo = collect(explode(':', $repoUrl))->map(
+            fn ($p) => Str::replace('.git', '', $p)
+        )->last();
+
+
+        $repo = $this->ask('Repo', $defaultRepo);
+
+        if ($repo === $defaultRepo) {
+            // Only offer up possible branches if this is the repo we thought it was
+            $repoBranch = $this->anticipate(
+                'Repo Branch',
+                $branchChoices,
+                Str::contains($domain, 'dev.') ? $devBranch : $mainBranch
+            );
+        } else {
+            $repoBranch = $this->ask('Repository Branch');
+        }
+
+        return [$repo, $repoBranch];
+    }
+
     protected function determinePhpVersion($projectDir)
     {
-        $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortByDesc('version');
-
         $composerJson = file_get_contents($projectDir . '/composer.json');
         $composerJson = json_decode($composerJson, true);
-
         $requiredPhpVersion = $composerJson['require']['php'] ?? null;
 
-        $phpVersion = $requiredPhpVersion ? $phpVersions->first(
-            fn ($p) => Semver::satisfies(
-                Str::replace('php', '', $p['binary_name']),
-                $requiredPhpVersion
-            )
-        ) : $phpVersions->first();
+        $phpVersion = $this->withSpinner(
+            title: 'Determining PHP Version',
+            task: function () use ($requiredPhpVersion,) {
+                $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortByDesc('version');
 
-        if (!$phpVersion) {
-            $available = collect([
-                'php82' => '8.2',
-                'php81' => '8.1',
-                'php80' => '8.0',
-                'php74' => '7.4',
-                'php73' => '7.3',
-                'php72' => '7.2',
-                'php71' => '7.1',
-                'php70' => '7.0',
-                'php56' => '5.6',
-            ]);
+                return $requiredPhpVersion ? $phpVersions->first(
+                    fn ($p) => Semver::satisfies(
+                        Str::replace('php', '', $p['binary_name']),
+                        $requiredPhpVersion
+                    )
+                ) : $phpVersions->first();
+            },
+            successDisplay: fn ($result) => $result['binary_name'] ?? '✗',
+        );
 
-            $toInstall = $available->first(
-                fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
-            );
-
-            if (!$toInstall || !$this->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
-                throw new \Exception('No PHP version on server found that matches the required version in composer.json');
-            }
-
-            $phpVersion = $this->installPHPVersion($toInstall, $available->search($toInstall));
+        if ($phpVersion) {
+            return [$phpVersion['version'], $phpVersion['binary_name']];
         }
+
+        $available = collect([
+            'php82' => '8.2',
+            'php81' => '8.1',
+            'php80' => '8.0',
+            'php74' => '7.4',
+            'php73' => '7.3',
+            'php72' => '7.2',
+            'php71' => '7.1',
+            'php70' => '7.0',
+            'php56' => '5.6',
+        ]);
+
+        $toInstall = $available->first(
+            fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
+        );
+
+        if (!$toInstall || !$this->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
+            throw new \Exception('No PHP version on server found that matches the required version in composer.json');
+        }
+
+        $phpVersion = $this->installPHPVersion($toInstall, $available->search($toInstall));
 
         return [$phpVersion['version'], $phpVersion['binary_name']];
     }
 
     protected function installPHPVersion($name, $version)
     {
-        $this->info("Installing PHP {$name} (this will take a minute or two)...");
-        Http::forgeServer()->post('php', ['version' => $version]);
+        return $this->withSpinner(
+            title: 'Installing PHP on server',
+            task: function () use ($version) {
+                Http::forgeServer()->post('php', ['version' => $version]);
 
-        $this->newLine();
+                do {
+                    $phpVersion = collect(Http::forgeServer()->get('php')->json())->first(
+                        fn ($p) => $p['version'] === $version
+                    );
+                } while ($phpVersion['status'] !== 'installed');
 
-        $bar = $this->output->createProgressBar(0);
-        $bar->start();
-
-        do {
-            $phpVersion = collect(Http::forgeServer()->get('php')->json())->first(
-                fn ($p) => $p['version'] === $version
-            );
-            $bar->advance();
-            sleep(2);
-        } while ($phpVersion['status'] !== 'installed');
-
-        $bar->finish();
-
-        $this->newLine();
-
-        $this->info("PHP {$name} installed successfully!");
-
-        return $phpVersion;
+                return $phpVersion;
+            },
+            successDisplay: fn ($result) => $result['binary_name'] ?? '✗',
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
     }
 
     // TODO: This probably.... doesn't belong here. Feels funny. Move it at some point.

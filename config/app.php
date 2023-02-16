@@ -1,5 +1,7 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use Illuminate\Foundation\Providers\ArtisanServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelRay\RayServiceProvider;
 
@@ -70,7 +72,7 @@ return [
     */
 
     'providers' => [
-        App\Providers\AppServiceProvider::class,
+        AppServiceProvider::class,
         LaravelDataServiceProvider::class,
         RayServiceProvider::class,
     ],
