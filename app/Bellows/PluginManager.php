@@ -53,7 +53,7 @@ class PluginManager
                 return false;
             }
 
-            $this->console->info("Configuring {$p->getName()} plugin...");
+            $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
 
             $this->call('setup', $p)->run();
 
