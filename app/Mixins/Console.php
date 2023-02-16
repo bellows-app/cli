@@ -89,6 +89,9 @@ class Console
 
             $this->showCursor();
 
+            $socketToSpinner->close();
+            $socketToTask->close();
+
             return $result[0];
         };
     }
