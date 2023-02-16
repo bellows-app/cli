@@ -5,7 +5,6 @@ namespace App\Plugins;
 use App\Bellows\Data\AddApiCredentialsPrompt;
 use App\Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Str;
 
 class FathomAnalytics extends Plugin
 {
