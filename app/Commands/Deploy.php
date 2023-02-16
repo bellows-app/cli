@@ -38,9 +38,9 @@ class Deploy extends Command
     protected string $siteEnv;
 
     protected $defaultLongProcessMessages = [
-        3 => 'One moment...',
-        6 => 'Hang in there...',
-        9 => 'Wrapping up...',
+        3  => 'One moment...',
+        7  => 'Almost done...',
+        11 => 'Wrapping up...',
     ];
 
     /**
@@ -52,19 +52,6 @@ class Deploy extends Command
     {
         $console->setInput($this->input);
         $console->setOutput($this->output);
-
-        // $phpVersion = $this->withSpinner(
-        //     title: 'Wat',
-        //     task: function () {
-        //         ray('hi i got here');
-        //         sleep(5);
-        //         ray('.....and i am done');
-
-        //         return 'this is from the main task';
-        //     },
-        // );
-
-        // die();
 
         if (!$config->get('forge.token')) {
             $this->info('Looks like we need a Forge token, you can get one here:');

@@ -2,7 +2,6 @@
 
 namespace App\Mixins;
 
-use Spatie\Async\Pool;
 use Spatie\Fork\Fork;
 
 class Console
@@ -17,45 +16,54 @@ class Console
         ) {
             $this->hideCursor();
 
-            file_put_contents(storage_path('app/running'), 'true');
+            // TODO: How do we do this better... this is a hack and who knows what the filesystem writability will be
+            $cachePath = storage_path('app/' . time());
+
+            file_put_contents($cachePath, '1');
+
+            // If they quit, wrap things up nicely (TODO: this isn't working?)
+            $this->trap([SIGTERM, SIGQUIT], function () use ($cachePath) {
+                $this->showCursor();
+                unlink($cachePath);
+            });
 
             $result = Fork::new()
                 ->run(
-                    function () use ($task, $successDisplay, $title) {
+                    function () use ($task, $successDisplay, $title, $cachePath) {
                         $output = $task();
 
-                        file_put_contents(storage_path('app/running'), 'false');
+                        unlink($cachePath);
 
                         if (is_callable($successDisplay)) {
-                            $message = $successDisplay($output);
+                            $display = $successDisplay($output);
                         } else if (is_string($successDisplay)) {
-                            $message = $successDisplay;
+                            $display = $successDisplay;
                         } else if (is_string($output)) {
-                            $message = $output;
+                            $display = $output;
                         } else {
-                            $message = '✓';
+                            $display = '✓';
                         }
 
                         $this->overwriteLine(
-                            $title . ': <info>' . $message . '</info>',
+                            "<info>{$title}: {$display}</info>",
                             true,
                         );
 
                         return $output;
                     },
-                    function () use ($longProcessMessages, $title) {
+                    function () use ($longProcessMessages, $title, $cachePath) {
                         $animation = collect(mb_str_split('⢿⣻⣽⣾⣷⣯⣟⡿'));
                         $startTime = time();
 
                         $index = 0;
 
-                        $this->output->write($title . ': ' . $animation->get($index));
+                        // $this->output->write($title . ': ' . $animation->get($index));
 
                         $reversedLongProcessMessages = collect($longProcessMessages)
                             ->reverse()
                             ->map(fn ($v) => ' ' . $v);
 
-                        while (file_get_contents(storage_path('app/running')) === 'true') {
+                        while (file_exists($cachePath)) {
                             $runningTime = 0;
                             $runningTime = time() - $startTime;
 
@@ -66,148 +74,18 @@ class Console
                             $index = ($index === $animation->count() - 1) ? 0 : $index + 1;
 
                             $this->overwriteLine(
-                                $title . ': <comment>' . $animation->get($index) . $longProcessMessage . '</comment>'
+                                "<info>{$title}:</info> <comment>{$animation->get($index)}{$longProcessMessage}</comment>"
                             );
 
-                            usleep(200000);
+                            usleep(200_000);
                         }
                     }
                 );
 
             $this->showCursor();
 
-            unlink(storage_path('app/running'));
-
             return $result[0];
-
-            [$first, $second] = $result;
-            dd($first, $second);
-
-            $this->hideCursor();
-
-            $running = true;
-            $animation = collect(mb_str_split('⢿⣻⣽⣾⣷⣯⣟⡿'));
-
-            $index = 0;
-
-            $this->output->write($title . ': ' . $animation->get($index));
-
-            $pool = Pool::create();
-
-            $process = $pool->add(function () use ($title, $animation, $index,) {
-                $stream = fopen('php://stdout', 'w');
-                $count = 0;
-                while ($count < 10) {
-
-                    fwrite($stream, $count);
-                    // fwrite($stream, $title . ': ' . $animation->get($index));
-
-                    fflush($stream);
-
-                    $count++;
-
-                    sleep(1);
-                }
-                // $this->output->write($title . ': ' . $animation->get($index));
-
-                // sleep(10);
-            });
-
-            // if (!$process->isRunning()) {
-            //     $process->start();
-            // }
-
-            $task();
-
-            // $process->stop();
-
-            return;
-
-            // $process->then(function ($output)  use (
-            //     &$running,
-            //     $title,
-            //     $successDisplay,
-            // ) {
-            //     $running = false;
-
-            //     if (is_callable($successDisplay)) {
-            //         $message = $successDisplay($output);
-            //     } else if (is_string($successDisplay)) {
-            //         $message = $successDisplay;
-            //     } else if (is_string($output)) {
-            //         $message = $output;
-            //     } else {
-            //         $message = '✓';
-            //     }
-
-            //     $this->overwriteLine(
-            //         $title . ': <info>' . $message . '</info>',
-            //         true,
-            //     );
-            // })->catch(function ($exception) use (
-            //     &$running,
-            //     $title,
-            // ) {
-            //     $running = false;
-
-            //     $this->overwriteLine(
-            //         $title . ': <error>' . $exception->getMessage() . '</error>',
-            //         true,
-            //     );
-
-            //     throw $exception;
-            // });
-
-            // // If they quit, wrap things up nicely
-            // $this->trap([SIGTERM, SIGQUIT], function () use ($process) {
-            //     $this->showCursor();
-            //     $process->stop();
-            // });
-
-            // $reversedLongProcessMessages = collect($longProcessMessages)
-            //     ->reverse()
-            //     ->map(fn ($v) => ' ' . $v);
-
-            // while ($running) {
-            //     $runningTime = floor($process->getCurrentExecutionTime());
-
-            //     $longProcessMessage = $reversedLongProcessMessages->first(
-            //         fn ($v, $k) => $runningTime >= $k
-            //     ) ?? '';
-
-            //     $index = ($index === $animation->count() - 1) ? 0 : $index + 1;
-
-            //     $this->overwriteLine(
-            //         $title . ': <comment>' . $animation->get($index) . $longProcessMessage . '</comment>'
-            //     );
-
-            //     usleep(200000);
-            // }
-
-            // $this->showCursor();
-
-            // return $process->getOutput();
         };
-    }
-
-    private function runTask($task, $longProcessMessage)
-    {
-        sleep(3);
-
-        $this->running = false;
-
-        return 'runnnnTask';
-    }
-
-    private function okSure()
-    {
-        while ($this->running) {
-            ray($this->running);
-            $this->output->writeLn('Is this working? At all?');
-            sleep(1);
-        }
-
-        return 'ooooookSure';
     }
 
     public function overwriteLine()
