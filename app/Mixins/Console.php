@@ -2,6 +2,7 @@
 
 namespace App\Mixins;
 
+use Spatie\Fork\Connection;
 use Spatie\Fork\Fork;
 
 class Console
@@ -16,23 +17,23 @@ class Console
         ) {
             $this->hideCursor();
 
-            // TODO: How do we do this better... this is a hack and who knows what the filesystem writability will be
-            $cachePath = storage_path('app/' . time());
-
-            file_put_contents($cachePath, '1');
-
             // If they quit, wrap things up nicely (TODO: this isn't working?)
-            $this->trap([SIGTERM, SIGQUIT], function () use ($cachePath) {
+            $this->trap([SIGTERM, SIGQUIT], function () {
                 $this->showCursor();
-                unlink($cachePath);
             });
+
+            // Create a pair of socket connections so the two tasks can communicate
+            [$socketToTask, $socketToSpinner] = Connection::createPair();
 
             $result = Fork::new()
                 ->run(
-                    function () use ($task, $successDisplay, $title, $cachePath) {
+                    function () use ($task, $successDisplay, $title,  $socketToSpinner) {
                         $output = $task();
 
-                        unlink($cachePath);
+                        $socketToSpinner->write(1);
+
+                        // Wait for the next cycle of the spinner so that it stops
+                        usleep(200_000);
 
                         if (is_callable($successDisplay)) {
                             $display = $successDisplay($output);
@@ -45,25 +46,29 @@ class Console
                         }
 
                         $this->overwriteLine(
-                            "<info>{$title}: {$display}</info>",
+                            "<info>{$title}:</info> <comment>{$display}</comment>",
                             true,
                         );
 
                         return $output;
                     },
-                    function () use ($longProcessMessages, $title, $cachePath) {
+                    function () use ($longProcessMessages, $title, $socketToTask) {
                         $animation = collect(mb_str_split('⢿⣻⣽⣾⣷⣯⣟⡿'));
                         $startTime = time();
 
                         $index = 0;
 
-                        // $this->output->write($title . ': ' . $animation->get($index));
-
                         $reversedLongProcessMessages = collect($longProcessMessages)
                             ->reverse()
                             ->map(fn ($v) => ' ' . $v);
 
-                        while (file_exists($cachePath)) {
+                        $socketResults = '';
+
+                        while (!$socketResults) {
+                            foreach ($socketToTask->read() as $output) {
+                                $socketResults .= $output;
+                            }
+
                             $runningTime = 0;
                             $runningTime = time() - $startTime;
 
