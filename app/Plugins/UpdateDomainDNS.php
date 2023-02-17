@@ -30,7 +30,7 @@ class UpdateDomainDNS extends Plugin
 
     public function enabled(): bool
     {
-        if (!$this->isEnabledByDefault()->enabled) {
+        if ($this->hasADefaultEnabledDecision() && !$this->isEnabledByDefault()->enabled) {
             return false;
         }
 
