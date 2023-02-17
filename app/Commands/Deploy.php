@@ -53,23 +53,26 @@ class Deploy extends Command
         $console->setInput($this->input);
         $console->setOutput($this->output);
 
-        if (!$config->get('forge.token')) {
-            $this->info('Looks like we need a Forge token, you can get one here:');
+        $forgeApiUrl = 'https://forge.laravel.com/api/v1';
+        $apiHost = parse_url($forgeApiUrl, PHP_URL_HOST);
+
+        $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
+
+        if (!$config->get($apiConfigKey)) {
+            $this->info('Looks like we need a Forge API token, you can get one here:');
             $this->info('https://forge.laravel.com/user-profile/api');
 
             $token = $this->secret('Forge API Token');
 
-            $config->set('forge.token', $token);
+            $config->set($apiConfigKey, $token);
         }
 
         $dir = rtrim(getcwd(), '/');
 
-        $forgeApiUrl = 'https://forge.laravel.com/api/v1';
-
         Http::macro(
             'forge',
             fn () => Http::baseUrl($forgeApiUrl)
-                ->withToken($config->get('forge.token'))
+                ->withToken($config->get($apiConfigKey))
                 ->acceptJson()
                 ->asJson()
                 ->retry(
