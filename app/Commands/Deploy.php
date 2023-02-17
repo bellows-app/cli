@@ -58,13 +58,18 @@ class Deploy extends Command
 
         $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
 
+        $startingNewLine = true;
+
         if (!$config->get($apiConfigKey)) {
+            $this->newLine();
             $this->info('Looks like we need a Forge API token, you can get one here:');
             $this->info('https://forge.laravel.com/user-profile/api');
 
             $token = $this->secret('Forge API Token');
 
             $config->set($apiConfigKey, $token);
+
+            $startingNewLine = false;
         }
 
         $dir = rtrim(getcwd(), '/');
@@ -93,16 +98,7 @@ class Deploy extends Command
                 )
         );
 
-        $servers = collect(
-            Http::forge()->get('servers')->json()['servers']
-        )->filter(fn ($s) => !$s['revoked'])->values();
-
-        $serverName = $this->choice(
-            'Which server?',
-            $servers->pluck('name')->values()->toArray()
-        );
-
-        $server = $servers->first(fn ($s) => $s['name'] === $serverName);
+        $server = $this->getServer($startingNewLine);
 
         App::instance(ForgeServer::class, ForgeServer::from($server));
 
@@ -169,7 +165,7 @@ class Deploy extends Command
         // TODO: Check if site exists
         $site = $this->withSpinner(
             title: 'Creating Site',
-            task: function () use ($createSiteParams, $forgeApiUrl, $server) {
+            task: function () use ($createSiteParams) {
                 $siteResponse = Http::forgeServer()->post('sites', $createSiteParams)->json();
 
                 $site = $siteResponse['site'];
@@ -275,6 +271,43 @@ class Deploy extends Command
         if ($this->confirm('Open site in Forge?', true)) {
             exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application");
         }
+    }
+
+    protected function getServer(bool $startingNewLine)
+    {
+        $servers = collect(
+            Http::forge()->get('servers')->json()['servers']
+        )->filter(fn ($s) => !$s['revoked'])->values();
+
+        if ($servers->isEmpty()) {
+            if ($startingNewLine) {
+                $this->newLine();
+            }
+
+            $this->error('No servers found!');
+            $this->error('Provision a server on Forge first then come on back: https://forge.laravel.com/servers');
+            $this->newLine();
+            exit;
+        }
+
+        if ($servers->count() === 1) {
+            $server = $servers->first();
+
+            if ($startingNewLine) {
+                $this->newLine();
+            }
+
+            $this->info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
+
+            return $server;
+        }
+
+        $serverName = $this->choice(
+            'Which server?',
+            $servers->pluck('name')->sort()->values()->toArray()
+        );
+
+        return $servers->first(fn ($s) => $s['name'] === $serverName);
     }
 
     protected function getGitInfo(string $dir, string $domain): array
