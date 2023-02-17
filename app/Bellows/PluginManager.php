@@ -45,20 +45,29 @@ class PluginManager
             // Usually I would filter()->filter() but I want to keep the context of what is being asked of the user here
             // So if there is a "Do you want to enable ____?" then just answer questions via the setup method instead of
             // prompting if the plugin should be enabled and then later asking how it should be configured
-            $enabled = $defaultsAreGood && $p->hasADefaultEnabledDecision()
-                ? $p->getDefaultEnabled()->enabled
-                : $p->enabled();
+            if ($defaultsAreGood && $p->hasADefaultEnabledDecision()) {
+                if (!$p->getDefaultEnabled()->enabled) {
+                    return false;
+                }
 
-            if (!$enabled) {
-                return false;
+                return $this->configure($p, true);
             }
 
-            $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
-
-            $this->call('setup', $p)->run();
-
-            return true;
+            return $this->configure($p);
         })->values();
+    }
+
+    protected function configure(Plugin $p, ?bool $isEnabled = null): bool
+    {
+        $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
+
+        $enabled = $isEnabled ?? $p->enabled();
+
+        if ($enabled) {
+            $this->call('setup', $p)->run();
+        }
+
+        return $enabled;
     }
 
     public function createSiteParams(array $params): array

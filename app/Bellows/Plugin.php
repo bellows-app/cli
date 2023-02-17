@@ -15,6 +15,8 @@ abstract class Plugin
 
     public $priority = 0;
 
+    protected Env $localEnv;
+
     public function __construct(
         protected ProjectConfig $projectConfig,
         protected Config $config,
@@ -24,10 +26,10 @@ abstract class Plugin
         protected Npm $npm,
         protected DeployScript $deployScript,
         protected Artisan $artisan,
-        protected Env $env,
         protected ForgeServer $forgeServer,
         protected ?DnsProvider $dnsProvider = null,
     ) {
+        $this->localEnv = new Env(file_get_contents($projectConfig->projectDirectory . '/.env'));
     }
 
     public function setup(): void

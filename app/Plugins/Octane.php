@@ -38,7 +38,7 @@ class Octane extends Plugin
         $this->octaneServer = $this->console->choice('Which server would you like to use for Octane?', [
             'roadrunner',
             'swoole',
-        ], $this->env->get('OCTANE_SERVER') ?? 'swoole');
+        ], $this->localEnv->get('OCTANE_SERVER') ?? 'swoole');
     }
 
     public function createSiteParams(array $params): array

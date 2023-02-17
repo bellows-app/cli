@@ -8,6 +8,7 @@ use App\Bellows\Data\ForgeServer;
 use App\Bellows\Data\ProjectConfig;
 use App\Bellows\Dns\DnsFactory;
 use App\Bellows\Dns\DnsProvider;
+use App\Bellows\Env;
 use App\Bellows\PluginManager;
 use Composer\Semver\Semver;
 use Dotenv\Dotenv;
@@ -34,8 +35,6 @@ class Deploy extends Command
      * @var string
      */
     protected $description = 'Deploy the current repo to a Forge server';
-
-    protected string $siteEnv;
 
     protected $defaultLongProcessMessages = [
         3  => 'One moment...',
@@ -74,6 +73,17 @@ class Deploy extends Command
 
         $dir = rtrim(getcwd(), '/');
 
+        if (!file_exists($dir . '/.env')) {
+            if ($startingNewLine) {
+                $this->newLine();
+            }
+
+            $this->error('No .env file found! Are you in the correct directory?');
+            $this->info('Bellows works best when it has access to an .env file.');
+            $this->newLine();
+            exit;
+        }
+
         Http::macro(
             'forge',
             fn () => Http::baseUrl($forgeApiUrl)
@@ -107,11 +117,11 @@ class Deploy extends Command
             fn () =>  Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}")
         );
 
-        $localEnv = Dotenv::parse(file_get_contents($dir . '/.env'));
+        $localEnv = new Env(file_get_contents($dir . '/.env'));
 
-        $host = parse_url($localEnv['APP_URL'], PHP_URL_HOST);
+        $host = parse_url($localEnv->get('APP_URL'), PHP_URL_HOST);
 
-        $appName      = $this->ask('App Name', $localEnv['APP_NAME']);
+        $appName      = $this->ask('App Name', $localEnv->get('APP_NAME'));
         $domain       = $this->ask('Domain', Str::replace('.test', '.com', $host));
         $isolatedUser = $this->ask(
             'Isolated User',
@@ -214,33 +224,34 @@ class Deploy extends Command
 
         $this->title('Updating Environment Variables');
 
-        $this->siteEnv = Http::forgeSite()->get('env');
+        $siteEnv = new Env(Http::forgeSite()->get('env'));
 
-        ray($this->siteEnv);
+        ray($siteEnv);
 
-        collect(array_merge(
+        $updatedEnvValues = collect(array_merge(
             [
                 'APP_NAME'     => $appName,
                 'APP_URL'      => "http://{$domain}",
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
-        ))->map(
-            fn ($v, $k) => $this->updateEnvKeyValue(
+            App::call([$pluginManager, 'setEnvironmentVariables']),
+        ));
+
+        $this->info('Setting the following environment variables:');
+
+        $updatedEnvValues->each(
+            fn ($v, $k) => $this->info($k)
+        );
+
+        $updatedEnvValues->map(
+            fn ($v, $k) => $siteEnv->update(
                 $k,
                 is_array($v) ? $v[0] : $v,
-                is_array($v)
+                is_array($v),
             )
         );
 
-        $parsedEnv = DotEnv::parse($this->siteEnv);
-
-        $newEnv = App::call([$pluginManager, 'setEnvironmentVariables'], ['parsedEnv' => $parsedEnv]);
-
-        ray($newEnv);
-
-        collect($newEnv)->each(fn ($v, $k) => $this->updateEnvKeyValue($k, $v));
-
-        Http::forgeSite()->put('env', ['content' => $this->siteEnv]);
+        Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]);
 
         $this->title('Updating Deployment Script');
 
@@ -422,50 +433,5 @@ class Deploy extends Command
             successDisplay: fn ($result) => $result['binary_name'] ?? '✗',
             longProcessMessages: $this->defaultLongProcessMessages,
         );
-    }
-
-    // TODO: This probably.... doesn't belong here. Feels funny. Move it at some point.
-    protected function updateEnvKeyValue($key, $value, $quote = false)
-    {
-        $this->info("Updating .env: {$key}");
-
-        if (
-            $quote ||
-            (!Str::startsWith($value, '"')
-                && (Str::contains($value, ['${', ' '])
-                    || Str::contains($key, ['PASSWORD'])))
-        ) {
-            $value = '"' . $value . '"';
-        }
-
-        if (Str::contains($this->siteEnv, "{$key}=")) {
-            $this->siteEnv = preg_replace("/{$key}=.*/", "{$key}={$value}", $this->siteEnv);
-            return $this->siteEnv;
-        }
-
-        $parts = collect(explode('_', $key));
-        $groupingKeys = collect([]);
-
-        if (in_array($parts->first(), ['MIX', 'VITE'])) {
-            $groupingKeys->push($parts->slice(0, 2)->implode('_'));
-            $parts->shift();
-            $groupingKeys->push($parts->first());
-        } else {
-            $groupingKeys->push($parts->first());
-        }
-
-        $match = $groupingKeys->map(
-            fn ($gk) => Str::matchAll("/^{$gk}_[A-Z0-9_]+=.+/m", $this->siteEnv)->last()
-        )->filter()->first();
-
-        if (!$match) {
-            // Not part of any grouping, just tack it onto the end
-            $this->siteEnv .=  PHP_EOL . PHP_EOL . "{$key}={$value}";
-            return $this->siteEnv;
-        }
-
-        $this->siteEnv = Str::replaceFirst($match, "{$match}\n{$key}={$value}", $this->siteEnv);
-
-        return $this->siteEnv;
     }
 }

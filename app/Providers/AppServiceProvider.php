@@ -8,10 +8,6 @@ use App\Mixins\Console as MixinsConsole;
 use Illuminate\Console\Command;
 use Illuminate\Console\Signals;
 use Illuminate\Support\ServiceProvider;
-use Spatie\Async\Pool;
-
-use function Termwind\render;
-use function Termwind\terminal;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,15 +36,6 @@ class AppServiceProvider extends ServiceProvider
                 && !$this->app->runningUnitTests()
                 && extension_loaded('pcntl');
         });
-
-        // https://antofthy.gitlab.io/info/ascii/Spinners.txt
-        // $animation = collect(mb_str_split(" ․‥…"));
-        // $animation = collect(mb_str_split(" ․‥…"));
-        // $animation = collect(mb_str_split("◜◠◝◞◡◟"));
-        // Leap frog
-        // $animation = collect(mb_str_split('⣀⢄⢂⢁⡈⡐⡠'));
-        // $animation = collect(mb_str_split('⣀⡠⠤⠢⠒⠊⠉⠑⠒⠔⠤⢄'));
-        // $animation = collect(mb_str_split('⠈⠘⠨⢈⡈⠌⠊⠉⠘⠐⠰⢐⡐⠔⠒⠑⠨⠰⠠⢠⡠⠤⠢⠡⢈⢐⢠⢀⣀⢄⢂⢁⡈⡐⡠⣀⡀⡄⡂⡁⠌⠔⠤⢄⡄⠠⠆⠅⠊⠒⠢⢂⡂⠆⠂⠃⠉⠑⠡⢁⡁⠅⠃⠁'));
 
         Command::mixin(new MixinsConsole);
     }

@@ -14,7 +14,7 @@ class BugsnagPHP extends Bugsnag
 
     public function setup(): void
     {
-        $this->bugsnagKey = $this->env->get('BUGSNAG_API_KEY');
+        $this->bugsnagKey = $this->localEnv->get('BUGSNAG_API_KEY');
 
         if ($this->bugsnagKey) {
             $this->console->info('Using existing Bugsnag PHP key from .env');
