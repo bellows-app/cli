@@ -123,6 +123,25 @@ class Deploy extends Command
 
         $appName      = $this->ask('App Name', $localEnv->get('APP_NAME'));
         $domain       = $this->ask('Domain', Str::replace('.test', '.com', $host));
+
+        $existingDomain = $this->withSpinner(
+            title: 'Checking for existing domain on server',
+            task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])
+                ->first(fn ($site) => $site['name'] === $domain),
+            successDisplay: fn ($result) => $result ? '✗' : '✓',
+        );
+
+        if ($existingDomain) {
+            $this->newLine();
+            $this->error('Domain already exists on server!');
+
+            if ($this->confirm('View existing site in Forge?', true)) {
+                exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
+            }
+
+            exit;
+        }
+
         $isolatedUser = $this->ask(
             'Isolated User',
             Str::of($host)->replace('.test', '')->replace('.', '_')->toString()
@@ -172,7 +191,6 @@ class Deploy extends Command
             ...App::call([$pluginManager, 'createSiteParams'], ['params' => $baseParams])
         );
 
-        // TODO: Check if site exists
         $site = $this->withSpinner(
             title: 'Creating Site',
             task: function () use ($createSiteParams) {
