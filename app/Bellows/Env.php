@@ -16,13 +16,20 @@ class Env
         $this->parsed = Dotenv::parse($this->raw);
     }
 
-    public function get(string $key)
+    public function get(string $key): ?string
     {
         return $this->parsed[$key] ?? null;
     }
 
+    public function all(): array
+    {
+        return $this->parsed;
+    }
+
     public function update($key, $value, $quote = false): string
     {
+        $this->parsed[$key] = (string) $value;
+
         if ($this->shouldQuote($value, $key, $quote)) {
             $value = '"' . $value . '"';
         }

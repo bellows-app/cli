@@ -269,7 +269,34 @@ class Deploy extends Command
             )
         );
 
-        Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]);
+        $inLocalButNotInRemote = collect(array_keys($localEnv->all()))->diff(array_keys($siteEnv->all()))->values();
+
+        if ($inLocalButNotInRemote->isNotEmpty()) {
+            $this->newLine();
+            $this->info('The following environment variables are in your local .env file but not in your remote .env file:');
+            $this->newLine();
+
+            $inLocalButNotInRemote->each(
+                fn ($k) => $this->comment($k)
+            );
+
+            if ($this->confirm('Would you like to add any of them? They will be added with their existing values.')) {
+                $toAdd = $this->choice(
+                    question: 'Which environment variables would you like to add?',
+                    choices: $inLocalButNotInRemote->toArray(),
+                    multiple: true,
+                );
+
+                collect($toAdd)->each(
+                    fn ($k) => $siteEnv->update($k, $localEnv->get($k))
+                );
+            }
+        }
+
+        $this->withSpinner(
+            title: 'Updating Environment Variables',
+            task: fn () => Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]),
+        );
 
         $this->title('Updating Deployment Script');
 
