@@ -11,7 +11,6 @@ use App\Bellows\Dns\DnsProvider;
 use App\Bellows\Env;
 use App\Bellows\PluginManager;
 use Composer\Semver\Semver;
-use Dotenv\Dotenv;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
@@ -20,21 +19,21 @@ use Illuminate\Support\Facades\Http;
 use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
 
-class Deploy extends Command
+class Launch extends Command
 {
     /**
      * The signature of the command.
      *
      * @var string
      */
-    protected $signature = 'deploy';
+    protected $signature = 'launch';
 
     /**
      * The description of the command.
      *
      * @var string
      */
-    protected $description = 'Deploy the current repo to a Forge server';
+    protected $description = 'Create the current repo as a site on a Forge server';
 
     protected $defaultLongProcessMessages = [
         3  => 'One moment...',
