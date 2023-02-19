@@ -127,13 +127,10 @@ class Launch extends Command
             title: 'Checking for existing domain on server',
             task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])
                 ->first(fn ($site) => $site['name'] === $domain),
-            successDisplay: fn ($result) => $result ? '✗' : '✓',
+            successDisplay: fn ($result) => $result ? '✗ Domain already exists on server!' : '✓ No site found, on we go!',
         );
 
         if ($existingDomain) {
-            $this->newLine();
-            $this->error('Domain already exists on server!');
-
             if ($this->confirm('View existing site in Forge?', true)) {
                 exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
             }
