@@ -38,10 +38,18 @@ class Cloudflare extends DnsProvider
         $token = $this->console->secret('Your Cloudflare API token');
         $name = $this->console->ask('Name');
 
-        // TODO: Do a quick test call to verify domain and that it has the correct scope
-        // https://api.cloudflare.com/client/v4/user/tokens/verify
-
         $this->setConfig($name, compact('token'));
+    }
+
+    protected function testApiCall(): bool
+    {
+        try {
+            // TODO: Also make sure we have the right scope (DNS)?
+            Http::dnsProvider()->get('user/tokens/verify')->throw();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     protected function getClient(array $credentials): PendingRequest

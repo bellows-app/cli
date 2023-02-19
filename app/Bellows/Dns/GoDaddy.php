@@ -36,6 +36,16 @@ class GoDaddy extends DnsProvider
         $this->setConfig($name, compact('key', 'secret'));
     }
 
+    protected function testApiCall(): bool
+    {
+        try {
+            Http::dnsProvider()->get('domains')->throw()->json();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     protected function getClient(array $credentials): PendingRequest
     {
         return Http::baseUrl($this->apiBaseUrl)

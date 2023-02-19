@@ -39,6 +39,8 @@ abstract class DnsProvider
 
     abstract protected function getClient(array $credentials): PendingRequest;
 
+    abstract protected function testApiCall(): bool;
+
     public function getName()
     {
         return class_basename($this);
@@ -51,6 +53,12 @@ abstract class DnsProvider
         if (!$config) {
             $this->addNewCredentials();
             $this->setCredentials();
+
+            if (!$this->testApiCall()) {
+                $this->console->line('Something went wrong, please try again.');
+                $this->setCredentials();
+            }
+
             return;
         }
 
@@ -65,6 +73,12 @@ abstract class DnsProvider
 
             $this->addNewCredentials();
             $this->setCredentials();
+
+            if (!$this->testApiCall()) {
+                $this->console->line('Something went wrong, please try again.');
+                $this->setCredentials();
+            }
+
             return;
         }
 
