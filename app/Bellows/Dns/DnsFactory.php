@@ -20,6 +20,7 @@ class DnsFactory
         $result = collect([
             DigitalOcean::class,
             GoDaddy::class,
+            Cloudflare::class,
         ])->first(fn ($provider) => $provider::matchByNameserver($nameserver));
 
         return $result ? app($result, ['domain' => $domain]) : null;

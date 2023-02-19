@@ -5,16 +5,13 @@ namespace App\Bellows\Dns;
 use App\Bellows\Enums\DnsRecordType;
 use App\Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
-
-// https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-list-dns-records
-// ipghost.app
 
 class Cloudflare extends DnsProvider
 {
-    protected string $apiBaseUrl = 'https://api.digitalocean.com/v2/';
+    protected string $apiBaseUrl = 'https://api.cloudflare.com/client/v4/';
+
+    protected string $zoneId;
 
     public static function getNameServerDomain(): string
     {
@@ -24,8 +21,11 @@ class Cloudflare extends DnsProvider
     protected function accountHasDomain(array $credentials): bool
     {
         try {
-            $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
-            return true;
+            $result = $this->getClient($credentials)->get("zones", [
+                'name' => $this->baseDomain,
+            ])->throw()->json();
+
+            return count($result['result']) > 0;
         } catch (\Exception $e) {
             return false;
         }
@@ -33,10 +33,13 @@ class Cloudflare extends DnsProvider
 
     protected function addNewCredentials(): void
     {
-        $this->console->info('https://cloud.digitalocean.com/account/api/tokens');
+        $this->console->info('https://dash.cloudflare.com/profile/api-tokens');
 
-        $token = $this->console->secret('Your DigitalOcean API token');
-        $name = $this->console->ask('Name', $this->getDefaultNewAccountName($token));
+        $token = $this->console->secret('Your Cloudflare API token');
+        $name = $this->console->ask('Name');
+
+        // TODO: Do a quick test call to verify domain and that it has the correct scope
+        // https://api.cloudflare.com/client/v4/user/tokens/verify
 
         $this->setConfig($name, compact('token'));
     }
@@ -49,24 +52,9 @@ class Cloudflare extends DnsProvider
             ->asJson();
     }
 
-    protected function getDefaultNewAccountName(string $token): ?string
-    {
-        $result = $this->getClient(compact('token'))->get('account')->json();
-
-        $teamName = Arr::get($result, 'account.team.name');
-
-        return $teamName === 'My Team' ? null : Str::slug($teamName);
-    }
-
     public function addCNAMERecord(string $name, string $value, int $ttl): bool
     {
-        return $this->addRecord(
-            DnsRecordType::CNAME,
-            $name,
-            // Requires a trailing dot
-            Str::of($value)->trim('.')->wrap('', '.')->toString(),
-            $ttl,
-        );
+        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
     }
 
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
@@ -75,11 +63,11 @@ class Cloudflare extends DnsProvider
             if ($currentRecord = $this->getFullRecord($type, $name)) {
                 $this->console->info("Updating {$type->value} record for {$name} to {$value}");
 
-                Http::dnsProvider()->put("domains/{$this->baseDomain}/records/{$currentRecord['id']}", [
-                    'type' => $type->value,
-                    'name' => $name,
-                    'data' => $value,
-                    'ttl'  => $ttl,
+                Http::dnsProvider()->put("zones/{$this->getZoneId()}/dns_records/{$currentRecord['id']}", [
+                    'type'    => $type->value,
+                    'name'    => $name,
+                    'content' => $value,
+                    'ttl'     => $ttl,
                 ]);
 
                 return true;
@@ -87,11 +75,11 @@ class Cloudflare extends DnsProvider
 
             $this->console->info("Adding {$type->value} record for {$name} to {$value}");
 
-            Http::dnsProvider()->post("domains/{$this->baseDomain}/records", [
-                'type' => $type->value,
-                'name' => $name,
-                'data' => $value,
-                'ttl'  => $ttl,
+            Http::dnsProvider()->post("zones/{$this->getZoneId()}/dns_records", [
+                'type'    => $type->value,
+                'name'    => $name,
+                'content' => $value,
+                'ttl'     => $ttl,
             ]);
 
             return true;
@@ -105,16 +93,31 @@ class Cloudflare extends DnsProvider
     {
         $host = Domain::getFullDomain($name === '@' ? '' : $name, $this->baseDomain);
 
-        $records = Http::dnsProvider()->get("domains/{$this->baseDomain}/records", [
+        $records = Http::dnsProvider()->get("zones/{$this->getZoneId()}/dns_records", [
             'type' => $type->value,
             'name' => $host,
         ])->json();
 
-        return $records['domain_records'][0] ?? null;
+        return $records['result'][0] ?? null;
     }
 
     protected function getRecord(DnsRecordType $type, string $name): ?string
     {
-        return $this->getFullRecord($type, $name)['data'] ?? null;
+        return $this->getFullRecord($type, $name) ?? null;
+    }
+
+    protected function getZoneId()
+    {
+        if (isset($this->zoneId)) {
+            return $this->zoneId;
+        }
+
+        $zone = Http::dnsProvider()->get("zones", [
+            'name' => $this->baseDomain,
+        ])->json();
+
+        $this->zoneId = $zone['result'][0]['id'];
+
+        return $this->zoneId;
     }
 }

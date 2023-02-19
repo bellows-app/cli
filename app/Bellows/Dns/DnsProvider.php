@@ -31,8 +31,6 @@ abstract class DnsProvider
 
     abstract public static function getNameServerDomain(): string;
 
-    abstract public function addCNAMERecord(string $name, string $value, int $ttl): bool;
-
     abstract protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool;
 
     abstract protected function addNewCredentials(): void;
@@ -98,6 +96,11 @@ abstract class DnsProvider
     public function addTXTRecord(string $name, string $value, int $ttl): bool
     {
         return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
+    }
+
+    public function addCNAMERecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
     }
 
     public function getARecord(string $name): ?string
