@@ -28,20 +28,19 @@ class DigitalOcean extends DnsProvider
         }
     }
 
-    protected function addNewCredentials(): void
+    protected function addNewCredentials(): array
     {
         $this->console->info('https://cloud.digitalocean.com/account/api/tokens');
 
         $token = $this->console->secret('Your DigitalOcean API token');
-        $name = $this->console->ask('Name', $this->getDefaultNewAccountName($token));
 
-        $this->setConfig($name, compact('token'));
+        return compact('token');
     }
 
-    protected function testApiCall(): bool
+    protected function testApiCall(array $credentials): bool
     {
         try {
-            Http::dnsProvider()->get('account')->throw();
+            $this->getClient($credentials)->get('account')->throw();
             return true;
         } catch (\Exception $e) {
             return false;
@@ -56,9 +55,9 @@ class DigitalOcean extends DnsProvider
             ->asJson();
     }
 
-    protected function getDefaultNewAccountName(string $token): ?string
+    protected function getDefaultNewAccountName(array $credentials): ?string
     {
-        $result = $this->getClient(compact('token'))->get('account')->json();
+        $result = $this->getClient($credentials)->get('account')->json();
 
         $teamName = Arr::get($result, 'account.team.name');
 

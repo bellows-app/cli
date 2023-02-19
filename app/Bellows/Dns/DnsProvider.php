@@ -33,13 +33,13 @@ abstract class DnsProvider
 
     abstract protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool;
 
-    abstract protected function addNewCredentials(): void;
+    abstract protected function addNewCredentials(): array;
 
     abstract protected function accountHasDomain(array $credentials): bool;
 
     abstract protected function getClient(array $credentials): PendingRequest;
 
-    abstract protected function testApiCall(): bool;
+    abstract protected function testApiCall(array $credentials): bool;
 
     public function getName()
     {
@@ -51,14 +51,7 @@ abstract class DnsProvider
         $config = $this->getApiConfig($this->apiHost);
 
         if (!$config) {
-            $this->addNewCredentials();
-            $this->setCredentials();
-
-            if (!$this->testApiCall()) {
-                $this->console->line('Something went wrong, please try again.');
-                $this->setCredentials();
-            }
-
+            $this->setUpNewCredentials();
             return;
         }
 
@@ -71,14 +64,7 @@ abstract class DnsProvider
                 return;
             }
 
-            $this->addNewCredentials();
-            $this->setCredentials();
-
-            if (!$this->testApiCall()) {
-                $this->console->line('Something went wrong, please try again.');
-                $this->setCredentials();
-            }
-
+            $this->setUpNewCredentials();
             return;
         }
 
@@ -90,6 +76,29 @@ abstract class DnsProvider
     public static function matchByNameserver(string $nameserver): bool
     {
         return Str::contains($nameserver, static::getNameServerDomain());
+    }
+
+    protected function setUpNewCredentials()
+    {
+        $credentials = $this->addNewCredentials();
+
+        if ($this->testApiCall($credentials)) {
+            $name = $this->console->ask(
+                'Account Name',
+                $this->getDefaultNewAccountName($credentials)
+            );
+
+            $this->setConfig($name, $credentials);
+        } else {
+            $this->console->warn('It seems that your credentials are invalid, try again.');
+        }
+
+        $this->setCredentials();
+    }
+
+    protected function getDefaultNewAccountName(array $credentials): ?string
+    {
+        return null;
     }
 
     protected function setConfig(string $name, array $payload)

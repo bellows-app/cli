@@ -26,20 +26,19 @@ class GoDaddy extends DnsProvider
         }
     }
 
-    protected function addNewCredentials(): void
+    protected function addNewCredentials(): array
     {
         $this->console->info('https://developer.godaddy.com/keys');
         $key = $this->console->secret('Your GoDaddy key');
         $secret = $this->console->secret('Your GoDaddy secret');
-        $name = $this->console->ask('Name');
 
-        $this->setConfig($name, compact('key', 'secret'));
+        return compact('key', 'secret');
     }
 
-    protected function testApiCall(): bool
+    protected function testApiCall(array $credentials): bool
     {
         try {
-            Http::dnsProvider()->get('domains')->throw()->json();
+            $this->getClient($credentials)->get('domains')->throw()->json();
             return true;
         } catch (\Exception $e) {
             return false;

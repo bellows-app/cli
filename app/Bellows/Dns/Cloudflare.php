@@ -31,21 +31,20 @@ class Cloudflare extends DnsProvider
         }
     }
 
-    protected function addNewCredentials(): void
+    protected function addNewCredentials(): array
     {
         $this->console->info('https://dash.cloudflare.com/profile/api-tokens');
 
         $token = $this->console->secret('Your Cloudflare API token');
-        $name = $this->console->ask('Name');
 
-        $this->setConfig($name, compact('token'));
+        return compact('token');
     }
 
-    protected function testApiCall(): bool
+    protected function testApiCall(array $credentials): bool
     {
         try {
             // TODO: Also make sure we have the right scope (DNS)?
-            Http::dnsProvider()->get('user/tokens/verify')->throw();
+            $this->getClient($credentials)->get('user/tokens/verify')->throw();
             return true;
         } catch (\Exception $e) {
             return false;
