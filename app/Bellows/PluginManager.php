@@ -2,7 +2,6 @@
 
 namespace App\Bellows;
 
-use App\Bellows\Data\Daemon;
 use App\Bellows\Data\Job;
 use App\Bellows\Data\ProjectConfig;
 use App\Bellows\Data\Worker;
@@ -60,6 +59,7 @@ class PluginManager
     protected function configure(Plugin $p, ?bool $isEnabled = null): bool
     {
         $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
+        $this->console->newLine();
 
         $enabled = $isEnabled ?? $p->enabled();
 
@@ -93,56 +93,28 @@ class PluginManager
         return $this->call('updateDeployScript')->reduce($deployScript);
     }
 
-    public function daemons(ProjectConfig $config)
+    /**
+     * @return \Illuminate\Support\Collection<\App\Bellows\Data\Daemon>
+     */
+    public function daemons(): Collection
     {
-        $this->call('daemons')
-            ->run()
-            ->flatMap(fn ($r) => $r)
-            ->ray()
-            ->each(
-                fn (Daemon $daemon) => Http::forgeServer()->post(
-                    'daemons',
-                    [
-                        'command'   => $daemon->command,
-                        'user'      => $daemon->user ?: $config->isolatedUser,
-                        'directory' => $daemon->directory ?: "/home/{$config->isolatedUser}/{$config->domain}",
-                    ],
-                )
-            );
+        return $this->call('daemons')->run()->flatMap(fn ($r) => $r)->filter()->values();
     }
 
-    public function workers(ProjectConfig $config)
+    /**
+     * @return \Illuminate\Support\Collection<\App\Bellows\Data\Worker>
+     */
+    public function workers(): Collection
     {
-        $this->call('workers')
-            ->run()
-            ->flatMap(fn ($r) => $r)
-            ->ray()
-            ->each(
-                fn (Worker $worker) => ray(Http::forgeSite()->post(
-                    'workers',
-                    array_merge(
-                        ['php_version'  => $config->phpVersion],
-                        $worker->toArray()
-                    ),
-                )->json())
-            );
+        return $this->call('workers')->run()->flatMap(fn ($r) => $r)->filter()->values();
     }
 
-    public function jobs(ProjectConfig $config)
+    /**
+     * @return \Illuminate\Support\Collection<\App\Bellows\Data\Job>
+     */
+    public function jobs(): Collection
     {
-        $this->call('jobs')
-            ->run()
-            ->flatMap(fn ($r) => $r)
-            ->ray()
-            ->each(
-                fn (Job $job) => Http::forgeServer()->post(
-                    'jobs',
-                    array_merge(
-                        ['user' => $config->isolatedUser],
-                        $job->toArray()
-                    ),
-                )
-            );
+        return $this->call('jobs')->run()->flatMap(fn ($r) => $r)->filter()->values();
     }
 
     public function wrapUp()

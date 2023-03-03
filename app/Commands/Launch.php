@@ -4,8 +4,11 @@ namespace App\Commands;
 
 use App\Bellows\Config;
 use App\Bellows\Console;
+use App\Bellows\Data\Daemon;
 use App\Bellows\Data\ForgeServer;
+use App\Bellows\Data\Job;
 use App\Bellows\Data\ProjectConfig;
+use App\Bellows\Data\Worker;
 use App\Bellows\Dns\DnsFactory;
 use App\Bellows\Dns\DnsProvider;
 use App\Bellows\Env;
@@ -16,6 +19,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
 
@@ -118,6 +122,8 @@ class Launch extends Command
         $appName      = $this->ask('App Name', $localEnv->get('APP_NAME'));
         $domain       = $this->ask('Domain', Str::replace('.test', '.com', $host));
 
+        $this->newLine();
+
         $existingDomain = $this->withSpinner(
             title: 'Checking for existing domain on server',
             task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])
@@ -127,7 +133,7 @@ class Launch extends Command
 
         if ($existingDomain) {
             if ($this->confirm('View existing site in Forge?', true)) {
-                exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
+                Process::run("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
             }
 
             exit;
@@ -149,11 +155,13 @@ class Launch extends Command
             $dnsProvider->setCredentials();
         }
 
+        $this->newLine();
+
         App::instance(DnsProvider::class, $dnsProvider);
 
         [$phpVersion, $phpVersionBinary] = $this->determinePhpVersion($dir);
 
-        App::instance(ProjectConfig::class, new ProjectConfig(
+        $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
@@ -162,11 +170,15 @@ class Launch extends Command
             projectDirectory: $dir,
             domain: $domain,
             appName: $appName,
-        ));
+        );
 
-        $this->info('Loading plugins...');
+        App::instance(ProjectConfig::class, $projectConfig);
 
-        App::call([$pluginManager, 'setActive']);
+        $this->step('Plugins');
+
+        $pluginManager->setActive();
+
+        $this->step('Site');
 
         $baseParams = [
             'domain'       => $domain,
@@ -179,11 +191,11 @@ class Launch extends Command
 
         $createSiteParams = array_merge(
             $baseParams,
-            ...App::call([$pluginManager, 'createSiteParams'], ['params' => $baseParams])
+            ...$pluginManager->createSiteParams($baseParams),
         );
 
         $site = $this->withSpinner(
-            title: 'Creating Site',
+            title: 'Creating',
             task: function () use ($createSiteParams) {
                 $siteResponse = Http::forgeServer()->post('sites', $createSiteParams)->json();
 
@@ -214,11 +226,13 @@ class Launch extends Command
 
         $installRepoParams = array_merge(
             $baseRepoParams,
-            ...App::call([$pluginManager, 'installRepoParams'], ['baseParams' => $baseRepoParams])
+            ...$pluginManager->installRepoParams($baseRepoParams),
         );
 
+        $this->step('Repository');
+
         $this->withSpinner(
-            title: 'Installing Repository',
+            title: 'Installing',
             task: function () use ($installRepoParams, $site) {
                 Http::forgeSite()->post('git', $installRepoParams);
 
@@ -231,11 +245,9 @@ class Launch extends Command
             longProcessMessages: $this->defaultLongProcessMessages,
         );
 
-        $this->title('Updating Environment Variables');
+        $this->step('Environment Variables');
 
         $siteEnv = new Env(Http::forgeSite()->get('env'));
-
-        ray($siteEnv);
 
         $updatedEnvValues = collect(array_merge(
             [
@@ -243,14 +255,8 @@ class Launch extends Command
                 'APP_URL'      => "http://{$domain}",
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
-            App::call([$pluginManager, 'setEnvironmentVariables']),
+            $pluginManager->setEnvironmentVariables(),
         ));
-
-        $this->info('Setting the following environment variables:');
-
-        $updatedEnvValues->each(
-            fn ($v, $k) => $this->info($k)
-        );
 
         $updatedEnvValues->map(
             fn ($v, $k) => $siteEnv->update(
@@ -285,39 +291,137 @@ class Launch extends Command
         }
 
         $this->withSpinner(
-            title: 'Updating Environment Variables',
+            title: 'Updating',
             task: fn () => Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]),
         );
 
-        $this->title('Updating Deployment Script');
+        $this->step('Deployment Script');
 
         $deployScript = (string) Http::forgeSite()->get('deployment/script');
-        $deployScript = App::call([$pluginManager, 'updateDeployScript'], ['deployScript' => $deployScript]);
+        $deployScript = $pluginManager->updateDeployScript($deployScript);
 
-        Http::forgeSite()->put('deployment/script', ['content' => $deployScript]);
-
-        $this->title('Creating Deamons');
-        App::call([$pluginManager, 'daemons']);
-
-        $this->title('Creating Workers');
-        App::call([$pluginManager, 'workers']);
-
-        $this->title('Creating Scheduled Jobs');
-        App::call([$pluginManager, 'jobs']);
-
-        $this->title('Wrapping Up');
-        App::call([$pluginManager, 'wrapUp']);
-
-        $this->info('Site created successfully!');
-        $this->info(
-            "https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application"
+        $this->withSpinner(
+            title: 'Updating',
+            task: fn () => Http::forgeSite()->put('deployment/script', ['content' => $deployScript]),
+            longProcessMessages: $this->defaultLongProcessMessages,
         );
+
+        $this->step('Deamons');
+
+        $daemons = $pluginManager->daemons()->map(fn (Daemon $daemon) => [
+            'command'   => $daemon->command,
+            'user'      => $daemon->user ?: $projectConfig->isolatedUser,
+            'directory' => $daemon->directory
+                ?: "/home/{$projectConfig->isolatedUser}/{$projectConfig->domain}",
+        ]);
+
+        $this->withSpinner(
+            title: 'Creating',
+            task: fn () => $daemons->each(
+                fn (array $params) => Http::forgeServer()->post(
+                    'daemons',
+                    $params,
+                )
+            ),
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
+
+        $this->step('Workers');
+
+        $workers = $pluginManager->workers()->map(fn (Worker $worker) => array_merge(
+            ['php_version'  => $projectConfig->phpVersion],
+            $worker->toArray()
+        ));
+
+        $this->withSpinner(
+            title: 'Creating',
+            task: fn () => $workers->each(
+                fn (array $params) => Http::forgeSite()->post(
+                    'workers',
+                    $params,
+                )->json()
+            ),
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
+
+        $this->step('Scheduled Jobs');
+
+        $jobs = $pluginManager->jobs()->map(
+            fn (Job $job) => array_merge(
+                ['user' => $projectConfig->isolatedUser],
+                $job->toArray()
+            )
+        );
+
+        $this->withSpinner(
+            title: 'Creating',
+            task: fn () => $jobs->each(
+                fn (array $params) => Http::forgeServer()->post(
+                    'jobs',
+                    $params,
+                )->json()
+            ),
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
+
+        $this->step('Wrapping Up');
+
+        $this->withSpinner(
+            title: 'Tying it up with a ribbon',
+            // Cooling the rockets?
+            task: fn () => $pluginManager->wrapUp(),
+            longProcessMessages: $this->defaultLongProcessMessages,
+        );
+
+        $this->step('Summary');
+
+        $this->table(
+            ['Task', 'Value'],
+            collect([
+                ['Environment Variables', $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-'],
+                ['Deployment Script', (string) Http::forgeSite()->get('deployment/script')],
+                ['Daemons', $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-'],
+                ['Workers', $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-'],
+                ['Scheduled Jobs', $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-'],
+            ])->map(fn ($row) => [
+                "<comment>{$row[0]}</comment>",
+                $row[1] . PHP_EOL,
+            ])->toArray(),
+        );
+
+        $this->newLine();
+        $this->info('🎉 Site created successfully!');
+        $this->newLine();
+
+        $siteUrl = "https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application";
+
+        $this->info($siteUrl);
 
         $this->newLine();
 
         if ($this->confirm('Open site in Forge?', true)) {
-            exec("open https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application");
+            Process::run("open {$siteUrl}");
         }
+    }
+
+    protected function step($title)
+    {
+        $padding = 2;
+        $length = max(40, strlen($title) + ($padding * 2));
+
+        $this->newLine();
+        $this->info('+' . str_repeat('-', $length) . '+');
+        $this->info('|' . str_repeat(' ', $length) . '|');
+        $this->info(
+            '|'
+                . str_repeat(' ', $padding)
+                . '<comment>' . $title . '</comment>'
+                . str_repeat(' ', $length - strlen($title) - $padding)
+                . '|'
+        );
+        $this->info('|' . str_repeat(' ', $length) . '|');
+        $this->info('+' . str_repeat('-', $length) . '+');
+        $this->newLine();
     }
 
     protected function getServer()
@@ -360,9 +464,10 @@ class Launch extends Command
             ];
         }
 
-        $repoUrl = exec('git config --get remote.origin.url');
+        $repoUrlResult = Process::run('git config --get remote.origin.url');
+        $branchesResult = Process::run('git branch -a');
 
-        $branches = collect(explode(PHP_EOL, shell_exec('git branch -a')))->map(fn ($b) => trim($b))->filter();
+        $branches = collect(explode(PHP_EOL, $branchesResult->output()))->map(fn ($b) => trim($b))->filter();
 
         $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
 
@@ -372,7 +477,7 @@ class Launch extends Command
             fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
         )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
 
-        $defaultRepo = collect(explode(':', $repoUrl))->map(
+        $defaultRepo = collect(explode(':', trim($repoUrlResult->output())))->map(
             fn ($p) => Str::replace('.git', '', $p)
         )->last();
 
@@ -382,7 +487,7 @@ class Launch extends Command
         if ($repo === $defaultRepo) {
             // Only offer up possible branches if this is the repo we thought it was
             $repoBranch = $this->anticipate(
-                'Repo Branch',
+                'Repository Branch',
                 $branchChoices,
                 Str::contains($domain, 'dev.') ? $devBranch : $mainBranch
             );
