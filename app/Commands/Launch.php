@@ -48,6 +48,10 @@ class Launch extends Command
      */
     public function handle(Config $config, Console $console, PluginManager $pluginManager)
     {
+        $this->newLine();
+        $this->info('🚀 Launch time! Let\'s do this.');
+        $this->newLine();
+
         $console->setInput($this->input);
         $console->setOutput($this->output);
 
@@ -56,27 +60,18 @@ class Launch extends Command
 
         $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
 
-        $startingNewLine = true;
-
         if (!$config->get($apiConfigKey)) {
-            $this->newLine();
             $this->info('Looks like we need a Forge API token, you can get one here:');
             $this->info('https://forge.laravel.com/user-profile/api');
 
             $token = $this->secret('Forge API Token');
 
             $config->set($apiConfigKey, $token);
-
-            $startingNewLine = false;
         }
 
         $dir = rtrim(getcwd(), '/');
 
         if (!file_exists($dir . '/.env')) {
-            if ($startingNewLine) {
-                $this->newLine();
-            }
-
             $this->error('No .env file found! Are you in the correct directory?');
             $this->info('Bellows works best when it has access to an .env file.');
             $this->newLine();
@@ -107,7 +102,7 @@ class Launch extends Command
                 )
         );
 
-        $server = $this->getServer($startingNewLine);
+        $server = $this->getServer();
 
         App::instance(ForgeServer::class, ForgeServer::from($server));
 
@@ -325,17 +320,13 @@ class Launch extends Command
         }
     }
 
-    protected function getServer(bool $startingNewLine)
+    protected function getServer()
     {
         $servers = collect(
             Http::forge()->get('servers')->json()['servers']
         )->filter(fn ($s) => !$s['revoked'])->values();
 
         if ($servers->isEmpty()) {
-            if ($startingNewLine) {
-                $this->newLine();
-            }
-
             $this->error('No servers found!');
             $this->error('Provision a server on Forge first then come on back: https://forge.laravel.com/servers');
             $this->newLine();
@@ -345,17 +336,13 @@ class Launch extends Command
         if ($servers->count() === 1) {
             $server = $servers->first();
 
-            if ($startingNewLine) {
-                $this->newLine();
-            }
-
             $this->info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
 
             return $server;
         }
 
         $serverName = $this->choice(
-            'Which server?',
+            'Which server would you like to use?',
             $servers->pluck('name')->sort()->values()->toArray()
         );
 
