@@ -119,8 +119,8 @@ class Launch extends Command
 
         $host = parse_url($localEnv->get('APP_URL'), PHP_URL_HOST);
 
-        $appName      = $this->ask('App Name', $localEnv->get('APP_NAME'));
-        $domain       = $this->ask('Domain', Str::replace('.test', '.com', $host));
+        $appName = $this->ask('App Name', $localEnv->get('APP_NAME'));
+        $domain  = $this->ask('Domain', Str::replace('.test', '.com', $host));
 
         $this->newLine();
 
@@ -295,7 +295,7 @@ class Launch extends Command
             task: fn () => Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]),
         );
 
-        $this->step('Deployment Script');
+        $this->step('Deploy Script');
 
         $deployScript = (string) Http::forgeSite()->get('deployment/script');
         $deployScript = $pluginManager->updateDeployScript($deployScript);
@@ -379,7 +379,7 @@ class Launch extends Command
             ['Task', 'Value'],
             collect([
                 ['Environment Variables', $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-'],
-                ['Deployment Script', (string) Http::forgeSite()->get('deployment/script')],
+                ['Deploy Script', (string) Http::forgeSite()->get('deployment/script')],
                 ['Daemons', $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-'],
                 ['Workers', $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-'],
                 ['Scheduled Jobs', $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-'],
@@ -464,10 +464,16 @@ class Launch extends Command
             ];
         }
 
-        $repoUrlResult = Process::run('git config --get remote.origin.url');
-        $branchesResult = Process::run('git branch -a');
+        $repoUrlResult = trim(
+            Process::run('git config --get remote.origin.url')->output()
+        );
 
-        $branches = collect(explode(PHP_EOL, $branchesResult->output()))->map(fn ($b) => trim($b))->filter();
+        $branchesResult = Process::run('git branch -a')->output();
+
+        $branches = collect(explode(PHP_EOL, $branchesResult))
+            ->map(fn ($b) => trim($b))
+            ->filter()
+            ->values();
 
         $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
 
@@ -477,12 +483,11 @@ class Launch extends Command
             fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
         )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
 
-        $defaultRepo = collect(explode(':', trim($repoUrlResult->output())))->map(
+        $defaultRepo = collect(explode(':', $repoUrlResult))->map(
             fn ($p) => Str::replace('.git', '', $p)
         )->last();
 
-
-        $repo = $this->ask('Repo', $defaultRepo);
+        $repo = $this->ask('Repository', $defaultRepo);
 
         if ($repo === $defaultRepo) {
             // Only offer up possible branches if this is the repo we thought it was

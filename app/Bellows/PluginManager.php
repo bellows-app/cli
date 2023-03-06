@@ -2,28 +2,24 @@
 
 namespace App\Bellows;
 
-use App\Bellows\Data\Job;
-use App\Bellows\Data\ProjectConfig;
-use App\Bellows\Data\Worker;
 use HaydenPierce\ClassFinder\ClassFinder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 
 class PluginManager
 {
+    protected Collection $activePlugins;
+
     public function __construct(
         protected Console $console,
-        protected Collection $activePlugins,
+        protected $namespaces = [
+            'App\Plugins',
+        ],
     ) {
     }
 
     public function setActive()
     {
-        $plugins = collect(ClassFinder::getClassesInNamespace('App\Plugins'))
-            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
-            ->values()
-            ->map(fn (string $plugin) => app($plugin))
-            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
+        $plugins = $this->getAllPlugins();
 
         $autoDecision = $plugins->filter(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision())->sortByDesc(
             fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled
@@ -54,6 +50,16 @@ class PluginManager
 
             return $this->configure($p);
         })->values();
+    }
+
+    protected function getAllPlugins(): Collection
+    {
+        return collect($this->namespaces)
+            ->flatMap(fn (string $namespace) => ClassFinder::getClassesInNamespace($namespace))
+            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
+            ->values()
+            ->map(fn (string $plugin) => app($plugin))
+            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
     }
 
     protected function configure(Plugin $p, ?bool $isEnabled = null): bool
