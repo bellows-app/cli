@@ -2,12 +2,10 @@
 
 namespace App\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
 use App\Bellows\Data\AddApiCredentialsPrompt;
 use App\Bellows\Plugin;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class DigitalOceanDatabase extends Plugin
@@ -53,21 +51,6 @@ class DigitalOceanDatabase extends Plugin
             return;
         }
 
-        config()->set('database.connections.' . $db['name'], [
-            'driver'    => 'mysql',
-            'host'      => $db['connection']['host'],
-            'port'      => $db['connection']['port'],
-            'database'  => $this->databaseName,
-            'username'  => $db['connection']['user'],
-            'password'  => $db['connection']['password'],
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
-            'strict'    => false
-        ]);
-
-        // $this->fixUserPermissions($db);
-
         $this->host = $db['private_connection']['host'];
         $this->port = $db['private_connection']['port'];
     }
@@ -84,24 +67,6 @@ class DigitalOceanDatabase extends Plugin
         $teamName = Arr::get($result, 'account.team.name');
 
         return $teamName === 'My Team' ? null : Str::slug($teamName);
-    }
-
-    protected function fixUserPermissions($db)
-    {
-        // TODO: Move this to its own plugin
-        $sqlUserStatements = collect([
-            "REVOKE SELECT, INSERT, UPDATE, DELETE, REFERENCES, CREATE, DROP, ALTER, INDEX, TRIGGER, REPLICATION CLIENT, REPLICATION SLAVE, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, RELOAD, PROCESS, CREATE TEMPORARY TABLES, LOCK TABLES, SHOW DATABASES, CREATE USER, GRANT OPTION, EVENT ON *.* FROM '{$this->databaseUser}'@'%';",
-
-            "GRANT LOCK TABLES, SELECT, ALTER ROUTINE, SHOW VIEW, EVENT, DELETE, EXECUTE, UPDATE, INDEX, INSERT, CREATE, REFERENCES, ALTER, DROP, CREATE VIEW, GRANT OPTION, TRIGGER, CREATE ROUTINE, CREATE TEMPORARY TABLES ON `{$this->databaseName}`.* TO '{$this->databaseUser}'@'%';",
-
-            "FLUSH PRIVILEGES;",
-        ])->implode("\n\n");
-
-        ray($sqlUserStatements);
-
-        $result = DB::connection($db['name'])->statement($sqlUserStatements);
-
-        ray($result)->label('Result of user statements');
     }
 
     protected function setUser($db)
