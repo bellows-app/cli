@@ -4,9 +4,25 @@ namespace App\Mixins;
 
 use Spatie\Fork\Connection;
 use Spatie\Fork\Fork;
+use Symfony\Component\Console\Question\Question;
 
 class Console
 {
+    public function askRequired()
+    {
+        return function ($question, $default = null, $multiline = false) {
+            $question = new Question($question, $default);
+
+            $question->setMultiline($multiline);
+
+            do {
+                $answer = $this->output->askQuestion($question);
+            } while (trim($answer) === '' || $answer === null);
+
+            return $answer;
+        };
+    }
+
     public function withSpinner()
     {
         return function (
