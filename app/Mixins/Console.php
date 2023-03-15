@@ -100,7 +100,7 @@ class Console
 
                         $reversedLongProcessMessages = collect($longProcessMessages)
                             ->reverse()
-                            ->map(fn ($v) => ' ' . $v);
+                            ->map(fn ($v) => ': <comment>' . $v . '</comment>');
 
                         $socketResults = '';
 
@@ -119,7 +119,7 @@ class Console
                             $index = ($index === $animation->count() - 1) ? 0 : $index + 1;
 
                             $this->overwriteLine(
-                                "<comment>{$animation->get($index)}{$longProcessMessage}</comment> <info>{$title}</info>"
+                                "<comment>{$animation->get($index)}</comment> <info>{$title}{$longProcessMessage}</info>"
                             );
 
                             usleep(200_000);
