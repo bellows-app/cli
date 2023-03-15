@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Providers;
+namespace Bellows\Providers;
 
-use App\Bellows\Config;
-use App\Bellows\Console;
-use App\Mixins\Console as MixinsConsole;
+use Bellows\Config;
+use Bellows\Console;
+use Bellows\Mixins\Console as MixinsConsole;
 use Illuminate\Console\Command;
 use Illuminate\Console\Signals;
 use Illuminate\Support\ServiceProvider;

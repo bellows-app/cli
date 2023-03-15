@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Plugin;
+use Bellows\Plugin;
 
 class LaravelWebsockets extends Plugin
 {

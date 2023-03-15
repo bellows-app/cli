@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
 class BugsnagJS extends Bugsnag
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Plugin;
-use App\Bellows\Util\Domain;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Plugin;
+use Bellows\Util\Domain;
 use Illuminate\Support\Collection;
 
 class UpdateDomainDNS extends Plugin

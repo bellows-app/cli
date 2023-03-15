@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Data\Job;
-use App\Bellows\Enums\JobFrequency;
-use App\Bellows\Plugin;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Data\Job;
+use Bellows\Enums\JobFrequency;
+use Bellows\Plugin;
 
 class RunSchedule extends Plugin
 {

@@ -1,7 +1,7 @@
 <?php
 
-use App\Bellows\Console;
-use App\Bellows\PluginManager;
+use Bellows\Console;
+use Bellows\PluginManager;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;

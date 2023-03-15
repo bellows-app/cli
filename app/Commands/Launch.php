@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Commands;
+namespace Bellows\Commands;
 
-use App\Bellows\Config;
-use App\Bellows\Console;
-use App\Bellows\Data\Daemon;
-use App\Bellows\Data\ForgeServer;
-use App\Bellows\Data\Job;
-use App\Bellows\Data\ProjectConfig;
-use App\Bellows\Data\Worker;
-use App\Bellows\Dns\DnsFactory;
-use App\Bellows\Dns\DnsProvider;
-use App\Bellows\Env;
-use App\Bellows\PluginManager;
+use Bellows\Config;
+use Bellows\Console;
+use Bellows\Data\Daemon;
+use Bellows\Data\ForgeServer;
+use Bellows\Data\Job;
+use Bellows\Data\ProjectConfig;
+use Bellows\Data\Worker;
+use Bellows\Dns\DnsFactory;
+use Bellows\Dns\DnsProvider;
+use Bellows\Env;
+use Bellows\PluginManager;
 use Composer\Semver\Semver;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;

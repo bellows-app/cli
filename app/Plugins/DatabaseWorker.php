@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Data\Job;
-use App\Bellows\Data\Worker;
-use App\Bellows\Enums\JobFrequency;
-use App\Bellows\Plugin;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Data\Job;
+use Bellows\Data\Worker;
+use Bellows\Enums\JobFrequency;
+use Bellows\Plugin;
 
 class DatabaseWorker extends Plugin
 {

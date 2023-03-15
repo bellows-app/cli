@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\AddApiCredentialsPrompt;
-use App\Bellows\Plugin;
+use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Plugin;
 
 abstract class Bugsnag extends Plugin
 {

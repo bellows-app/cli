@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mixins;
+namespace Bellows\Mixins;
 
 use Spatie\Fork\Connection;
 use Spatie\Fork\Fork;

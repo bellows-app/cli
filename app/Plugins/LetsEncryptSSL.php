@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Plugin;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Plugin;
 use Illuminate\Support\Facades\Http;
 
 class LetsEncryptSSL extends Plugin

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\AddApiCredentialsPrompt;
-use App\Bellows\Plugin;
-use App\Bellows\Util\Domain;
+use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Plugin;
+use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;

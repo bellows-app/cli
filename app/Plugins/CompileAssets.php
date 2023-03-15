@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Plugins;
+namespace Bellows\Plugins;
 
-use App\Bellows\Data\DefaultEnabledDecision;
-use App\Bellows\Plugin;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Plugin;
 
 class CompileAssets extends Plugin
 {
