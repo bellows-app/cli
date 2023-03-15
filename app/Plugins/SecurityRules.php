@@ -55,7 +55,6 @@ class SecurityRules extends Plugin
             return;
         }
 
-        $this->console->info('Setting up security rules (basic auth)...');
         $this->securityRules->each(fn ($rule) => Http::forgeSite()->post('security-rules', $rule));
     }
 }

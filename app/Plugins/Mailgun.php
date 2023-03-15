@@ -108,7 +108,6 @@ class Mailgun extends Plugin
     public function wrapUp(): void
     {
         if ($this->verifyNewDomain) {
-            $this->console->info('Verifying domain with Mailgun...');
             $this->http->client()->put("domains/{$this->domain}/verify");
         }
     }

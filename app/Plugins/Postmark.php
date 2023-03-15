@@ -192,12 +192,10 @@ class Postmark extends Plugin
     public function wrapUp(): void
     {
         if ($this->verifyReturnPath) {
-            $this->console->info('Verifying Postmark ReturnPath record...');
             $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyReturnPath");
         }
 
         if ($this->verifyDKIM) {
-            $this->console->info('Verifying Postmark DKIM record...');
             $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyDkim ");
         }
     }
