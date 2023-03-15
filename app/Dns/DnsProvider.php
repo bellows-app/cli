@@ -58,7 +58,7 @@ abstract class DnsProvider
         $credentials = collect($config)->first(fn ($creds) => $this->accountHasDomain($creds));
 
         if (!$credentials) {
-            $this->console->line('No account found for this domain.');
+            $this->console->warn('No account found for this domain.');
 
             if (!$this->console->confirm('Do you want to add a new account?', true)) {
                 return;
@@ -68,7 +68,7 @@ abstract class DnsProvider
             return;
         }
 
-        $this->console->line('Found account for this domain: ' . collect($config)->search($credentials));
+        $this->console->info('Found account for this domain: <comment>' . collect($config)->search($credentials) . '</comment>');
 
         $this->setClient($this->getClient($credentials));
     }

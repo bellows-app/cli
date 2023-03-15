@@ -130,7 +130,8 @@ class Launch extends Command
             title: 'Checking for existing domain on server',
             task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])
                 ->first(fn ($site) => $site['name'] === $domain),
-            successDisplay: fn ($result) => $result ? '✗ Domain already exists on server!' : '✓ No site found, on we go!',
+            message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
+            success: fn ($result) => $result === null,
         );
 
         if ($existingDomain) {
@@ -213,7 +214,6 @@ class Launch extends Command
 
                 return $site;
             },
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         Http::macro(
@@ -246,7 +246,6 @@ class Launch extends Command
                     $site = Http::forgeSite()->get('')->json()['site'];
                 }
             },
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Environment Variables');
@@ -307,7 +306,6 @@ class Launch extends Command
         $this->withSpinner(
             title: 'Updating',
             task: fn () => Http::forgeSite()->put('deployment/script', ['content' => $deployScript]),
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Deamons');
@@ -327,7 +325,6 @@ class Launch extends Command
                     $params,
                 )
             ),
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Workers');
@@ -345,7 +342,6 @@ class Launch extends Command
                     $params,
                 )->json()
             ),
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Scheduled Jobs');
@@ -365,16 +361,13 @@ class Launch extends Command
                     $params,
                 )->json()
             ),
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Wrapping Up');
 
         $this->withSpinner(
-            title: 'Tying it up with a ribbon',
-            // Cooling the rockets?
+            title: 'Cooling the rockets',
             task: fn () => $pluginManager->wrapUp(),
-            longProcessMessages: $this->defaultLongProcessMessages,
         );
 
         $this->step('Summary');
@@ -525,7 +518,8 @@ class Launch extends Command
                     )
                 ) : $phpVersions->first();
             },
-            successDisplay: fn ($result) => $result['binary_name'] ?? '✗',
+            message: fn ($result) => $result['binary_name'] ?? null,
+            success: fn ($result) => $result !== null,
         );
 
         if ($phpVersion) {
@@ -572,8 +566,8 @@ class Launch extends Command
 
                 return $phpVersion;
             },
-            successDisplay: fn ($result) => $result['binary_name'] ?? '✗',
-            longProcessMessages: $this->defaultLongProcessMessages,
+            message: fn ($result) => $result['binary_name'] ?? null,
+            success: fn ($result) => $result !== null,
         );
     }
 }

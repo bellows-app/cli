@@ -28,7 +28,8 @@ class Console
         return function (
             string $title,
             callable $task,
-            string|callable $successDisplay = null,
+            string|callable $message = null,
+            string|callable $success = null,
             array $longProcessMessages = []
         ) {
             $this->hideCursor();
@@ -43,7 +44,7 @@ class Console
 
             $result = Fork::new()
                 ->run(
-                    function () use ($task, $successDisplay, $title,  $socketToSpinner) {
+                    function () use ($task, $message, $success, $title,  $socketToSpinner) {
                         $output = $task();
 
                         $socketToSpinner->write(1);
@@ -51,18 +52,33 @@ class Console
                         // Wait for the next cycle of the spinner so that it stops
                         usleep(200_000);
 
-                        if (is_callable($successDisplay)) {
-                            $display = $successDisplay($output);
-                        } else if (is_string($successDisplay)) {
-                            $display = $successDisplay;
+                        $display = '';
+
+                        if (is_callable($message)) {
+                            $display = $message($output);
+                        } else if (is_string($message)) {
+                            $display = $message;
                         } else if (is_string($output)) {
                             $display = $output;
-                        } else {
-                            $display = '✓';
                         }
 
+                        if (is_callable($success)) {
+                            $wasSuccessful = $success($output);
+                        } else if (is_bool($success)) {
+                            $wasSuccessful = $success;
+                        } else {
+                            // At this point we just assume things worked out
+                            $wasSuccessful = true;
+                        }
+
+                        $successIndicator = $wasSuccessful ? '✓' : '✗';
+
+                        $finalMessage = $display === '' || $display === null
+                            ? "<info>{$title}</info>"
+                            : "<info>{$title}:</info> <comment>{$display}</comment>";
+
                         $this->overwriteLine(
-                            "<info>{$title}:</info> <comment>{$display}</comment>",
+                            "<comment>{$successIndicator}</comment> {$finalMessage}",
                             true,
                         );
 
@@ -73,6 +89,14 @@ class Console
                         $startTime = time();
 
                         $index = 0;
+
+                        if (count($longProcessMessages) === 0) {
+                            $longProcessMessages = [
+                                3  => 'One moment...',
+                                7  => 'Almost done...',
+                                11 => 'Wrapping up...',
+                            ];
+                        }
 
                         $reversedLongProcessMessages = collect($longProcessMessages)
                             ->reverse()
@@ -95,7 +119,7 @@ class Console
                             $index = ($index === $animation->count() - 1) ? 0 : $index + 1;
 
                             $this->overwriteLine(
-                                "<info>{$title}:</info> <comment>{$animation->get($index)}{$longProcessMessage}</comment>"
+                                "<comment>{$animation->get($index)}{$longProcessMessage}</comment> <info>{$title}</info>"
                             );
 
                             usleep(200_000);
