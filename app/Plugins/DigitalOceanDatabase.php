@@ -11,10 +11,16 @@ use Illuminate\Support\Facades\Http;
 class DigitalOceanDatabase extends Plugin
 {
     protected string $host;
+
     protected string $port;
+
     protected string $password;
+
     protected string $databaseName;
+
     protected string $databaseUser;
+
+    protected string $dbType;
 
     public function setup(): void
     {
@@ -45,6 +51,8 @@ class DigitalOceanDatabase extends Plugin
                 'name'
             );
         }
+
+        $this->dbType = collect(['pg' => 'pgsql'])->get($db['engine'], $db['engine']);
 
         if (!$this->setUser($db) || !$this->setDatabase($db)) {
             $this->setup();
@@ -116,7 +124,7 @@ class DigitalOceanDatabase extends Plugin
     public function setEnvironmentVariables(): array
     {
         return [
-            'DB_CONNECTION'        => 'mysql',
+            'DB_CONNECTION'        => $this->dbType,
             'DB_DATABASE'          => $this->databaseName,
             'DB_USERNAME'          => $this->databaseUser,
             'DB_HOST'              => $this->host,
