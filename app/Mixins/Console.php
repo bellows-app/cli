@@ -23,6 +23,15 @@ class Console
         };
     }
 
+    public function miniTask()
+    {
+        return function (string $key, string $value, bool $successful = true) {
+            $successIndicator = $successful ? '✓' : '✗';
+
+            $this->output->writeln("<comment>{$successIndicator}</comment> <info>{$key}:</info> <comment>{$value}</comment>");
+        };
+    }
+
     public function withSpinner()
     {
         return function (

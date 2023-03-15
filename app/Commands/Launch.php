@@ -153,9 +153,9 @@ class Launch extends Command
         $dnsProvider = DnsFactory::fromDomain($domain);
 
         if (!$dnsProvider) {
-            $this->warn('Unsupported DNS provider for ' . $domain);
+            $this->miniTask('Unsupported DNS provider', $domain, false);
         } else {
-            $this->info('Detected DNS provider: ' . $dnsProvider->getName());
+            $this->miniTask('Detected DNS provider', $dnsProvider->getName());
             $dnsProvider->setCredentials();
             $secureSite = $this->confirm('Secure site (enable SSL)?', true);
         }

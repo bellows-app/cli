@@ -79,7 +79,7 @@ class DigitalOcean extends DnsProvider
     {
         try {
             if ($currentRecord = $this->getFullRecord($type, $name)) {
-                $this->console->info("Updating {$type->value} record for {$name} to {$value}");
+                $this->console->miniTask("Updating {$type->value} record for {$name} to", $value);
 
                 Http::dnsProvider()->put("domains/{$this->baseDomain}/records/{$currentRecord['id']}", [
                     'type' => $type->value,
@@ -91,7 +91,7 @@ class DigitalOcean extends DnsProvider
                 return true;
             }
 
-            $this->console->info("Adding {$type->value} record for {$name} to {$value}");
+            $this->console->miniTask("Adding {$type->value} record for {$name} to", $value);
 
             Http::dnsProvider()->post("domains/{$this->baseDomain}/records", [
                 'type' => $type->value,

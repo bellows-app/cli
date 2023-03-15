@@ -37,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
                 && extension_loaded('pcntl');
         });
 
+        Console::mixin(new MixinsConsole);
         Command::mixin(new MixinsConsole);
     }
 }

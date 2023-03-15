@@ -68,7 +68,7 @@ class Cloudflare extends DnsProvider
     {
         try {
             if ($currentRecord = $this->getFullRecord($type, $name)) {
-                $this->console->info("Updating {$type->value} record for {$name} to {$value}");
+                $this->console->miniTask("Updating {$type->value} record for {$name} to", $value);
 
                 Http::dnsProvider()->put("zones/{$this->getZoneId()}/dns_records/{$currentRecord['id']}", [
                     'type'    => $type->value,
@@ -80,7 +80,7 @@ class Cloudflare extends DnsProvider
                 return true;
             }
 
-            $this->console->info("Adding {$type->value} record for {$name} to {$value}");
+            $this->console->miniTask("Adding {$type->value} record for {$name} to", $value);
 
             Http::dnsProvider()->post("zones/{$this->getZoneId()}/dns_records", [
                 'type'    => $type->value,

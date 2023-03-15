@@ -2,11 +2,14 @@
 
 namespace Bellows;
 
+use Bellows\Mixins\Console as MixinsConsole;
 use Illuminate\Console\Concerns\InteractsWithIO;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Traits\Macroable;
 
 class Console
 {
+    use Macroable;
     use InteractsWithIO {
         choice as protected baseChoice;
     }

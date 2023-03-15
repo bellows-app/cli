@@ -17,7 +17,7 @@ class BugsnagPHP extends Bugsnag
         $this->bugsnagKey = $this->localEnv->get('BUGSNAG_API_KEY');
 
         if ($this->bugsnagKey) {
-            $this->console->info('Using existing Bugsnag PHP key from .env');
+            $this->console->miniTask('Using existing Bugsnag PHP key from', '.env');
             return;
         }
 

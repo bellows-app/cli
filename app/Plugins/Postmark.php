@@ -93,12 +93,12 @@ class Postmark extends Plugin
         }
 
         if (!$this->dnsProvider) {
-            $this->console->info('Skipping DNS verification as no DNS provider is configured.');
+            $this->console->warn('Skipping DNS verification as no DNS provider is configured.');
             return;
         }
 
         if (!$this->sendingDomain['ReturnPathDomainVerified']) {
-            $this->console->info('Adding ReturnPath record to ' . $this->dnsProvider->getName());
+            $this->console->miniTask('Adding ReturnPath record to', $this->dnsProvider->getName());
 
             $this->dnsProvider->addCNAMERecord(
                 name: 'pm-bounces.' . Domain::getSubdomain($this->sendingDomain['Name']),
@@ -110,7 +110,7 @@ class Postmark extends Plugin
         }
 
         if (!$this->sendingDomain['DKIMVerified']) {
-            $this->console->info('Adding DKIM record to ' . $this->dnsProvider->getName());
+            $this->console->miniTask('Adding DKIM record to ', $this->dnsProvider->getName());
 
             $this->dnsProvider->addTXTRecord(
                 name: Domain::getSubdomain($this->sendingDomain['DKIMPendingHost']),

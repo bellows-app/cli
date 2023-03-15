@@ -68,7 +68,7 @@ abstract class DnsProvider
             return;
         }
 
-        $this->console->info('Found account for this domain: <comment>' . collect($config)->search($credentials) . '</comment>');
+        $this->console->miniTask('Found account for this domain', collect($config)->search($credentials));
 
         $this->setClient($this->getClient($credentials));
     }

@@ -28,7 +28,8 @@ class Pusher extends Plugin
 
         $appName = config('app.name');
 
-        $this->console->info("Pusher API limitations don't allow {$appName} to create an app for you, if you'd like to create one head to https://dashboard.pusher.com/channels then refresh the list below.");
+        $this->console->info("Pusher API limitations don't allow {$appName} to create an app for you.");
+        $this->console->info("If you'd like to create one head to <comment>https://dashboard.pusher.com/channels</comment> then refresh the list below.");
 
         $this->presentChoices();
     }

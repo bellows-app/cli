@@ -68,7 +68,7 @@ class GoDaddy extends DnsProvider
     {
         try {
             if ($this->getFullRecord($type, $name)) {
-                $this->console->info("Updating existing {$type->value} record for {$name} to {$value}");
+                $this->console->miniTask("Updating existing {$type->value} record for {$name} to", $value);
 
                 Http::dnsProvider()->put("domains/{$this->baseDomain}/records/{$type->value}/{$name}", [
                     [
@@ -80,7 +80,7 @@ class GoDaddy extends DnsProvider
                 return true;
             }
 
-            $this->console->info("Adding new {$type->value} record for {$name} to {$value}");
+            $this->console->miniTask("Adding new {$type->value} record for {$name} to", $value);
 
             Http::dnsProvider()->patch("domains/{$this->baseDomain}/records", [
                 [

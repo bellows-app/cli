@@ -17,7 +17,7 @@ class BugsnagJS extends Bugsnag
         $this->bugsnagKey = $this->localEnv->get('BUGSNAG_JS_API_KEY');
 
         if ($this->bugsnagKey) {
-            $this->console->info('Using existing Bugsnag JS key from .env');
+            $this->console->miniTask('Using existing Bugsnag JS key from', '.env');
             return;
         }
 

@@ -93,6 +93,8 @@ class DigitalOceanDatabase extends Plugin
             return true;
         }
 
+        $this->console->miniTask('Creating user', $this->databaseUser);
+
         $newDbUser = $this->http->client()->post(
             "databases/{$db['id']}/users",
             [
@@ -112,6 +114,8 @@ class DigitalOceanDatabase extends Plugin
         if ($existingDatabase) {
             return $this->console->confirm('Database already exists, do you want to continue?', true);
         }
+
+        $this->console->miniTask('Creating database', $this->databaseName);
 
         $this->http->client()->post(
             "databases/{$db['id']}/dbs",
