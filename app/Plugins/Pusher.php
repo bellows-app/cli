@@ -23,6 +23,7 @@ class Pusher extends Plugin
                 url: 'https://dashboard.pusher.com/accounts/api_key',
                 credentials: ['token'],
             ),
+            fn (PendingRequest $request) => $request->get('apps.json'),
         );
 
         $appName = config('app.name');

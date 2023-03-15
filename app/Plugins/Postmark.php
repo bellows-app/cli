@@ -39,6 +39,7 @@ class Postmark extends Plugin
                 helpText: 'Retrieve your *Account* token here.',
                 credentials: ['token'],
             ),
+            fn (PendingRequest $request) => $request->get('servers', ['count' => 1]),
         );
 
         $this->server        = $this->getServer();

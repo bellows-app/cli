@@ -4,7 +4,9 @@ namespace Bellows;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http as HttpFacade;
+use Illuminate\Support\Arr;
 
 class Http
 {
@@ -22,8 +24,10 @@ class Http
         string $baseUrl,
         callable $factory,
         AddApiCredentialsPrompt $addCredentialsPrompt = null,
-        string $name = 'default',
+        callable $test,
     ): void {
+        $name = 'default';
+
         if (array_key_exists($name, $this->clients)) {
             throw new \Exception("Client {$name} already exists");
         }
@@ -32,23 +36,49 @@ class Http
 
         $credentials = $this->getApiCredentials($host, $addCredentialsPrompt);
 
+        try {
+            $test($factory(HttpFacade::baseUrl($baseUrl), $credentials)->throw());
+        } catch (RequestException $e) {
+            $this->console->warn('Could not connect with the provided credentials:');
+
+            $data = json_decode((string) $e->response->body(), true);
+            $message = Arr::get($data ?? [], 'message', (string) $e->response->body());
+
+            $this->console->warn($e->response->status() . ': ' . $message);
+
+            $this->console->warn('Please select a different account or add a new one.');
+
+            $this->createClient($baseUrl, $factory, $addCredentialsPrompt, $test);
+
+            return;
+        } catch (\Exception $e) {
+            // Something else happened, just give a generic error message.
+            $this->console->warn('Could not connect with the provided credentials!');
+            $this->console->warn('Please select a different account or add a new one.');
+
+            $this->createClient($baseUrl, $factory, $addCredentialsPrompt, $test);
+
+            return;
+        }
+
         $this->clients[$name] = fn () => $factory(
             HttpFacade::baseUrl($baseUrl),
             $credentials,
         );
     }
 
+    // TODO: This is starting to feel more like a builder object that params.
     public function createJsonClient(
         string $baseUrl,
         callable $factory,
         AddApiCredentialsPrompt $addCredentialsPrompt = null,
-        string $name = 'default',
+        callable $test,
     ): void {
         $this->createClient(
             $baseUrl,
             fn ($request, $credentials) => $factory($request, $credentials)->acceptJson()->asJson(),
             $addCredentialsPrompt,
-            $name,
+            $test,
         );
     }
 
@@ -116,18 +146,19 @@ class Http
             return $value;
         }
 
-        if ($addCredentialsPrompt->helpText) {
-            $this->console->info($addCredentialsPrompt->helpText);
-            $this->console->info($addCredentialsPrompt->url);
-        } else {
-            $this->console->info('You can get your token from ' . $addCredentialsPrompt->url);
-        }
+        $this->console->info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
+        $this->console->info($addCredentialsPrompt->url);
 
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
             fn ($value) => [$value => $this->console->secret(ucwords($value))]
         )->toArray();
 
-        $accountName = $this->console->ask('Name (for your reference)');
+        do {
+            $accountName = $this->console->ask('Name (for your reference)');
+        } while (
+            $this->getApiConfig($host, $accountName)
+            && !$this->console->confirm('Overwrite existing account?')
+        );
 
         $this->setApiConfig($host, $accountName, $value);
 

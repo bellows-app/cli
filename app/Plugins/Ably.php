@@ -3,6 +3,7 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -18,12 +19,13 @@ class Ably extends Plugin
     {
         $this->http->createJsonClient(
             'https://control.ably.net/v1/',
-            fn (PendingRequest $request, $credentials) => $request->withToken($credentials['token']),
+            fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
             new AddApiCredentialsPrompt(
                 url: 'https://ably.com/users/access_tokens',
                 helpText: 'When creating a token, make sure to select the following permissions: read:app, write:app, read:key',
                 credentials: ['token'],
             ),
+            fn (PendingRequest $request) => $request->get('me'),
         );
 
         $me = $this->http->client()->get('me')->json();

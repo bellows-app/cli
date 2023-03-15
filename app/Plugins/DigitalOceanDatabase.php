@@ -4,6 +4,7 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Plugin;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -29,11 +30,12 @@ class DigitalOceanDatabase extends Plugin
 
         $this->http->createJsonClient(
             'https://api.digitalocean.com/v2/',
-            fn ($request, $credentials) => $request->withToken($credentials['token']),
+            fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
             new AddApiCredentialsPrompt(
                 url: 'https://cloud.digitalocean.com/account/api/tokens',
                 credentials: ['token'],
             ),
+            fn (PendingRequest $request) => $request->get('databases', ['per_page' => 1]),
         );
 
         $response = $this->http->client()->get('databases');

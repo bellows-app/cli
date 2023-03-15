@@ -25,7 +25,8 @@ class FathomAnalytics extends Plugin
             new AddApiCredentialsPrompt(
                 url: 'https://app.usefathom.com/api',
                 credentials: ['token'],
-            )
+            ),
+            fn (PendingRequest $request) => $request->get('sites', ['limit' => 1]),
         );
 
         if ($this->console->confirm('Create new Fathom Analytics site?', true)) {

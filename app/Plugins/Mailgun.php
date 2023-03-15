@@ -37,7 +37,8 @@ class Mailgun extends Plugin
                 url: 'https://app.mailgun.com/app/account/security/api_keys',
                 helpText: 'Make sure you select your *Private API key*',
                 credentials: ['token'],
-            )
+            ),
+            fn (PendingRequest $request) => $request->get('domains', ['limit' => 1]),
         );
 
         if ($this->console->confirm('Create a new domain?', true)) {

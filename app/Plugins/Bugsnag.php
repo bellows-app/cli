@@ -4,6 +4,7 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Plugin;
+use Illuminate\Http\Client\PendingRequest;
 
 abstract class Bugsnag extends Plugin
 {
@@ -11,11 +12,12 @@ abstract class Bugsnag extends Plugin
     {
         $this->http->createJsonClient(
             'https://api.bugsnag.com/',
-            fn ($request, $credentials) => $request->withToken($credentials['token'], 'token'),
+            fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token'], 'token'),
             new AddApiCredentialsPrompt(
                 url: 'https://app.bugsnag.com/settings/my-account',
                 credentials: ['token'],
             ),
+            fn (PendingRequest $request) => $request->get('user/organizations', ['per_page' => 1]),
         );
 
         $organization = $this->http->client()->get('user/organizations')->json()[0];
