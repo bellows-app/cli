@@ -32,6 +32,10 @@ class Npm extends PackageManager
 
     protected function getPackageJson(): array
     {
+        if (!file_exists($this->config->projectDirectory . '/package.json')) {
+            return [];
+        }
+
         $file = file_get_contents($this->config->projectDirectory . '/package.json');
         $json = json_decode($file, true);
 
