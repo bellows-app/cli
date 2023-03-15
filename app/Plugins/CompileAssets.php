@@ -14,7 +14,6 @@ class CompileAssets extends Plugin
 
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
-
         if ($this->getLockFile() === null) {
             $files = collect($this->lockFiles)->join(', ');
 
@@ -34,7 +33,9 @@ class CompileAssets extends Plugin
 
     protected function getLockFile()
     {
-        return collect($this->lockFiles)->first(fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file));
+        return collect($this->lockFiles)->first(
+            fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file)
+        );
     }
 
     public function updateDeployScript(string $deployScript): string
