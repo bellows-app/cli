@@ -23,6 +23,27 @@ class Console
         };
     }
 
+    public function askForNumber()
+    {
+        return function ($question, $default = null, $required = false) {
+            $question = new Question($question, $default);
+
+            do {
+                if (isset($answer) && !is_numeric($answer)) {
+                    $this->output->writeln('<warning>Please enter a number.</warning>');
+                }
+
+                $answer = $this->output->askQuestion($question);
+            } while (($required && (trim($answer) === '' || $answer === null)) || ($answer !== null && !is_numeric($answer)));
+
+            if ($answer === null) {
+                return null;
+            }
+
+            return (int) $answer;
+        };
+    }
+
     public function miniTask()
     {
         return function (string $key, string $value, bool $successful = true) {
