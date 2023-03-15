@@ -53,7 +53,7 @@ class Launch extends Command
     public function handle(Config $config, Console $console, PluginManager $pluginManager)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
-        // least once before being able to use the <warn></warn> tags. Not sure why.
+        // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');
         $this->info("🚀 Launch time! Let's do this.");
         $this->newLine();
