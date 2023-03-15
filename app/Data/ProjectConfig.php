@@ -15,6 +15,7 @@ class ProjectConfig extends Data
         public string $projectDirectory,
         public string $domain,
         public string $appName,
+        public bool $secureSite,
     ) {
     }
 }

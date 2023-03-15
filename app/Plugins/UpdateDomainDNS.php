@@ -49,7 +49,7 @@ class UpdateDomainDNS extends Plugin
 
     protected function getDomainsToCheck(): Collection
     {
-        if ($this->projectConfig->domain === Domain::getBaseDomain($this->projectConfig->domain)) {
+        if (Domain::isBaseDomain($this->projectConfig->domain)) {
             return collect(['www', '']);
         }
 

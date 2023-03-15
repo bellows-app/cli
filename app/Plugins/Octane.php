@@ -54,12 +54,9 @@ class Octane extends Plugin
         return  array_merge([
             'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
-        ]);
-
-        // TODO: Re-implement this when we determine SSL situation
-        // Str::startsWith($envVars['APP_URL'], 'https://') ? [
-        //     'OCTANE_HTTPS' => 'true',
-        // ] : []
+        ], $this->projectConfig->secureSite ? [
+            'OCTANE_HTTPS' => 'true',
+        ] : []);
     }
 
     public function daemons(): array

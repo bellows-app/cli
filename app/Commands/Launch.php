@@ -155,6 +155,7 @@ class Launch extends Command
         } else {
             $this->info('Detected DNS provider: ' . $dnsProvider->getName());
             $dnsProvider->setCredentials();
+            $secureSite = $this->confirm('Secure site (enable SSL)?', true);
         }
 
         $this->newLine();
@@ -172,6 +173,7 @@ class Launch extends Command
             projectDirectory: $dir,
             domain: $domain,
             appName: $appName,
+            secureSite: $secureSite ?? false,
         );
 
         App::instance(ProjectConfig::class, $projectConfig);

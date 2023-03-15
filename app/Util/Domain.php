@@ -6,6 +6,11 @@ use Illuminate\Support\Str;
 
 class Domain
 {
+    public static function isBaseDomain(string $domain): string
+    {
+        return $domain === self::getBaseDomain($domain);
+    }
+
     public static function getBaseDomain(string $domain): string
     {
         return Str::of($domain)->explode('.')->slice(-2)->implode('.');
