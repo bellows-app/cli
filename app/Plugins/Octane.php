@@ -2,6 +2,7 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Data\Daemon;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Facades\Http;
@@ -62,7 +63,9 @@ class Octane extends Plugin
     public function daemons(): array
     {
         return [
-            $this->artisan->forDaemon("octane:start --port={$this->octanePort} --no-interaction"),
+            new Daemon(
+                $this->artisan->forDaemon("octane:start --port={$this->octanePort} --no-interaction"),
+            ),
         ];
     }
 }
