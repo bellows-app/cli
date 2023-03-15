@@ -3,9 +3,7 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
-use Bellows\Data\Job;
 use Bellows\Data\Worker;
-use Bellows\Enums\JobFrequency;
 use Bellows\Plugin;
 
 class DatabaseWorker extends Plugin
