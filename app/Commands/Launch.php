@@ -128,8 +128,9 @@ class Launch extends Command
 
         $existingDomain = $this->withSpinner(
             title: 'Checking for existing domain on server',
-            task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])
-                ->first(fn ($site) => $site['name'] === $domain),
+            task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])->first(
+                fn ($site) => $site['name'] === $domain
+            ),
             message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
             success: fn ($result) => $result === null,
         );
