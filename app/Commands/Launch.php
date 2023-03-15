@@ -54,7 +54,9 @@ class Launch extends Command
     {
         $this->newLine();
         $this->info('🚀 Launch time! Let\'s do this.');
-        $this->newLine();
+        // Why are we warning? After Laravel 10 warn needs to be called at
+        // least once before being able to use the <warn></warn> tags. Not sure why.
+        $this->warn('');
 
         $console->setInput($this->input);
         $console->setOutput($this->output);
