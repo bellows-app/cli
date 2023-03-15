@@ -15,13 +15,11 @@ class Optimize extends Plugin
     public function updateDeployScript(string $deployScript): string
     {
         return $this->deployScript->addBeforePHPReload($deployScript, [
-            'if [ -f artisan ]; then',
             $this->artisan->inDeployScript('config:cache'),
             $this->artisan->inDeployScript('route:cache'),
             $this->artisan->inDeployScript('view:cache'),
             $this->artisan->inDeployScript('event:cache'),
             $this->artisan->inDeployScript('queue:restart'),
-            'fi',
         ]);
     }
 }
