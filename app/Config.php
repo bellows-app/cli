@@ -42,6 +42,16 @@ class Config
         $this->cacheConfig();
     }
 
+    public function remove(string $key)
+    {
+        Arr::forget($this->config, $key);
+
+        file_put_contents($this->path, json_encode($this->config, JSON_PRETTY_PRINT));
+
+        // We've changed the config, re-cache it
+        $this->cacheConfig();
+    }
+
     protected function createConfigFile(string $path)
     {
         file_put_contents($path, json_encode([]));

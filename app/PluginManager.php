@@ -11,6 +11,7 @@ class PluginManager
 
     public function __construct(
         protected Console $console,
+        protected Config $config,
         protected $namespaces = [
             'Bellows\Plugins',
         ],
@@ -52,11 +53,28 @@ class PluginManager
         })->values();
     }
 
-    protected function getAllPlugins(): Collection
+    public function getAllAvailablePluginNames(): Collection
     {
         return collect($this->namespaces)
             ->flatMap(fn (string $namespace) => ClassFinder::getClassesInNamespace($namespace))
             ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
+            ->values();
+    }
+
+    protected function getAllPlugins(): Collection
+    {
+        return $this->getAllAvailablePluginNames()
+            ->filter(function (string $plugin) {
+                if (count($this->config->get('plugins.launch.blacklist', [])) > 0) {
+                    return !in_array($plugin, $this->config->get('plugins.launch.blacklist', []));
+                }
+
+                if (count($this->config->get('plugins.launch.whitelist', [])) > 0) {
+                    return in_array($plugin, $this->config->get('plugins.launch.whitelist', []));
+                }
+
+                return true;
+            })
             ->values()
             ->map(fn (string $plugin) => app($plugin))
             ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
