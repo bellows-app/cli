@@ -12,7 +12,7 @@ class LaunchPlugins extends Command
 {
     protected $signature = 'launch:plugins {action? : blacklist, whitelist}';
 
-    protected $description = 'Command description';
+    protected $description = 'Configure which plugins should run when launching a project.';
 
     protected Config $config;
 
