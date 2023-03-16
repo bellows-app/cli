@@ -66,11 +66,48 @@ class Launch extends Command
 
         $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
 
-        if (!$config->get($apiConfigKey)) {
-            $this->info('Looks like we need a Forge API token, you can get one here:');
-            $this->info('https://forge.laravel.com/user-profile/api');
+        if ($token = $config->get($apiConfigKey)) {
+            try {
+                // Do a quick test to make sure it's a valid token
+                Http::baseUrl($forgeApiUrl)
+                    ->withToken($token)
+                    ->acceptJson()
+                    ->asJson()
+                    ->get('user')
+                    ->throw()
+                    ->json();
+            } catch (\Exception $e) {
+                $token = null;
+                $this->warn('Your saved Forge token is invalid!');
+                $this->newLine();
+            }
+        }
 
-            $token = $this->secret('Forge API Token');
+        if (!isset($token) || $token === null) {
+            $this->info('Looks like we need a Forge API token, you can get one here:');
+            $this->comment('https://forge.laravel.com/user-profile/api');
+
+            do {
+                if (isset($isInvalid)) {
+                    $this->warn('Invalid token, please try again.');
+                }
+
+                $token = $this->secret('Forge API Token');
+
+                try {
+                    // Do a quick test to make sure it's a valid token
+                    Http::baseUrl($forgeApiUrl)
+                        ->withToken($token)
+                        ->acceptJson()
+                        ->asJson()
+                        ->get('user')
+                        ->throw();
+
+                    $isInvalid = false;
+                } catch (\Exception $e) {
+                    $isInvalid = true;
+                }
+            } while ($isInvalid);
 
             $config->set($apiConfigKey, $token);
         }
