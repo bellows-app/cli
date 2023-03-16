@@ -261,7 +261,7 @@ class Launch extends Command
                 'APP_URL'      => "http://{$domain}",
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
-            $pluginManager->setEnvironmentVariables(),
+            $pluginManager->environmentVariables(),
         ));
 
         $updatedEnvValues->map(

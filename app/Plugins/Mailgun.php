@@ -112,7 +112,7 @@ class Mailgun extends Plugin
         }
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [
             'MAILGUN_DOMAIN'   => $this->domain,

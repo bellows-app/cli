@@ -33,7 +33,7 @@ class InertiaServerSideRendering extends Plugin
         $this->ssrPort = $highestSSRPortInUse + 1;
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return  [
             'SSR_PORT'      => $this->ssrPort,

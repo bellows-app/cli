@@ -107,9 +107,9 @@ class PluginManager
             ->toArray();
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
-        return $this->call('setEnvironmentVariables')->reduce([]);
+        return $this->call('environmentVariables')->reduce([]);
     }
 
     public function updateDeployScript(string $deployScript): string

@@ -55,7 +55,7 @@ class Pusher extends Plugin
         $this->appConfig['cluster'] = $app['cluster'];
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [
             'BROADCAST_DRIVER'   => 'pusher',

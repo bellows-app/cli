@@ -50,7 +50,7 @@ class Octane extends Plugin
         ];
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return  array_merge([
             'OCTANE_SERVER' => $this->octaneServer,

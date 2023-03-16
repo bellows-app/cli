@@ -200,7 +200,7 @@ class Postmark extends Plugin
         }
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [
             'MAIL_MAILER'                => 'postmark',

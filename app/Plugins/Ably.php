@@ -59,7 +59,7 @@ class Ably extends Plugin
         )['key'];
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         if (!isset($this->key)) {
             return [];

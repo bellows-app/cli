@@ -27,7 +27,7 @@ class LetsEncryptSSL extends Plugin
         );
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [
             'APP_URL' => "https://{$this->projectConfig->domain}",

@@ -47,7 +47,7 @@ abstract class Plugin
         return [];
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [];
     }

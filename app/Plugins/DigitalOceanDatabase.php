@@ -127,7 +127,7 @@ class DigitalOceanDatabase extends Plugin
         return true;
     }
 
-    public function setEnvironmentVariables(): array
+    public function environmentVariables(): array
     {
         return [
             'DB_CONNECTION'        => $this->dbType,
