@@ -110,7 +110,7 @@ class Cloudflare extends DnsProvider
 
     protected function getRecord(DnsRecordType $type, string $name): ?string
     {
-        return $this->getFullRecord($type, $name) ?? null;
+        return $this->getFullRecord($type, $name)['content'] ?? null;
     }
 
     protected function getZoneId()
