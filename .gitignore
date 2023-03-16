@@ -5,3 +5,4 @@
 .phpunit.result.cache
 .env
 storage
+tests/stubs/config/config.json

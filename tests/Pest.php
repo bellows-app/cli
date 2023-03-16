@@ -14,6 +14,7 @@
 use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class)->in('Feature');
+uses(Tests\TestCase::class)->in('Unit');
 
 /*
 |--------------------------------------------------------------------------
