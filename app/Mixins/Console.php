@@ -23,6 +23,23 @@ class Console
         };
     }
 
+    public function anticipateRequired()
+    {
+        return function ($question, array|callable $choices, $default = null) {
+            $question = new Question($question, $default);
+
+            is_callable($choices)
+                ? $question->setAutocompleterCallback($choices)
+                : $question->setAutocompleterValues($choices);
+
+            do {
+                $answer = $this->output->askQuestion($question);
+            } while (trim($answer) === '' || $answer === null);
+
+            return $answer;
+        };
+    }
+
     public function askForNumber()
     {
         return function ($question, $default = null, $required = false) {
