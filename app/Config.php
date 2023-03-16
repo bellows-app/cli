@@ -10,16 +10,17 @@ class Config
 
     protected array $config;
 
-    public function __construct()
+    public function __construct(?string $configDir = null)
     {
-        $home = env('HOME');
+        if ($configDir === null) {
+            $home = env('HOME');
+            $configDir = $home . '/.bellows';
+        }
 
-        $dir = $home . '/.bellows';
-
-        $this->path = $dir . '/config.json';
+        $this->path = $configDir . '/config.json';
 
         if (!file_exists($this->path)) {
-            if (is_dir($dir) || mkdir($dir)) {
+            if (is_dir($configDir) || mkdir($configDir)) {
                 $this->createConfigFile($this->path);
             }
         }
