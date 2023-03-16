@@ -37,7 +37,7 @@ class Launch extends Command
      *
      * @var string
      */
-    protected $description = 'Create the current repo as a site on a Forge server';
+    protected $description = 'Launch the current repository as a site on a Forge server.';
 
     protected $defaultLongProcessMessages = [
         3  => 'One moment...',
