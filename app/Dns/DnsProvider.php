@@ -46,13 +46,16 @@ abstract class DnsProvider
         return class_basename($this);
     }
 
-    public function setCredentials(): void
+    public function setCredentials(): bool
     {
         $config = $this->getApiConfig($this->apiHost);
 
         if (!$config) {
-            $this->setUpNewCredentials();
-            return;
+            if ($this->console->confirm('Do you want to allow Bellows to manage your DNS records?', true)) {
+                return $this->setUpNewCredentials();
+            }
+
+            return false;
         }
 
         $credentials = collect($config)->first(fn ($creds) => $this->accountHasDomain($creds));
@@ -60,17 +63,18 @@ abstract class DnsProvider
         if (!$credentials) {
             $this->console->warn('No account found for this domain.');
 
-            if (!$this->console->confirm('Do you want to add a new account?', true)) {
-                return;
+            if ($this->console->confirm('Do you want to add a new account?', true)) {
+                return $this->setUpNewCredentials();
             }
 
-            $this->setUpNewCredentials();
-            return;
+            return false;
         }
 
         $this->console->miniTask('Found account for this domain', collect($config)->search($credentials));
 
         $this->setClient($this->getClient($credentials));
+
+        return true;
     }
 
     public static function matchByNameserver(string $nameserver): bool
@@ -78,7 +82,7 @@ abstract class DnsProvider
         return Str::contains($nameserver, static::getNameServerDomain());
     }
 
-    protected function setUpNewCredentials()
+    protected function setUpNewCredentials(): bool
     {
         $credentials = $this->addNewCredentials();
 
@@ -93,7 +97,7 @@ abstract class DnsProvider
             $this->console->warn('It seems that your credentials are invalid, try again.');
         }
 
-        $this->setCredentials();
+        return $this->setCredentials();
     }
 
     protected function getDefaultNewAccountName(array $credentials): ?string

@@ -193,7 +193,14 @@ class Launch extends Command
             $this->miniTask('Unsupported DNS provider', $domain, false);
         } else {
             $this->miniTask('Detected DNS provider', $dnsProvider->getName());
-            $dnsProvider->setCredentials();
+
+            if (!$dnsProvider->setCredentials()) {
+                // We found a DNS provider, but they don't want to use it
+                $dnsProvider = null;
+            }
+        }
+
+        if ($dnsProvider) {
             $secureSite = $this->confirm('Secure site (enable SSL)?', true);
         }
 

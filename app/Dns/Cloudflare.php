@@ -33,7 +33,8 @@ class Cloudflare extends DnsProvider
 
     protected function addNewCredentials(): array
     {
-        $this->console->info('https://dash.cloudflare.com/profile/api-tokens');
+        $this->console->info('Looks like you need a Cloudflare API token. You can create one here:');
+        $this->console->comment('https://dash.cloudflare.com/profile/api-tokens');
 
         $token = $this->console->secret('Your Cloudflare API token');
 

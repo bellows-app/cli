@@ -147,7 +147,7 @@ class Http
         }
 
         $this->console->info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
-        $this->console->info($addCredentialsPrompt->url);
+        $this->console->comment($addCredentialsPrompt->url);
 
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
             fn ($value) => [$value => $this->console->secret(ucwords($value))]

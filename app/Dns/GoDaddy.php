@@ -28,7 +28,8 @@ class GoDaddy extends DnsProvider
 
     protected function addNewCredentials(): array
     {
-        $this->console->info('https://developer.godaddy.com/keys');
+        $this->console->info('Looks like you need GoDaddy keys. You can retrieve them here:');
+        $this->console->comment('https://developer.godaddy.com/keys');
         $key = $this->console->secret('Your GoDaddy key');
         $secret = $this->console->secret('Your GoDaddy secret');
 

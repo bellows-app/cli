@@ -30,7 +30,8 @@ class DigitalOcean extends DnsProvider
 
     protected function addNewCredentials(): array
     {
-        $this->console->info('https://cloud.digitalocean.com/account/api/tokens');
+        $this->console->info('Looks like you need a DigitalOcean API token. You can create one here:');
+        $this->console->comment('https://cloud.digitalocean.com/account/api/tokens');
 
         $token = $this->console->secret('Your DigitalOcean API token');
 
