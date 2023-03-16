@@ -25,6 +25,7 @@ class FathomAnalytics extends Plugin
             new AddApiCredentialsPrompt(
                 url: 'https://app.usefathom.com/api',
                 credentials: ['token'],
+                displayName: 'Fathom Analytics',
             ),
             fn (PendingRequest $request) => $request->get('sites', ['limit' => 1]),
         );

@@ -35,8 +35,9 @@ class Mailgun extends Plugin
             fn (PendingRequest $request, array $credentials) => $request->asForm()->withBasicAuth('api', $credentials['token']),
             new AddApiCredentialsPrompt(
                 url: 'https://app.mailgun.com/app/account/security/api_keys',
-                helpText: 'Make sure you select your *Private API key*',
+                helpText: 'Make sure you select your <comment>Private API key</comment>',
                 credentials: ['token'],
+                displayName: 'Mailgun',
             ),
             fn (PendingRequest $request) => $request->get('domains', ['limit' => 1]),
         );

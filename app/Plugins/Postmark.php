@@ -38,6 +38,7 @@ class Postmark extends Plugin
                 url: 'https://account.postmarkapp.com/api_tokens',
                 helpText: 'Retrieve your *Account* token here.',
                 credentials: ['token'],
+                displayName: 'Postmark',
             ),
             fn (PendingRequest $request) => $request->get('servers', ['count' => 1, 'offset' => 0]),
         );

@@ -23,6 +23,7 @@ class Ably extends Plugin
                 url: 'https://ably.com/users/access_tokens',
                 helpText: 'When creating a token, make sure to select the following permissions: read:app, write:app, read:key',
                 credentials: ['token'],
+                displayName: 'Ably',
             ),
             fn (PendingRequest $request) => $request->get('me'),
         );

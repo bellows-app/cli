@@ -101,7 +101,9 @@ class Http
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
         if (!$this->getApiConfig($host)) {
-            $this->console->info("No config found for {$host}");
+            $this->console->miniTask('No config found for', $addCredentialsPrompt->displayName, false);
+            $this->console->newLine();
+
             return $this->addNewCredentials($host, $addCredentialsPrompt);
         }
 

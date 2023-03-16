@@ -22,6 +22,7 @@ class Pusher extends Plugin
             new AddApiCredentialsPrompt(
                 url: 'https://dashboard.pusher.com/accounts/api_key',
                 credentials: ['token'],
+                displayName: 'Pusher',
             ),
             fn (PendingRequest $request) => $request->get('apps.json'),
         );

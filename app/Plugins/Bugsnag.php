@@ -16,6 +16,7 @@ abstract class Bugsnag extends Plugin
             new AddApiCredentialsPrompt(
                 url: 'https://app.bugsnag.com/settings/my-account',
                 credentials: ['token'],
+                displayName: 'Bugsnag',
             ),
             fn (PendingRequest $request) => $request->get('user/organizations', ['per_page' => 1]),
         );

@@ -34,6 +34,7 @@ class DigitalOceanDatabase extends Plugin
             new AddApiCredentialsPrompt(
                 url: 'https://cloud.digitalocean.com/account/api/tokens',
                 credentials: ['token'],
+                displayName: 'DigitalOcean',
             ),
             fn (PendingRequest $request) => $request->get('databases', ['per_page' => 1]),
         );
