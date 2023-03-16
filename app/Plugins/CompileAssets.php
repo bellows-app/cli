@@ -40,24 +40,17 @@ class CompileAssets extends Plugin
 
     public function updateDeployScript(string $deployScript): string
     {
-        $lockFile = $this->getLockFile();
-
-        if ($lockFile === 'yarn.lock') {
-            return $this->deployScript->addAfterComposerInstall(
-                $deployScript,
-                [
-                    'yarn',
-                    'yarn build',
-                ],
-            );
-        }
+        $toAdd = $this->getLockFile() === 'yarn.lock' ? [
+            'yarn',
+            'yarn build',
+        ] :  [
+            'npm install',
+            'npm run build',
+        ];
 
         return $this->deployScript->addAfterComposerInstall(
             $deployScript,
-            [
-                'npm install',
-                'npm run build',
-            ],
+            $toAdd,
         );
     }
 }
