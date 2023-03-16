@@ -184,6 +184,8 @@ class Launch extends Command
 
         $pluginManager->setActive();
 
+        $this->info("💨 Off we go!");
+
         $this->step('Site');
 
         $baseParams = [
