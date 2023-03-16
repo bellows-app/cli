@@ -10,7 +10,7 @@ use Bellows\Dns\DnsFactory;
 use Bellows\Dns\GoDaddy;
 use Bellows\Plugins\Ably;
 use Illuminate\Console\BufferedConsoleOutput;
-use Illuminate\Console\OutputStyle as ConsoleOutputStyle;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -60,17 +60,97 @@ beforeEach(function () {
         function () {
             $console = new Console();
 
-            $console->setOutput(
-                app(ConsoleOutputStyle::class)
-            );
+            $console->setOutput(app(OutputStyle::class));
 
             return $console;
         }
     );
 
-    Http::fake([]);
+    Http::preventStrayRequests();
 });
 
-it('can boot up the plugin', function () {
-    dd(app(Ably::class));
+// $class = new class(app(InputInterface::class), app(OupuInt)) extends OutputStyle
+// {
+//     public function ask(string $question, ?string $default = null, ?callable $validator = null): mixed
+//     {
+//         return 'Test App';
+//     }
+
+//     public function confirm($question, $default = true): bool
+//     {
+//         return true;
+//     }
+
+//     public function choice($question, array $choices, $default = null, $attempts = null, $multiple = null): mixed
+//     {
+//         return 'Test Key';
+//     }
+// };
+
+it('can choose an app from the list', function () {
+    Http::fake([
+        'me' => Http::response([
+            'account' => [
+                'id' => '456',
+            ],
+        ]),
+        'accounts/456/apps' => Http::response([
+            [
+                'id'   => '789',
+                'name' => 'Test App',
+            ],
+        ]),
+        'apps/789/keys' => Http::response([
+            [
+                'name' => 'Test Key',
+                'key'  => 'test-key',
+            ],
+            [
+                'name' => 'Test Key 2',
+                'key'  => 'test-key-2',
+            ]
+        ]),
+    ]);
+
+    $plugin = app(Ably::class);
+
+    $plugin->setup();
+
+    expect($plugin->environmentVariables())->toEqual([
+        'BROADCAST_DRIVER' => 'ably',
+        'ABLY_KEY' => 'test-key',
+    ]);
+})->group('plugin');
+
+it('can create a new app', function () {
+    Http::fake([
+        'me' => Http::response([
+            'account' => [
+                'id' => '456',
+            ],
+        ]),
+        'accounts/456/apps' => Http::response([
+            'id'   => '789',
+            'name' => 'Test App',
+        ]),
+        'apps/789/keys' => Http::response([
+            [
+                'name' => 'Test Key',
+                'key'  => 'test-key',
+            ],
+            [
+                'name' => 'Test Key 2',
+                'key'  => 'test-key-2',
+            ]
+        ]),
+    ]);
+
+    $plugin = app(Ably::class);
+
+    $plugin->setup();
+
+    expect($plugin->environmentVariables())->toEqual([
+        'BROADCAST_DRIVER' => 'ably',
+        'ABLY_KEY' => 'test-key',
+    ]);
 })->group('plugin');

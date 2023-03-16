@@ -3,7 +3,6 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
-use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
 
