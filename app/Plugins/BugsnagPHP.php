@@ -8,8 +8,9 @@ class BugsnagPHP extends Bugsnag
 
     protected ?string $bugsnagKey;
 
-    protected array $requiredComposerPackages = [
+    protected array $anyRequiredComposerPackages = [
         'bugsnag/bugsnag-laravel',
+        'bugsnag/bugsnag',
     ];
 
     public function setup(): void

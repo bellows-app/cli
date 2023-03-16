@@ -31,7 +31,7 @@ abstract class Bugsnag extends Plugin
     protected function createProject(string $type): array
     {
         return $this->http->client('bugsnagOrganization')->post('projects', [
-            'name' => $this->projectConfig->appName,
+            'name' => $this->console->ask('Project name', $this->projectConfig->appName),
             'type' => $type,
         ])->json();
     }
