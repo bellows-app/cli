@@ -18,7 +18,9 @@ class UpdateDomainDNS extends Plugin
         }
 
         $needsUpdating = $this->getDomainsToCheck()->first(
-            fn ($subdomain) => $this->dnsProvider->getARecord($subdomain) !== $this->forgeServer->ip_address,
+            fn ($subdomain) => $subdomain === 'www'
+                ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [$this->projectConfig->domain, '@'])
+                : $this->dnsProvider->getARecord($subdomain) !== $this->forgeServer->ip_address,
         );
 
         if ($needsUpdating === null) {
@@ -78,11 +80,15 @@ class UpdateDomainDNS extends Plugin
             )
             ->filter(fn ($config) => $config['ip_address'] !== $this->forgeServer->ip_address)
             ->each(
-                fn ($config) => $this->dnsProvider->addARecord(
+                fn ($config) => $config['subdomain'] === 'www' ? $this->dnsProvider->addCNAMERecord(
+                    $config['subdomain'],
+                    '@',
+                    1800,
+                ) : $this->dnsProvider->addARecord(
                     $config['subdomain'],
                     $this->forgeServer->ip_address,
                     1800,
-                )
+                ),
             );
     }
 }

@@ -100,6 +100,15 @@ abstract class DnsProvider
         return $this->setCredentials();
     }
 
+    protected function withTrailingDot(string $value): string
+    {
+        if ($value === '@') {
+            return $value;
+        }
+
+        return Str::of($value)->trim('.')->wrap('', '.')->toString();
+    }
+
     protected function getDefaultNewAccountName(array $credentials): ?string
     {
         return null;

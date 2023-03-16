@@ -70,8 +70,7 @@ class DigitalOcean extends DnsProvider
         return $this->addRecord(
             DnsRecordType::CNAME,
             $name,
-            // Requires a trailing dot
-            Str::of($value)->trim('.')->wrap('', '.')->toString(),
+            $this->withTrailingDot($value),
             $ttl,
         );
     }
