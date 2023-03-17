@@ -3,17 +3,26 @@
 namespace Bellows\Commands;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
 
 class Support extends Command
 {
     protected $signature = 'support';
 
-    protected $description = 'Submit a support request, feedback, or a bug.';
+    protected $description = 'Submit a support request, feedback, bug, or view the docs.';
 
     public function handle()
     {
-        $type = $this->choice('What type of support request would you like to submit?', ['Bug', 'Feedback', 'Support']);
+        $type = $this->choice('What can we help you with?', ['Bug', 'Feedback', 'Support', 'View the Docs']);
+
+        if ($type === 'View the Docs') {
+            if ($this->confirm('This will open the docs in your browser, continue?', true)) {
+                Process::run('open https://bellows.dev/docs');
+            }
+
+            return;
+        }
 
         $prompt = [
             'Bug'      => 'Please describe the bug in detail',
