@@ -18,7 +18,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if (\Phar::running()) {
+            if (!is_dir(env('HOME') . '/.bellows')) {
+                mkdir(env('HOME') . '/.bellows');
+            }
+
+            if (!is_dir(env('HOME') . '/.bellows/logs')) {
+                mkdir(env('HOME') . '/.bellows/logs');
+            }
+        }
+
+        config([
+            'logging.channels.single.path' => \Phar::running()
+                ? env('HOME') . '/.bellows/logs/cli.log'
+                : storage_path('logs/laravel.log')
+        ]);
     }
 
     /**

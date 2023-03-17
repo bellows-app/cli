@@ -75,8 +75,6 @@ class Mailgun extends Plugin
                 1800,
             ];
 
-            ray($args);
-
             match ($record['record_type']) {
                 'TXT'   => $this->dnsProvider->addTXTRecord(...$args),
                 'CNAME' => $this->dnsProvider->addCNAMERecord(...$args),

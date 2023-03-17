@@ -40,23 +40,15 @@ class Support extends Command
             'email'       => $email,
         ];
 
-        ray(
-            json_encode($params),
-            env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),
-        );
-
         $computedSignature = hash_hmac(
             'sha256',
             json_encode($params),
             env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),
         );
 
-        $repsonse = Http::withHeaders([
+        Http::withHeaders([
             'Signature' => $computedSignature,
         ])->asJson()->acceptJson()->throw()->baseUrl(env('BELLOWS_URL', 'https://bellows.dev'))->post('cli/support', $params);
-
-        ray($computedSignature, json_encode($params));
-        // dd($computedSignature, $repsonse);
 
         $this->info('Thank you for your support request. We will get back to you as soon as possible.');
     }
