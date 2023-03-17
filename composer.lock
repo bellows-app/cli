@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09206ea396bcd32e65a53e6ccf90c2d0",
+    "content-hash": "120ff85e76a1a0118a9a63c93a8e088e",
     "packages": [
         {
             "name": "brick/math",
@@ -3202,16 +3202,16 @@
         },
         {
             "name": "spatie/laravel-data",
-            "version": "3.1.2",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-data.git",
-                "reference": "5cc6b285817dfff8327fd07870972d25c4e16aae"
+                "reference": "c4f632924870e52beefe982aa50a88ff59250bfd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-data/zipball/5cc6b285817dfff8327fd07870972d25c4e16aae",
-                "reference": "5cc6b285817dfff8327fd07870972d25c4e16aae",
+                "url": "https://api.github.com/repos/spatie/laravel-data/zipball/c4f632924870e52beefe982aa50a88ff59250bfd",
+                "reference": "c4f632924870e52beefe982aa50a88ff59250bfd",
                 "shasum": ""
             },
             "require": {
@@ -3230,6 +3230,7 @@
                 "orchestra/testbench": "^7.6|^8.0",
                 "pestphp/pest": "^1.22",
                 "pestphp/pest-plugin-laravel": "^1.3",
+                "phpbench/phpbench": "^1.2",
                 "phpstan/extension-installer": "^1.1",
                 "phpunit/phpunit": "^9.3",
                 "spatie/invade": "^1.0",
@@ -3272,7 +3273,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-data/issues",
-                "source": "https://github.com/spatie/laravel-data/tree/3.1.2"
+                "source": "https://github.com/spatie/laravel-data/tree/3.2.0"
             },
             "funding": [
                 {
@@ -3280,7 +3281,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-03-10T09:05:26+00:00"
+            "time": "2023-03-17T09:48:15+00:00"
         },
         {
             "name": "spatie/laravel-package-tools",
