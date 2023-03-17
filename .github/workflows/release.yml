@@ -33,7 +33,8 @@ jobs:
               with:
                   type: 'zip'
                   filename: 'release.zip'
-                  exclusions: '*tests* *app* *bootstrap* bellows *config*'
+                  # exclusions: '*tests* *app* *bootstrap* bellows *config*'
+                  path: 'builds'
 
             # Create a new release and include the build artifact from the previous step
             - name: Release and publish release
