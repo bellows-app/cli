@@ -1,0 +1,39 @@
+name: Build release
+
+# Run this workflow when a tag is published that follows the semantic versioning schema.
+on:
+    push:
+        tags:
+            - '*.*.*'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the code of this repository
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            # Setup PHP 8.0
+            - name: Setup PHP
+              uses: shivammathur/setup-php@master
+              with:
+                  php-version: 8.0
+
+            # Install the composer dependencies
+            - name: Install Dependencies
+              run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+
+            # Create a zip archive of all the files and exclude certain files from the archieve
+            - name: Create release archive
+              uses: thedoctor0/zip-release@master
+              with:
+                  type: 'zip'
+                  filename: 'release.zip'
+                  exclusions: 'tests app bootstrap bellows config'
+
+            # Create a new release and include the build artifact from the previous step
+            - name: Release and publish release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: release.zip
