@@ -34,7 +34,7 @@ jobs:
                   type: 'zip'
                   filename: 'release.zip'
                   # exclusions: '*tests* *app* *bootstrap* bellows *config*'
-                  path: 'builds'
+                  path: 'composer.json builds'
 
             # Create a new release and include the build artifact from the previous step
             - name: Release and publish release
