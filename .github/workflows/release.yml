@@ -6,13 +6,16 @@ on:
         tags:
             - '*.*.*'
 
+permissions:
+    contents: write
+
 jobs:
     build:
         runs-on: ubuntu-latest
         steps:
             # Checkout the code of this repository
             - name: Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             # Setup PHP 8.0
             # - name: Setup PHP
@@ -30,7 +33,7 @@ jobs:
               with:
                   type: 'zip'
                   filename: 'release.zip'
-                  exclusions: 'tests app bootstrap bellows config'
+                  exclusions: 'tests/* app/* bootstrap/* bellows config/*'
 
             # Create a new release and include the build artifact from the previous step
             - name: Release and publish release
