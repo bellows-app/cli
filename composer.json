@@ -19,7 +19,9 @@
         }
     ],
     "require": {
-        "php": "^8.0",
+        "php": "^8.0"
+    },
+    "require-dev": {
         "composer/semver": "^3.3",
         "guzzlehttp/guzzle": "^7.5",
         "haydenpierce/class-finder": "^0.5.0",
@@ -29,9 +31,7 @@
         "illuminate/view": "^10.0",
         "nunomaduro/termwind": "^1.14",
         "spatie/fork": "^1.1",
-        "spatie/laravel-data": "^3.0"
-    },
-    "require-dev": {
+        "spatie/laravel-data": "^3.0",
         "laravel/pint": "^1.2",
         "laravel-zero/framework": "^10.0",
         "mockery/mockery": "^1.4.4",
