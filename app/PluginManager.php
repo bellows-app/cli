@@ -2,8 +2,8 @@
 
 namespace Bellows;
 
-use HaydenPierce\ClassFinder\ClassFinder;
 use Illuminate\Support\Collection;
+use Spatie\StructureDiscoverer\Discover;
 
 class PluginManager
 {
@@ -12,10 +12,12 @@ class PluginManager
     public function __construct(
         protected Console $console,
         protected Config $config,
-        protected $namespaces = [
-            'Bellows\Plugins',
-        ],
+        protected array $pluginPaths = [],
     ) {
+        if (count($this->pluginPaths) === 0) {
+            // If nothing was passed in, default to app_path()
+            $this->pluginPaths = [app_path()];
+        }
     }
 
     public function setActive()
@@ -55,8 +57,8 @@ class PluginManager
 
     public function getAllAvailablePluginNames(): Collection
     {
-        return collect($this->namespaces)
-            ->flatMap(fn (string $namespace) => ClassFinder::getClassesInNamespace($namespace))
+        return collect($this->pluginPaths)
+            ->flatMap(fn (string $path) => Discover::in($path)->extending(Plugin::class)->get())
             ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
             ->values();
     }
