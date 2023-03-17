@@ -1,24 +1,21 @@
 {
-    "name": "laravel-zero/laravel-zero",
-    "description": "The Laravel Zero Framework.",
+    "name": "bellows-app/cli",
+    "description": "An intelligent command line utility that sits on top of Laravel Forge to get your site up and running with all of your third party integrations configured at the speed of light.",
     "keywords": [
-        "framework",
         "laravel",
-        "laravel zero",
         "console",
-        "cli"
+        "cli",
+        "forge",
+        "tools",
+        "productivity"
     ],
-    "homepage": "https://laravel-zero.com",
+    "homepage": "https://bellows.dev",
     "type": "project",
     "license": "MIT",
-    "support": {
-        "issues": "https://github.com/laravel-zero/laravel-zero/issues",
-        "source": "https://github.com/laravel-zero/laravel-zero"
-    },
     "authors": [
         {
-            "name": "Nuno Maduro",
-            "email": "enunomaduro@gmail.com"
+            "name": "Joe Tannenbaum",
+            "email": "joe@joe.codes"
         }
     ],
     "require": {
