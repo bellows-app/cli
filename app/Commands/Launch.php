@@ -182,7 +182,7 @@ class Launch extends Command
 
         $isolatedUser = $this->ask(
             'Isolated User',
-            Str::of($host)->replace('.test', '')->replace('.', '_')->toString()
+            Str::snake($appName),
         );
 
         [$repo, $repoBranch] = $this->getGitInfo($dir, $domain);

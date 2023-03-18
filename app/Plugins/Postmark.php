@@ -36,7 +36,7 @@ class Postmark extends Plugin
             ]),
             new AddApiCredentialsPrompt(
                 url: 'https://account.postmarkapp.com/api_tokens',
-                helpText: 'Retrieve your *Account* token here.',
+                helpText: 'Retrieve your <comment>Account</comment> token here.',
                 credentials: ['token'],
                 displayName: 'Postmark',
             ),

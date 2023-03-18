@@ -101,7 +101,7 @@ class Http
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
         if (!$this->getApiConfig($host)) {
-            $this->console->miniTask('No config found for', $addCredentialsPrompt->displayName, false);
+            $this->console->miniTask('No credentials found for', $addCredentialsPrompt->displayName, false);
             $this->console->newLine();
 
             return $this->addNewCredentials($host, $addCredentialsPrompt);
@@ -137,9 +137,9 @@ class Http
         if (!$addCredentialsPrompt) {
             // We'll just assume they need a personal access token and proceed accordingly
             $token = $this->console->secret('Token');
-            $accountName = $this->console->ask('Name (for your reference)');
+            $accountName = $this->console->ask('Account Name (for your own reference)');
             // TODO: Re-implement this, it was useful I think (maybe it's not common enough)
-            // $accountName = $this->ask('Name (for your reference)', $this->getDefaultNewAccountName($token));
+            // $accountName = $this->ask('Account Name (for your own reference)', $this->getDefaultNewAccountName($token));
 
             $value = compact('token');
 
@@ -156,7 +156,7 @@ class Http
         )->toArray();
 
         do {
-            $accountName = $this->console->ask('Name (for your reference)');
+            $accountName = $this->console->ask('Account Name (for your own reference)');
         } while (
             $this->getApiConfig($host, $accountName)
             && !$this->console->confirm('Overwrite existing account?')
