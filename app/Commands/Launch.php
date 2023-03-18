@@ -39,12 +39,6 @@ class Launch extends Command
      */
     protected $description = 'Launch the current repository as a site on a Forge server.';
 
-    protected $defaultLongProcessMessages = [
-        3  => 'One moment...',
-        7  => 'Almost done...',
-        11 => 'Wrapping up...',
-    ];
-
     /**
      * Execute the console command.
      *
