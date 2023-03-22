@@ -1,36 +1,16 @@
 <?php
 
 use Bellows\Config;
-use Bellows\Console;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ProjectConfig;
-use Bellows\Dns\Cloudflare;
-use Bellows\Dns\DigitalOcean;
-use Bellows\Dns\DnsFactory;
-use Bellows\Dns\GoDaddy;
 use Bellows\Plugins\Ably;
-use Illuminate\Console\BufferedConsoleOutput;
-use Illuminate\Console\OutputStyle;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 beforeEach(function () {
     $this->app->bind(
         Config::class,
         fn () => new Config(__DIR__ . '/../stubs/config'),
     );
-
-    $this->app->bind(OutputInterface::class, function () {
-        return new BufferedConsoleOutput();
-    });
-
-    $this->app->bind(InputInterface::class, function () {
-        return new ArgvInput();
-    });
 
     $this->app->bind(ProjectConfig::class, function () {
         return new ProjectConfig(
@@ -54,38 +34,7 @@ beforeEach(function () {
             'ip_address' => '123.123.123.123',
         ]);
     });
-
-    $this->app->bind(
-        Console::class,
-        function () {
-            $console = new Console();
-
-            $console->setOutput(app(OutputStyle::class));
-
-            return $console;
-        }
-    );
-
-    Http::preventStrayRequests();
 });
-
-// $class = new class(app(InputInterface::class), app(OupuInt)) extends OutputStyle
-// {
-//     public function ask(string $question, ?string $default = null, ?callable $validator = null): mixed
-//     {
-//         return 'Test App';
-//     }
-
-//     public function confirm($question, $default = true): bool
-//     {
-//         return true;
-//     }
-
-//     public function choice($question, array $choices, $default = null, $attempts = null, $multiple = null): mixed
-//     {
-//         return 'Test Key';
-//     }
-// };
 
 it('can choose an app from the list', function () {
     Http::fake([
@@ -112,13 +61,22 @@ it('can choose an app from the list', function () {
         ]),
     ]);
 
+    $mock = $this->plugin()
+        ->expectsQuestion('Select account', 'joe')
+        ->expectsConfirmation('Create new app?', 'no')
+        ->expectsQuestion('Which app do you want to use?', 'Test App')
+        ->expectsQuestion('Which key do you want to use?', 'Test Key')
+        ->setup();
+
     $plugin = app(Ably::class);
 
     $plugin->setup();
 
+    $mock->validate();
+
     expect($plugin->environmentVariables())->toEqual([
         'BROADCAST_DRIVER' => 'ably',
-        'ABLY_KEY' => 'test-key',
+        'ABLY_KEY'         => 'test-key',
     ]);
 })->group('plugin');
 
@@ -145,12 +103,21 @@ it('can create a new app', function () {
         ]),
     ]);
 
+    $mock = $this->plugin()
+        ->expectsQuestion('Select account', 'joe')
+        ->expectsConfirmation('Create new app?', 'yes')
+        ->expectsQuestion('App name', 'Test App')
+        ->expectsQuestion('Which key do you want to use?', 'Test Key')
+        ->setup();
+
     $plugin = app(Ably::class);
 
     $plugin->setup();
 
+    $mock->validate();
+
     expect($plugin->environmentVariables())->toEqual([
         'BROADCAST_DRIVER' => 'ably',
-        'ABLY_KEY' => 'test-key',
+        'ABLY_KEY'         => 'test-key',
     ]);
 })->group('plugin');
