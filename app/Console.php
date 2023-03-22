@@ -2,10 +2,11 @@
 
 namespace Bellows;
 
-use Bellows\Mixins\Console as MixinsConsole;
 use Illuminate\Console\Concerns\InteractsWithIO;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 class Console
 {
@@ -14,7 +15,18 @@ class Console
         choice as protected baseChoice;
     }
 
-    public function choice($question, array $choices, $default = null, $attempts = null, $multiple = false)
+    public function __construct(OutputStyle $outputStyle)
+    {
+        $this->setOutput($outputStyle);
+
+        if (!$this->output->getFormatter()->hasStyle('warning')) {
+            $style = new OutputFormatterStyle('yellow');
+
+            $this->output->getFormatter()->setStyle('warning', $style);
+        }
+    }
+
+    public function choice($question, array $choices, $default = null, $attempts = null, $multiple = false): array|string
     {
         if ($default === null && count($choices) === 1) {
             $default = array_key_first($choices);
@@ -31,7 +43,7 @@ class Console
         $attempts = null,
         $multiple = false
     ) {
-        $default = $this->determinDefaultFromCollection($default, $collection, $labelKey);
+        $default = $this->determineDefaultFromCollection($default, $collection, $labelKey);
 
         $result = $this->choice(
             $question,
@@ -48,7 +60,7 @@ class Console
         return $collection->firstWhere($labelKey, $result);
     }
 
-    protected function determinDefaultFromCollection($default, Collection $collection, string $labelKey)
+    protected function determineDefaultFromCollection($default, Collection $collection, string $labelKey)
     {
         if ($default === null) {
             return null;
