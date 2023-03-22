@@ -6,8 +6,11 @@ use Bellows\Config;
 use Bellows\Console;
 use Bellows\Mixins\Console as MixinsConsole;
 use Illuminate\Console\Command;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Signals;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,7 +46,16 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(Config::class, fn () => new Config);
-        $this->app->singleton(Console::class, fn () => new Console);
+
+        $this->app->singleton(
+            Console::class,
+            fn () => new Console(
+                app(
+                    OutputStyle::class,
+                    ['input' => new ArgvInput(), 'output' => new ConsoleOutput()],
+                )
+            )
+        );
 
         Signals::resolveAvailabilityUsing(function () {
             return $this->app->runningInConsole()
