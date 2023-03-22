@@ -3,7 +3,6 @@
 namespace Bellows\Commands;
 
 use Bellows\Config;
-use Bellows\Console;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\Job;
@@ -44,16 +43,13 @@ class Launch extends Command
      *
      * @return mixed
      */
-    public function handle(Config $config, Console $console, PluginManager $pluginManager)
+    public function handle(Config $config, PluginManager $pluginManager)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');
         $this->info("🚀 Launch time! Let's do this.");
         $this->newLine();
-
-        $console->setInput($this->input);
-        $console->setOutput($this->output);
 
         $forgeApiUrl = 'https://forge.laravel.com/api/v1';
         $apiHost = parse_url($forgeApiUrl, PHP_URL_HOST);
