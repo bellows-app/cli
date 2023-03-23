@@ -1,5 +1,5 @@
 {
-    "name": "laravel/laravel",
+    "name": "laravel\/laravel",
     "type": "project",
     "description": "The Laravel Framework.",
     "keywords": [
@@ -8,15 +8,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.0.2",
-        "bugsnag/bugsnag-laravel": "^0.2.0"
+        "php": "^8.1"
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp\/pest-plugin": true
         }
     },
     "minimum-stability": "stable",

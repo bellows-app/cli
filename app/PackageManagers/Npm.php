@@ -16,7 +16,8 @@ class Npm extends PackageManager
     {
         $json = $this->getPackageJson();
 
-        return Arr::get($json, 'dependencies.' . $package) || Arr::get($json, 'devDependencies.' . $package);
+        return Arr::get($json, 'dependencies.' . $package) !== null
+            || Arr::get($json, 'devDependencies.' . $package) !== null;
     }
 
     public function installPackage(string $package): void
@@ -27,7 +28,7 @@ class Npm extends PackageManager
 
     public function hasScriptCommand(string $command): bool
     {
-        return Arr::get($this->getPackageJson(), 'scripts.' . $command);
+        return Arr::get($this->getPackageJson(), 'scripts.' . $command) !== null;
     }
 
     protected function getPackageJson(): array

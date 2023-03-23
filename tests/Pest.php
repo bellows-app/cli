@@ -47,6 +47,36 @@ function cdTo(string $dir)
     chdir(dirname(__DIR__, 1) . '/' . $dir);
 }
 
+function installNpmPackage(string $package)
+{
+    $projectDir = __DIR__ . '/stubs/plugins/default';
+
+    $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
+    $packages['dependencies'][$package] = '*';
+
+    file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
+}
+
+function installComposerPackage(string $package)
+{
+    $projectDir = __DIR__ . '/stubs/plugins/default';
+
+    $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
+    $composer['require'][$package] = '*';
+
+    file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+}
+
+function setInEnv(string $key, string $value)
+{
+    $projectDir = __DIR__ . '/stubs/plugins/default';
+
+    $env = file_get_contents($projectDir . '/.env');
+    $env .= "\n{$key}={$value}";
+
+    file_put_contents($projectDir . '/.env', $env);
+}
+
 function server(array $params)
 {
     return array_merge(
