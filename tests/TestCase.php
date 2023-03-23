@@ -13,7 +13,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        Http::preventStrayRequests();
+        // Http::preventStrayRequests();
     }
 
     public function plugin(): PendingPlugin
