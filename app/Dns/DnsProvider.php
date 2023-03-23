@@ -29,19 +29,14 @@ abstract class DnsProvider
         $this->apiHost = parse_url($this->apiBaseUrl, PHP_URL_HOST);
     }
 
+    public static function matchByNameserver(string $nameserver): bool
+    {
+        return Str::contains($nameserver, static::getNameServerDomain());
+    }
+
     abstract public static function getNameServerDomain(): string;
 
-    abstract protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool;
-
-    abstract protected function addNewCredentials(): array;
-
-    abstract protected function accountHasDomain(array $credentials): bool;
-
-    abstract protected function getClient(array $credentials): PendingRequest;
-
-    abstract protected function testApiCall(array $credentials): bool;
-
-    public function getName()
+    public function getName(): string
     {
         return class_basename($this);
     }
@@ -77,10 +72,45 @@ abstract class DnsProvider
         return true;
     }
 
-    public static function matchByNameserver(string $nameserver): bool
+    public function addARecord(string $name, string $value, int $ttl): bool
     {
-        return Str::contains($nameserver, static::getNameServerDomain());
+        return $this->addRecord(DnsRecordType::A, $name ? $name : '@', $value, $ttl);
     }
+
+    public function addTXTRecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
+    }
+
+    public function addCNAMERecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
+    }
+
+    public function getARecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::A, $name);
+    }
+
+    public function getTXTRecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::TXT, $name);
+    }
+
+    public function getCNAMERecord(string $name): ?string
+    {
+        return $this->getRecord(DnsRecordType::CNAME, $name);
+    }
+
+    abstract protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool;
+
+    abstract protected function addNewCredentials(): array;
+
+    abstract protected function accountHasDomain(array $credentials): bool;
+
+    abstract protected function getClient(array $credentials): PendingRequest;
+
+    abstract protected function testApiCall(array $credentials): bool;
 
     protected function setUpNewCredentials(): bool
     {
@@ -114,44 +144,14 @@ abstract class DnsProvider
         return null;
     }
 
-    protected function setConfig(string $name, array $payload)
+    protected function setConfig(string $name, array $payload): void
     {
         $this->setApiConfig($this->apiHost, $name, $payload);
     }
 
-    protected function setClient(PendingRequest $base)
+    protected function setClient(PendingRequest $base): void
     {
         Http::macro('dnsProvider', fn () => $base);
-    }
-
-    public function addARecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::A, $name ? $name : '@', $value, $ttl);
-    }
-
-    public function addTXTRecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::TXT, $name, $value, $ttl);
-    }
-
-    public function addCNAMERecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
-    }
-
-    public function getARecord(string $name): ?string
-    {
-        return $this->getRecord(DnsRecordType::A, $name);
-    }
-
-    public function getTXTRecord(string $name): ?string
-    {
-        return $this->getRecord(DnsRecordType::TXT, $name);
-    }
-
-    public function getCNAMERecord(string $name): ?string
-    {
-        return $this->getRecord(DnsRecordType::CNAME, $name);
     }
 
     abstract protected function getRecord(DnsRecordType $type, string $name): ?string;

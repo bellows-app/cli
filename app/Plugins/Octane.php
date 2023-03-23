@@ -5,9 +5,8 @@ namespace Bellows\Plugins;
 use Bellows\Data\Daemon;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class Octane extends Plugin
 {
@@ -29,7 +28,7 @@ class Octane extends Plugin
             ->filter(fn ($s) => $s['project_type'] === 'octane')
             ->map(fn ($s) => (string) Http::forgeServer()->get("sites/{$s['id']}/env"))
             ->map(fn ($s) => Dotenv::parse($s))
-            ->map(fn ($s) => Arr::get($s,  'OCTANE_PORT'))
+            ->map(fn ($s) => Arr::get($s, 'OCTANE_PORT'))
             ->filter()
             ->map(fn ($s) => (int) $s)
             ->max() ?: $defaultOctanePort - 1;

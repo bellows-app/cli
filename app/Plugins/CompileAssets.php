@@ -31,19 +31,12 @@ class CompileAssets extends Plugin
         return $this->enabledByDefault('You probably want to compile your assets');
     }
 
-    protected function getLockFile()
-    {
-        return collect($this->lockFiles)->first(
-            fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file)
-        );
-    }
-
     public function updateDeployScript(string $deployScript): string
     {
         $toAdd = $this->getLockFile() === 'yarn.lock' ? [
             'yarn',
             'yarn build',
-        ] :  [
+        ] : [
             'npm install',
             'npm run build',
         ];
@@ -51,6 +44,13 @@ class CompileAssets extends Plugin
         return $this->deployScript->addAfterComposerInstall(
             $deployScript,
             $toAdd,
+        );
+    }
+
+    protected function getLockFile()
+    {
+        return collect($this->lockFiles)->first(
+            fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file)
         );
     }
 }

@@ -18,10 +18,21 @@ class DigitalOcean extends DnsProvider
         return 'digitalocean.com';
     }
 
+    public function addCNAMERecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(
+            DnsRecordType::CNAME,
+            $name,
+            $this->withTrailingDot($value),
+            $ttl,
+        );
+    }
+
     protected function accountHasDomain(array $credentials): bool
     {
         try {
             $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -42,6 +53,7 @@ class DigitalOcean extends DnsProvider
     {
         try {
             $this->getClient($credentials)->get('account')->throw();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -63,16 +75,6 @@ class DigitalOcean extends DnsProvider
         $teamName = Arr::get($result, 'account.team.name');
 
         return $teamName === 'My Team' ? null : Str::slug($teamName);
-    }
-
-    public function addCNAMERecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(
-            DnsRecordType::CNAME,
-            $name,
-            $this->withTrailingDot($value),
-            $ttl,
-        );
     }
 
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
@@ -103,6 +105,7 @@ class DigitalOcean extends DnsProvider
             return true;
         } catch (\Exception $e) {
             $this->console->error($e->getMessage());
+
             return false;
         }
     }

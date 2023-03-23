@@ -18,6 +18,7 @@ class BugsnagJS extends Bugsnag
 
         if ($this->bugsnagKey) {
             $this->console->miniTask('Using existing Bugsnag JS key from', '.env');
+
             return;
         }
 
@@ -28,6 +29,7 @@ class BugsnagJS extends Bugsnag
         if ($this->console->confirm('Create Bugsnag JS Project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
+
             return;
         }
 

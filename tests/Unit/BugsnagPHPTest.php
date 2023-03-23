@@ -77,14 +77,14 @@ it('can choose an app from the list', function () {
         ]),
         'organizations/123/projects?per_page=100' => Http::response([
             [
-                'api_key'   => '456',
-                'name' => 'Test App',
-                'type' => 'php',
+                'api_key' => '456',
+                'name'    => 'Test App',
+                'type'    => 'php',
             ],
             [
-                'api_key'   => '789',
-                'name' => 'Test App 2',
-                'type' => 'php',
+                'api_key' => '789',
+                'name'    => 'Test App 2',
+                'type'    => 'php',
             ],
         ]),
     ]);

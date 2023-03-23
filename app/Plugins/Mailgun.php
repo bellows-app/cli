@@ -49,6 +49,22 @@ class Mailgun extends Plugin
         }
     }
 
+    public function wrapUp(): void
+    {
+        if ($this->verifyNewDomain) {
+            $this->http->client()->put("domains/{$this->domain}/verify");
+        }
+    }
+
+    public function environmentVariables(): array
+    {
+        return [
+            'MAILGUN_DOMAIN'   => $this->domain,
+            'MAILGUN_SECRET'   => $this->getApiConfig($this->domain)['token'],
+            'MAILGUN_ENDPOINT' => $this->endpoint,
+        ];
+    }
+
     protected function createDomain()
     {
         $domain = $this->console->ask('What is the domain name?', 'mail.' . $this->projectConfig->domain);
@@ -101,22 +117,5 @@ class Mailgun extends Plugin
         );
 
         $this->domain = $domain['name'];
-    }
-
-
-    public function wrapUp(): void
-    {
-        if ($this->verifyNewDomain) {
-            $this->http->client()->put("domains/{$this->domain}/verify");
-        }
-    }
-
-    public function environmentVariables(): array
-    {
-        return [
-            'MAILGUN_DOMAIN'   => $this->domain,
-            'MAILGUN_SECRET'   => $this->getApiConfig($this->domain)['token'],
-            'MAILGUN_ENDPOINT' => $this->endpoint,
-        ];
     }
 }

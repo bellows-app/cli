@@ -18,10 +18,15 @@ class Cloudflare extends DnsProvider
         return 'ns.cloudflare.com';
     }
 
+    public function addCNAMERecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
+    }
+
     protected function accountHasDomain(array $credentials): bool
     {
         try {
-            $result = $this->getClient($credentials)->get("zones", [
+            $result = $this->getClient($credentials)->get('zones', [
                 'name' => $this->baseDomain,
             ])->throw()->json();
 
@@ -46,6 +51,7 @@ class Cloudflare extends DnsProvider
         try {
             // TODO: Also make sure we have the right scope (DNS)?
             $this->getClient($credentials)->get('user/tokens/verify')->throw();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -58,11 +64,6 @@ class Cloudflare extends DnsProvider
             ->withToken($credentials['token'])
             ->acceptJson()
             ->asJson();
-    }
-
-    public function addCNAMERecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(DnsRecordType::CNAME, $name, $value, $ttl);
     }
 
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
@@ -93,6 +94,7 @@ class Cloudflare extends DnsProvider
             return true;
         } catch (\Exception $e) {
             $this->console->error($e->getMessage());
+
             return false;
         }
     }
@@ -120,7 +122,7 @@ class Cloudflare extends DnsProvider
             return $this->zoneId;
         }
 
-        $zone = Http::dnsProvider()->get("zones", [
+        $zone = Http::dnsProvider()->get('zones', [
             'name' => $this->baseDomain,
         ])->json();
 

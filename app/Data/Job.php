@@ -3,8 +3,8 @@
 namespace Bellows\Data;
 
 use Bellows\Enums\JobFrequency;
-use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Attributes\Validation\Enum;
+use Spatie\LaravelData\Data;
 
 class Job extends Data
 {

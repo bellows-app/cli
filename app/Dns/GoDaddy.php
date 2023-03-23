@@ -5,7 +5,6 @@ namespace Bellows\Dns;
 use Bellows\Enums\DnsRecordType;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class GoDaddy extends DnsProvider
 {
@@ -16,10 +15,21 @@ class GoDaddy extends DnsProvider
         return 'domaincontrol.com';
     }
 
+    public function addCNAMERecord(string $name, string $value, int $ttl): bool
+    {
+        return $this->addRecord(
+            DnsRecordType::CNAME,
+            $name,
+            $this->withTrailingDot($value),
+            $ttl,
+        );
+    }
+
     protected function accountHasDomain(array $credentials): bool
     {
         try {
             $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -40,6 +50,7 @@ class GoDaddy extends DnsProvider
     {
         try {
             $this->getClient($credentials)->get('domains')->throw()->json();
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -52,16 +63,6 @@ class GoDaddy extends DnsProvider
             ->withToken("{$credentials['key']}:{$credentials['secret']}", 'sso-key')
             ->acceptJson()
             ->asJson();
-    }
-
-    public function addCNAMERecord(string $name, string $value, int $ttl): bool
-    {
-        return $this->addRecord(
-            DnsRecordType::CNAME,
-            $name,
-            $this->withTrailingDot($value),
-            $ttl,
-        );
     }
 
     protected function addRecord(DnsRecordType $type, string $name, string $value, int $ttl): bool
@@ -88,12 +89,13 @@ class GoDaddy extends DnsProvider
                     'name' => $name,
                     'ttl'  => $ttl,
                     'type' => $type->value,
-                ]
+                ],
             ]);
 
             return true;
         } catch (\Exception $e) {
             $this->console->error($e->getMessage());
+
             return false;
         }
     }

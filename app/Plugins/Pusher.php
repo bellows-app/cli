@@ -35,6 +35,17 @@ class Pusher extends Plugin
         $this->presentChoices();
     }
 
+    public function environmentVariables(): array
+    {
+        return [
+            'BROADCAST_DRIVER'   => 'pusher',
+            'PUSHER_APP_ID'      => $this->appConfig['app_id'],
+            'PUSHER_APP_KEY'     => $this->appConfig['key'],
+            'PUSHER_APP_SECRET'  => $this->appConfig['secret'],
+            'PUSHER_APP_CLUSTER' => $this->appConfig['cluster'],
+        ];
+    }
+
     protected function presentChoices()
     {
         $apps = collect($this->http->client()->get('apps.json')->json());
@@ -54,16 +65,5 @@ class Pusher extends Plugin
         $this->appConfig = $this->http->client()->get("apps/{$app['id']}/tokens.json")->json()[0];
 
         $this->appConfig['cluster'] = $app['cluster'];
-    }
-
-    public function environmentVariables(): array
-    {
-        return [
-            'BROADCAST_DRIVER'   => 'pusher',
-            'PUSHER_APP_ID'      => $this->appConfig['app_id'],
-            'PUSHER_APP_KEY'     => $this->appConfig['key'],
-            'PUSHER_APP_SECRET'  => $this->appConfig['secret'],
-            'PUSHER_APP_CLUSTER' => $this->appConfig['cluster'],
-        ];
     }
 }

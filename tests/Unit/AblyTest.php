@@ -38,7 +38,7 @@ it('can create a new app', function () {
             [
                 'name' => 'Test Key 2',
                 'key'  => 'test-key-2',
-            ]
+            ],
         ]),
     ]);
 

@@ -31,16 +31,6 @@ trait MakesEnabledDecisions
         );
     }
 
-    protected function hasRequiredPackages(): bool
-    {
-        return collect(
-            count($this->requiredComposerPackages),
-            count($this->requiredNpmPackages),
-            count($this->anyRequiredComposerPackages),
-            count($this->anyRequiredNpmPackages),
-        )->max() > 0;
-    }
-
     public function getName()
     {
         return class_basename(static::class);
@@ -71,48 +61,6 @@ trait MakesEnabledDecisions
         return null;
     }
 
-    protected function ensureRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
-    {
-        $packagePropertyName = ucfirst(strtolower($packageManager));
-        $property = "required{$packagePropertyName}Packages";
-
-        $packagesInstalled = $this->$packageManager->allPackagesAreInstalled($this->$property);
-        $packageList       = collect($this->$property)->implode(', ');
-        $descriptor        = count($this->$property) > 1 ? 'are' : 'is';
-
-        return $this->getDefaultEnabledDecision(
-            $packagesInstalled,
-            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
-            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
-        );
-    }
-
-    protected function ensureAnyRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
-    {
-        $packagePropertyName = ucfirst(strtolower($packageManager));
-        $property = "anyRequired{$packagePropertyName}Packages";
-
-        $packagesInstalled = $this->$packageManager->anyPackagesAreInstalled($this->$property);
-        $packageList       = collect($this->$property)->implode(', ');
-        $descriptor        = count($this->$property) > 1 ? 'are' : 'is';
-
-        return $this->getDefaultEnabledDecision(
-            $packagesInstalled,
-            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
-            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
-        );
-    }
-
-    protected function enabledByDefault(string $reason): EnabledByDefault
-    {
-        return new EnabledByDefault($reason);
-    }
-
-    protected function disabledByDefault(string $reason): DisabledByDefault
-    {
-        return new DisabledByDefault($reason);
-    }
-
     public function hasADefaultEnabledDecision()
     {
         $this->getDefaultEnabled();
@@ -135,6 +83,58 @@ trait MakesEnabledDecisions
         }
 
         return null;
+    }
+
+    protected function hasRequiredPackages(): bool
+    {
+        return collect(
+            count($this->requiredComposerPackages),
+            count($this->requiredNpmPackages),
+            count($this->anyRequiredComposerPackages),
+            count($this->anyRequiredNpmPackages),
+        )->max() > 0;
+    }
+
+    protected function ensureRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
+    {
+        $packagePropertyName = ucfirst(strtolower($packageManager));
+        $property = "required{$packagePropertyName}Packages";
+
+        $packagesInstalled = $this->$packageManager->allPackagesAreInstalled($this->$property);
+        $packageList = collect($this->$property)->implode(', ');
+        $descriptor = count($this->$property) > 1 ? 'are' : 'is';
+
+        return $this->getDefaultEnabledDecision(
+            $packagesInstalled,
+            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
+            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
+        );
+    }
+
+    protected function ensureAnyRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
+    {
+        $packagePropertyName = ucfirst(strtolower($packageManager));
+        $property = "anyRequired{$packagePropertyName}Packages";
+
+        $packagesInstalled = $this->$packageManager->anyPackagesAreInstalled($this->$property);
+        $packageList = collect($this->$property)->implode(', ');
+        $descriptor = count($this->$property) > 1 ? 'are' : 'is';
+
+        return $this->getDefaultEnabledDecision(
+            $packagesInstalled,
+            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
+            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
+        );
+    }
+
+    protected function enabledByDefault(string $reason): EnabledByDefault
+    {
+        return new EnabledByDefault($reason);
+    }
+
+    protected function disabledByDefault(string $reason): DisabledByDefault
+    {
+        return new DisabledByDefault($reason);
     }
 
     protected function getDefaultEnabledDecision(bool $enabled, $messageIfEnabled, $messageIfDisabled = null): DefaultEnabledDecision

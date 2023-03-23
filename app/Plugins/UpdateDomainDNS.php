@@ -49,15 +49,6 @@ class UpdateDomainDNS extends Plugin
         );
     }
 
-    protected function getDomainsToCheck(): Collection
-    {
-        if (Domain::isBaseDomain($this->projectConfig->domain)) {
-            return collect(['www', '']);
-        }
-
-        return collect([Domain::getSubdomain($this->projectConfig->domain)]);
-    }
-
     public function setup(): void
     {
         $this->console->info('Updating DNS records...');
@@ -90,5 +81,14 @@ class UpdateDomainDNS extends Plugin
                     1800,
                 ),
             );
+    }
+
+    protected function getDomainsToCheck(): Collection
+    {
+        if (Domain::isBaseDomain($this->projectConfig->domain)) {
+            return collect(['www', '']);
+        }
+
+        return collect([Domain::getSubdomain($this->projectConfig->domain)]);
     }
 }

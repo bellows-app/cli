@@ -47,7 +47,7 @@ class Env
 
         if (!$match) {
             // Not part of any grouping, just tack it onto the end
-            $this->raw .=  PHP_EOL . PHP_EOL . "{$key}={$value}";
+            $this->raw .= PHP_EOL . PHP_EOL . "{$key}={$value}";
 
             return $this->raw;
         }

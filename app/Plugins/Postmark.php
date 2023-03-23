@@ -43,7 +43,7 @@ class Postmark extends Plugin
             fn (PendingRequest $request) => $request->get('servers', ['count' => 1, 'offset' => 0]),
         );
 
-        $this->server        = $this->getServer();
+        $this->server = $this->getServer();
         $this->sendingDomain = $this->getDomain();
 
         $this->updateDomainRecordsWithProvider();
@@ -95,6 +95,7 @@ class Postmark extends Plugin
 
         if (!$this->dnsProvider) {
             $this->console->warn('Skipping DNS verification as no DNS provider is configured.');
+
             return;
         }
 
@@ -169,7 +170,7 @@ class Postmark extends Plugin
             $name = $this->console->ask('Domain name', "mail.{$this->projectConfig->domain}");
 
             return $this->http->client()->post('domains', [
-                'Name'         => $name,
+                'Name' => $name,
             ])->json();
         }
 

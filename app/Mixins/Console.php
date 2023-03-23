@@ -91,7 +91,7 @@ class Console
 
             $result = Fork::new()
                 ->run(
-                    function () use ($task, $message, $success, $title,  $socketToSpinner) {
+                    function () use ($task, $message, $success, $title, $socketToSpinner) {
                         $output = $task();
 
                         $socketToSpinner->write(1);
@@ -103,15 +103,15 @@ class Console
 
                         if (is_callable($message)) {
                             $display = $message($output);
-                        } else if (is_string($message)) {
+                        } elseif (is_string($message)) {
                             $display = $message;
-                        } else if (is_string($output)) {
+                        } elseif (is_string($output)) {
                             $display = $output;
                         }
 
                         if (is_callable($success)) {
                             $wasSuccessful = $success($output);
-                        } else if (is_bool($success)) {
+                        } elseif (is_bool($success)) {
                             $wasSuccessful = $success;
                         } else {
                             // At this point we just assume things worked out

@@ -5,8 +5,8 @@ namespace Bellows;
 use Bellows\Data\AddApiCredentialsPrompt;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Http as HttpFacade;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http as HttpFacade;
 
 class Http
 {
@@ -98,6 +98,15 @@ class Http
         $this->clients[$name] = fn () => $this->clients[$toExtend]()->baseUrl($baseUrl);
     }
 
+    public function client(string $name = 'default'): PendingRequest
+    {
+        if (!array_key_exists($name, $this->clients)) {
+            throw new \Exception("Client {$name} does not exist");
+        }
+
+        return $this->clients[$name]();
+    }
+
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
         if (!$this->getApiConfig($host)) {
@@ -165,14 +174,5 @@ class Http
         $this->setApiConfig($host, $accountName, $value);
 
         return $value;
-    }
-
-    public function client(string $name = 'default'): PendingRequest
-    {
-        if (!array_key_exists($name, $this->clients)) {
-            throw new \Exception("Client {$name} does not exist");
-        }
-
-        return $this->clients[$name]();
     }
 }

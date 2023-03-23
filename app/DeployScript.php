@@ -8,20 +8,23 @@ use Illuminate\Support\Str;
 class DeployScript
 {
     const COMPOSER_INSTALL = '$FORGE_COMPOSER install';
+
     const PHP_RELOAD = '( flock -w 10 9 || exit 1';
+
     const OCTANE_RELOAD = '! $FORGE_PHP artisan octane:status';
+
     const MIGRATE = '$FORGE_PHP artisan migrate';
 
     public function __construct(protected Console $console)
     {
     }
 
-    public function addAfterComposerInstall(string $currentScript, string | array $toAdd): string
+    public function addAfterComposerInstall(string $currentScript, string|array $toAdd): string
     {
         return $this->addAfterLine($currentScript, self::COMPOSER_INSTALL, $toAdd);
     }
 
-    public function addBeforePHPReload(string $currentScript, string | array $toAdd): string
+    public function addBeforePHPReload(string $currentScript, string|array $toAdd): string
     {
         return $this->addBeforeLine(
             $currentScript,
@@ -30,7 +33,7 @@ class DeployScript
         );
     }
 
-    public function addAfterLine(string $currentScript, string $toFind, string | array $toAdd): string
+    public function addAfterLine(string $currentScript, string $toFind, string|array $toAdd): string
     {
         [$parts, $index] = $this->fineLine($currentScript, $toFind);
 
@@ -45,7 +48,7 @@ class DeployScript
         return $this->cleanUp($parts->implode(PHP_EOL));
     }
 
-    public function addBeforeLine(string $currentScript, string | array $toFind, string | array $toAdd): string
+    public function addBeforeLine(string $currentScript, string|array $toFind, string|array $toAdd): string
     {
         [$parts, $index] = $this->fineLine($currentScript, $toFind);
 
@@ -60,7 +63,7 @@ class DeployScript
         return $this->cleanUp($parts->implode(PHP_EOL));
     }
 
-    public function formatLines(string | array $toAdd, Collection $parts, int $index)
+    public function formatLines(string|array $toAdd, Collection $parts, int $index)
     {
         $toAdd = collect($toAdd)->map('trim');
 
@@ -93,7 +96,7 @@ class DeployScript
         return preg_replace('/\n{3,}/', PHP_EOL . PHP_EOL, $currentScript);
     }
 
-    public function fineLine(string $currentScript, string | array $toFind): array
+    public function fineLine(string $currentScript, string|array $toFind): array
     {
         $parts = collect(explode(PHP_EOL, $currentScript));
 

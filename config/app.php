@@ -1,7 +1,6 @@
 <?php
 
 use Bellows\Providers\AppServiceProvider;
-use Illuminate\Foundation\Providers\ArtisanServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelRay\RayServiceProvider;
 

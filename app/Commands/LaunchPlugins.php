@@ -6,8 +6,6 @@ use Bellows\Config;
 use Bellows\PluginManager;
 use LaravelZero\Framework\Commands\Command;
 
-use function Termwind\render;
-
 class LaunchPlugins extends Command
 {
     protected $signature = 'launch:plugins {action? : blacklist, whitelist}';
@@ -51,7 +49,6 @@ class LaunchPlugins extends Command
             $action = $validActions->where('title', $action)->first()['value'];
         }
 
-
         switch ($action) {
             case 'blacklist':
                 $this->blacklistPlugins($config);
@@ -72,6 +69,7 @@ class LaunchPlugins extends Command
 
             if (!$this->confirm('Do you want to clear your whitelist and start a blacklist instead?')) {
                 $this->info('Ok, aborting.');
+
                 return;
             }
 
@@ -81,8 +79,8 @@ class LaunchPlugins extends Command
         }
 
         $allPlugins = $this->pluginManager->getAllAvailablePluginNames()->map(fn ($plugin) => [
-            'name'  => class_basename($plugin),
-            'value' => $plugin,
+            'name'    => class_basename($plugin),
+            'value'   => $plugin,
             'enabled' => !in_array($plugin, $blacklist),
         ])->sortByDesc('enabled');
 
@@ -136,6 +134,7 @@ class LaunchPlugins extends Command
 
             if (!$this->confirm('Do you want to clear your blacklist and start a whitelist instead?')) {
                 $this->info('Ok, aborting.');
+
                 return;
             }
 
@@ -145,8 +144,8 @@ class LaunchPlugins extends Command
         }
 
         $allPlugins = $this->pluginManager->getAllAvailablePluginNames()->map(fn ($plugin) => [
-            'name'  => class_basename($plugin),
-            'value' => $plugin,
+            'name'    => class_basename($plugin),
+            'value'   => $plugin,
             'enabled' => count($whitelist) === 0 || in_array($plugin, $whitelist),
         ])->sortByDesc('enabled');
 

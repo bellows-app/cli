@@ -6,8 +6,8 @@ use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class DigitalOceanDatabase extends Plugin
 {
@@ -59,11 +59,25 @@ class DigitalOceanDatabase extends Plugin
 
         if (!$this->setUser($db) || !$this->setDatabase($db)) {
             $this->setup();
+
             return;
         }
 
         $this->host = $db['private_connection']['host'];
         $this->port = $db['private_connection']['port'];
+    }
+
+    public function environmentVariables(): array
+    {
+        return [
+            'DB_CONNECTION'        => $this->dbType,
+            'DB_DATABASE'          => $this->databaseName,
+            'DB_USERNAME'          => $this->databaseUser,
+            'DB_HOST'              => $this->host,
+            'DB_PORT'              => $this->port,
+            'DB_PASSWORD'          => $this->password,
+            'DB_ALLOW_DISABLED_PK' => 'true',
+        ];
     }
 
     protected function getDefaultNewAccountName(string $token): ?string
@@ -126,18 +140,5 @@ class DigitalOceanDatabase extends Plugin
         );
 
         return true;
-    }
-
-    public function environmentVariables(): array
-    {
-        return [
-            'DB_CONNECTION'        => $this->dbType,
-            'DB_DATABASE'          => $this->databaseName,
-            'DB_USERNAME'          => $this->databaseUser,
-            'DB_HOST'              => $this->host,
-            'DB_PORT'              => $this->port,
-            'DB_PASSWORD'          => $this->password,
-            'DB_ALLOW_DISABLED_PK' => 'true',
-        ];
     }
 }

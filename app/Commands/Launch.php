@@ -19,8 +19,8 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
-use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
+use LaravelZero\Framework\Commands\Command;
 
 class Launch extends Command
 {
@@ -141,7 +141,7 @@ class Launch extends Command
 
         Http::macro(
             'forgeServer',
-            fn () =>  Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}")
+            fn () => Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}")
         );
 
         $localEnv = new Env(file_get_contents($dir . '/.env'));
@@ -149,7 +149,7 @@ class Launch extends Command
         $host = parse_url($localEnv->get('APP_URL'), PHP_URL_HOST);
 
         $appName = $this->ask('App Name', $localEnv->get('APP_NAME'));
-        $domain  = $this->ask('Domain', Str::replace('.test', '.com', $host));
+        $domain = $this->ask('Domain', Str::replace('.test', '.com', $host));
 
         $this->newLine();
 
@@ -218,7 +218,7 @@ class Launch extends Command
 
         $pluginManager->setActive();
 
-        $this->info("💨 Off we go!");
+        $this->info('💨 Off we go!');
 
         $this->step('Site');
 
@@ -367,7 +367,7 @@ class Launch extends Command
         $this->step('Workers');
 
         $workers = $pluginManager->workers()->map(fn (Worker $worker) => array_merge(
-            ['php_version'  => $projectConfig->phpVersion],
+            ['php_version' => $projectConfig->phpVersion],
             $worker->toArray()
         ));
 
@@ -545,7 +545,7 @@ class Launch extends Command
 
         $phpVersion = $this->withSpinner(
             title: 'Determining PHP Version',
-            task: function () use ($requiredPhpVersion,) {
+            task: function () use ($requiredPhpVersion) {
                 $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortByDesc('version');
 
                 return $requiredPhpVersion ? $phpVersions->first(

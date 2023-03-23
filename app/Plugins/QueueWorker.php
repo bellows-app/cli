@@ -51,6 +51,16 @@ class QueueWorker extends Plugin
         } while ($addAnother);
     }
 
+    public function workers(): array
+    {
+        return [
+            new Worker(
+                connection: 'database',
+                queue: 'default',
+            ),
+        ];
+    }
+
     protected function getParams(): array
     {
         $params = [
@@ -59,8 +69,8 @@ class QueueWorker extends Plugin
                 'value' => 0,
             ],
             'sleep' => [
-                'label' => 'Rest Seconds When Empty',
-                'value' => 60,
+                'label'    => 'Rest Seconds When Empty',
+                'value'    => 60,
                 'required' => true,
             ],
             'processes' => [
@@ -92,7 +102,7 @@ class QueueWorker extends Plugin
 
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
-                } else if (is_null($value)) {
+                } elseif (is_null($value)) {
                     $value = '-';
                 }
 
@@ -115,15 +125,5 @@ class QueueWorker extends Plugin
         }
 
         return $params;
-    }
-
-    public function workers(): array
-    {
-        return [
-            new Worker(
-                connection: 'database',
-                queue: 'default',
-            ),
-        ];
     }
 }

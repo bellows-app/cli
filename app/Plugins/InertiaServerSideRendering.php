@@ -5,8 +5,8 @@ namespace Bellows\Plugins;
 use Bellows\Data\Daemon;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 
 class InertiaServerSideRendering extends Plugin
 {
@@ -25,7 +25,7 @@ class InertiaServerSideRendering extends Plugin
         )
             ->map(fn ($s) => (string) Http::forgeServer()->get("sites/{$s['id']}/env"))
             ->map(fn ($s) => Dotenv::parse($s))
-            ->map(fn ($s) => Arr::get($s,  'SSR_PORT'))
+            ->map(fn ($s) => Arr::get($s, 'SSR_PORT'))
             ->filter()
             ->map(fn ($s) => (int) $s)
             ->max() ?: $defaultSSRPort - 1;

@@ -63,39 +63,6 @@ class PluginManager
             ->values();
     }
 
-    protected function getAllPlugins(): Collection
-    {
-        return $this->getAllAvailablePluginNames()
-            ->filter(function (string $plugin) {
-                if (count($this->config->get('plugins.launch.blacklist', [])) > 0) {
-                    return !in_array($plugin, $this->config->get('plugins.launch.blacklist', []));
-                }
-
-                if (count($this->config->get('plugins.launch.whitelist', [])) > 0) {
-                    return in_array($plugin, $this->config->get('plugins.launch.whitelist', []));
-                }
-
-                return true;
-            })
-            ->values()
-            ->map(fn (string $plugin) => app($plugin))
-            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
-    }
-
-    protected function configure(Plugin $p, ?bool $isEnabled = null): bool
-    {
-        $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
-        $this->console->newLine();
-
-        $enabled = $isEnabled ?? $p->enabled();
-
-        if ($enabled) {
-            $this->call('setup', $p)->run();
-        }
-
-        return $enabled;
-    }
-
     public function createSiteParams(array $params): array
     {
         return $this->call('createSiteParams')->withArgs($params)->run()->toArray();
@@ -146,6 +113,39 @@ class PluginManager
     public function wrapUp()
     {
         $this->call('wrapUp')->run();
+    }
+
+    protected function getAllPlugins(): Collection
+    {
+        return $this->getAllAvailablePluginNames()
+            ->filter(function (string $plugin) {
+                if (count($this->config->get('plugins.launch.blacklist', [])) > 0) {
+                    return !in_array($plugin, $this->config->get('plugins.launch.blacklist', []));
+                }
+
+                if (count($this->config->get('plugins.launch.whitelist', [])) > 0) {
+                    return in_array($plugin, $this->config->get('plugins.launch.whitelist', []));
+                }
+
+                return true;
+            })
+            ->values()
+            ->map(fn (string $plugin) => app($plugin))
+            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
+    }
+
+    protected function configure(Plugin $p, ?bool $isEnabled = null): bool
+    {
+        $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
+        $this->console->newLine();
+
+        $enabled = $isEnabled ?? $p->enabled();
+
+        if ($enabled) {
+            $this->call('setup', $p)->run();
+        }
+
+        return $enabled;
     }
 
     protected function call(string $method, Plugin $plugin = null)

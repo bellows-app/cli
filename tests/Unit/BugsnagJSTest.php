@@ -77,14 +77,14 @@ it('can choose an app from the list', function () {
         ]),
         'organizations/123/projects?per_page=100' => Http::response([
             [
-                'api_key'   => '456',
-                'name' => 'Test App',
-                'type' => 'js',
+                'api_key' => '456',
+                'name'    => 'Test App',
+                'type'    => 'js',
             ],
             [
-                'api_key'   => '789',
-                'name' => 'Test App 2',
-                'type' => 'js',
+                'api_key' => '789',
+                'name'    => 'Test App 2',
+                'type'    => 'js',
             ],
         ]),
     ]);
@@ -94,7 +94,7 @@ it('can choose an app from the list', function () {
     $plugin->setup();
 
     expect($plugin->environmentVariables())->toEqual([
-        'BUGSNAG_JS_API_KEY' => '456',
+        'BUGSNAG_JS_API_KEY'      => '456',
         'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
     ]);
 })->group('plugin');
@@ -112,8 +112,8 @@ it('can create a new app', function () {
             ],
         ]),
         'organizations/123/projects' => Http::response([
-            'api_key'   => '789',
-            'name' => 'Test App 2',
+            'api_key' => '789',
+            'name'    => 'Test App 2',
         ]),
     ]);
 
@@ -122,7 +122,7 @@ it('can create a new app', function () {
     $plugin->setup();
 
     expect($plugin->environmentVariables())->toEqual([
-        'BUGSNAG_JS_API_KEY' => '789',
+        'BUGSNAG_JS_API_KEY'      => '789',
         'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
     ]);
 })->group('plugin');

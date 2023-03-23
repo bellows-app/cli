@@ -19,6 +19,7 @@ class BugsnagPHP extends Bugsnag
 
         if ($this->bugsnagKey) {
             $this->console->miniTask('Using existing Bugsnag PHP key from', '.env');
+
             return;
         }
 
@@ -29,6 +30,7 @@ class BugsnagPHP extends Bugsnag
         if ($this->console->confirm('Create Bugsnag PHP Project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
+
             return;
         }
 

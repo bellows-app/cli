@@ -42,8 +42,8 @@ class SecurityRules extends Plugin
             } while ($this->console->confirm('Add another user?'));
 
             $this->securityRules->push([
-                'name' => $groupName,
-                'path' => $path,
+                'name'        => $groupName,
+                'path'        => $path,
                 'credentials' => $credentials,
             ]);
         } while ($this->console->confirm('Add another security rule group?'));
