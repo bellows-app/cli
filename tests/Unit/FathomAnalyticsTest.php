@@ -1,9 +1,7 @@
 <?php
 
 use Bellows\Plugins\FathomAnalytics;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 it('can choose an app from the list', function () {
     $mock = $this->plugin()
