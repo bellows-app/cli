@@ -2,7 +2,7 @@
 
 use Bellows\Plugins\RunSchedule;
 
-it('can update the deploy script', function () {
+it('can create the run schedule job', function () {
     $plugin = app(RunSchedule::class);
     $plugin->setup();
 
