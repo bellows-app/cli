@@ -1,8 +1,6 @@
 {
     "private": true,
-    "scripts": {
-        "build": "*"
-    },
+    "scripts": [],
     "devDependencies": [],
     "dependencies": []
 }
