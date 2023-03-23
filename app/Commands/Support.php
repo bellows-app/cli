@@ -18,7 +18,7 @@ class Support extends Command
 
         if ($type === 'View the Docs') {
             if ($this->confirm('This will open the docs in your browser, continue?', true)) {
-                Process::run('open https://bellows.dev/docs');
+                Process::run(sprintf('open %s/docs', config('app.url')));
             }
 
             return;
@@ -43,12 +43,12 @@ class Support extends Command
         $computedSignature = hash_hmac(
             'sha256',
             json_encode($params),
-            env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),
+            config('app.webhook_signing_secret'),
         );
 
         Http::withHeaders([
             'Signature' => $computedSignature,
-        ])->asJson()->acceptJson()->throw()->baseUrl(env('BELLOWS_URL', 'https://bellows.dev'))->post('cli/support', $params);
+        ])->asJson()->acceptJson()->throw()->baseUrl(config('app.url'))->post('cli/support', $params);
 
         $this->info('Thank you for your support request. We will get back to you as soon as possible.');
     }

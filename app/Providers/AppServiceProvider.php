@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Signals;
 use Illuminate\Support\ServiceProvider;
+use Phar;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
@@ -16,34 +17,30 @@ class AppServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        if (\Phar::running()) {
-            if (!is_dir(env('HOME') . '/.bellows')) {
-                mkdir(env('HOME') . '/.bellows');
+        if (Phar::running()) {
+            if (!is_dir(config('app.home_dir') . '/.bellows')) {
+                mkdir(config('app.home_dir') . '/.bellows');
             }
 
-            if (!is_dir(env('HOME') . '/.bellows/logs')) {
-                mkdir(env('HOME') . '/.bellows/logs');
+            if (!is_dir(config('app.home_dir') . '/.bellows/logs')) {
+                mkdir(config('app.home_dir') . '/.bellows/logs');
             }
         }
 
         config([
-            'logging.channels.single.path' => \Phar::running()
-                ? env('HOME') . '/.bellows/logs/cli.log'
+            'logging.channels.single.path' => Phar::running()
+                ? config('app.home_dir') . '/.bellows/logs/cli.log'
                 : storage_path('logs/laravel.log'),
         ]);
     }
 
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton(Config::class, fn () => new Config);
 
@@ -52,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
             fn () => new Console(
                 app(
                     OutputStyle::class,
-                    ['input' => new ArgvInput(), 'output' => new ConsoleOutput()],
+                    ['input' => new ArgvInput, 'output' => new ConsoleOutput],
                 )
             )
         );

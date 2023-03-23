@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Illuminate\Support\Collection;
+use ReflectionClass;
 use Spatie\StructureDiscoverer\Discover;
 
 class PluginManager
@@ -59,7 +60,7 @@ class PluginManager
     {
         return collect($this->pluginPaths)
             ->flatMap(fn (string $path) => Discover::in($path)->extending(Plugin::class)->get())
-            ->filter(fn ($plugin) => with(new \ReflectionClass($plugin))->isInstantiable())
+            ->filter(fn ($plugin) => with(new ReflectionClass($plugin))->isInstantiable())
             ->values();
     }
 

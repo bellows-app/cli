@@ -13,7 +13,7 @@ class Config
     public function __construct(?string $configDir = null)
     {
         if ($configDir === null) {
-            $home = env('HOME');
+            $home = config('app.home_dir');
             $configDir = $home . '/.bellows';
         }
 
@@ -33,7 +33,7 @@ class Config
         return Arr::get($this->config, $key, $default);
     }
 
-    public function set(string $key, $value)
+    public function set(string $key, $value): void
     {
         Arr::set($this->config, $key, $value);
 
@@ -43,7 +43,7 @@ class Config
         $this->cacheConfig();
     }
 
-    public function remove(string $key)
+    public function remove(string $key): void
     {
         Arr::forget($this->config, $key);
 
@@ -53,12 +53,12 @@ class Config
         $this->cacheConfig();
     }
 
-    protected function createConfigFile(string $path)
+    protected function createConfigFile(string $path): void
     {
         file_put_contents($path, json_encode([]));
     }
 
-    protected function cacheConfig()
+    protected function cacheConfig(): void
     {
         $this->config = json_decode(file_get_contents($this->path), true) ?: [];
     }

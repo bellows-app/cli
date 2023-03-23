@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
@@ -29,7 +30,7 @@ class Http
         $name = 'default';
 
         if (array_key_exists($name, $this->clients)) {
-            throw new \Exception("Client {$name} already exists");
+            throw new Exception("Client {$name} already exists");
         }
 
         $host = parse_url($baseUrl, PHP_URL_HOST);
@@ -51,7 +52,7 @@ class Http
             $this->createClient($baseUrl, $factory, $addCredentialsPrompt, $test);
 
             return;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Something else happened, just give a generic error message.
             $this->console->warn('Could not connect with the provided credentials!');
             $this->console->warn('Please select a different account or add a new one.');
@@ -88,11 +89,11 @@ class Http
         string $toExtend = 'default',
     ): void {
         if (!array_key_exists($toExtend, $this->clients)) {
-            throw new \Exception("Client {$toExtend} does not exist to extend");
+            throw new Exception("Client {$toExtend} does not exist to extend");
         }
 
         if (array_key_exists($name, $this->clients)) {
-            throw new \Exception("Client {$name} already exists");
+            throw new Exception("Client {$name} already exists");
         }
 
         $this->clients[$name] = fn () => $this->clients[$toExtend]()->baseUrl($baseUrl);
@@ -101,7 +102,7 @@ class Http
     public function client(string $name = 'default'): PendingRequest
     {
         if (!array_key_exists($name, $this->clients)) {
-            throw new \Exception("Client {$name} does not exist");
+            throw new Exception("Client {$name} does not exist");
         }
 
         return $this->clients[$name]();
@@ -136,7 +137,7 @@ class Http
             return $value;
         }
 
-        throw new \Exception("Could not find credentials for {$host} {$result}");
+        throw new Exception("Could not find credentials for {$host} {$result}");
     }
 
     protected function addNewCredentials(string $host, ?AddApiCredentialsPrompt $addCredentialsPrompt = null): array
@@ -150,7 +151,7 @@ class Http
             // TODO: Re-implement this, it was useful I think (maybe it's not common enough)
             // $accountName = $this->ask('Account Name (for your own reference)', $this->getDefaultNewAccountName($token));
 
-            $value = compact('token');
+            $value = ['token' => $token];
 
             $this->setApiConfig($host, $accountName, $value);
 

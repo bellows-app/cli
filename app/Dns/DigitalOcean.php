@@ -4,6 +4,7 @@ namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
 use Bellows\Util\Domain;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +35,7 @@ class DigitalOcean extends DnsProvider
             $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -46,7 +47,7 @@ class DigitalOcean extends DnsProvider
 
         $token = $this->console->secret('Your DigitalOcean API token');
 
-        return compact('token');
+        return ['token' => $token];
     }
 
     protected function testApiCall(array $credentials): bool
@@ -55,7 +56,7 @@ class DigitalOcean extends DnsProvider
             $this->getClient($credentials)->get('account')->throw();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -103,7 +104,7 @@ class DigitalOcean extends DnsProvider
             ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->console->error($e->getMessage());
 
             return false;

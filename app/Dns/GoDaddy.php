@@ -3,6 +3,7 @@
 namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -31,7 +32,7 @@ class GoDaddy extends DnsProvider
             $this->getClient($credentials)->get("domains/{$this->baseDomain}")->throw();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -43,7 +44,7 @@ class GoDaddy extends DnsProvider
         $key = $this->console->secret('Your GoDaddy key');
         $secret = $this->console->secret('Your GoDaddy secret');
 
-        return compact('key', 'secret');
+        return ['key' => $key, 'secret' => $secret];
     }
 
     protected function testApiCall(array $credentials): bool
@@ -52,7 +53,7 @@ class GoDaddy extends DnsProvider
             $this->getClient($credentials)->get('domains')->throw()->json();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -93,7 +94,7 @@ class GoDaddy extends DnsProvider
             ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->console->error($e->getMessage());
 
             return false;
@@ -111,7 +112,7 @@ class GoDaddy extends DnsProvider
             $response = Http::dnsProvider()->get("domains/{$this->baseDomain}/records/{$type->value}/{$name}")->throw()->json();
 
             return $response[0] ?? null;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
     }

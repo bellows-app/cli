@@ -4,6 +4,7 @@ namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
 use Bellows\Util\Domain;
+use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -31,7 +32,7 @@ class Cloudflare extends DnsProvider
             ])->throw()->json();
 
             return count($result['result']) > 0;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -43,7 +44,7 @@ class Cloudflare extends DnsProvider
 
         $token = $this->console->secret('Your Cloudflare API token');
 
-        return compact('token');
+        return ['token' => $token];
     }
 
     protected function testApiCall(array $credentials): bool
@@ -53,7 +54,7 @@ class Cloudflare extends DnsProvider
             $this->getClient($credentials)->get('user/tokens/verify')->throw();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -92,7 +93,7 @@ class Cloudflare extends DnsProvider
             ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->console->error($e->getMessage());
 
             return false;

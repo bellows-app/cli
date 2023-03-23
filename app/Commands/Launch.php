@@ -66,7 +66,7 @@ class Launch extends Command
                     ->get('user')
                     ->throw()
                     ->json();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $token = null;
                 $this->warn('Your saved Forge token is invalid!');
                 $this->newLine();
@@ -94,7 +94,7 @@ class Launch extends Command
                         ->throw();
 
                     $isInvalid = false;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $isInvalid = true;
                 }
             } while ($isInvalid);
@@ -580,7 +580,7 @@ class Launch extends Command
         );
 
         if (!$toInstall || !$this->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
-            throw new \Exception('No PHP version on server found that matches the required version in composer.json');
+            throw new Exception('No PHP version on server found that matches the required version in composer.json');
         }
 
         $phpVersion = $this->installPHPVersion($toInstall, $available->search($toInstall));
