@@ -40,8 +40,8 @@ it('can create a single security rule', function () {
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
             && $request->data() === [
-                'name'    => 'Restricted Access',
-                'path'    => null,
+                'name'          => 'Restricted Access',
+                'path'          => null,
                 'credentials'   => [
                     [
                         'username' => 'joe',
@@ -82,8 +82,8 @@ it('can add multiple users to a security group', function () {
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
             && $request->data() === [
-                'name'    => 'Restricted Access',
-                'path'    => 'stripe/*',
+                'name'          => 'Restricted Access',
+                'path'          => 'stripe/*',
                 'credentials'   => [
                     [
                         'username' => 'joe',
@@ -134,8 +134,8 @@ it('can create multiple security rules', function () {
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
             && $request->data() === [
-                'name'    => 'Restricted Access',
-                'path'    => null,
+                'name'          => 'Restricted Access',
+                'path'          => null,
                 'credentials'   => [
                     [
                         'username' => 'joe',
@@ -148,8 +148,8 @@ it('can create multiple security rules', function () {
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
             && $request->data() === [
-                'name'    => 'Admins',
-                'path'    => null,
+                'name'          => 'Admins',
+                'path'          => null,
                 'credentials'   => [
                     [
                         'username' => 'gary',

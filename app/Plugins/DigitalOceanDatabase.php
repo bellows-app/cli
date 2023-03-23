@@ -25,9 +25,6 @@ class DigitalOceanDatabase extends Plugin
 
     public function setup(): void
     {
-        $this->databaseName = $this->console->ask('Database', $this->projectConfig->isolatedUser);
-        $this->databaseUser = $this->console->ask('Database User', $this->databaseName);
-
         $this->http->createJsonClient(
             'https://api.digitalocean.com/v2/',
             fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
@@ -38,6 +35,9 @@ class DigitalOceanDatabase extends Plugin
             ),
             fn (PendingRequest $request) => $request->get('databases', ['per_page' => 1]),
         );
+
+        $this->databaseName = $this->console->ask('Database', $this->projectConfig->isolatedUser);
+        $this->databaseUser = $this->console->ask('Database User', $this->databaseName);
 
         $response = $this->http->client()->get('databases');
 
