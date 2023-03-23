@@ -14,11 +14,6 @@ class RunSchedule extends Plugin
         return $this->enabledByDefault('You probably want to run your artisan schedule');
     }
 
-    public function enabled(): bool
-    {
-        return true;
-    }
-
     public function jobs(): array
     {
         return [
