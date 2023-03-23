@@ -49,6 +49,10 @@ it('can set the env variable', function () {
 })->group('plugin');
 
 it('can wrap up', function () {
+    overrideProjectConfig([
+        'domain' => 'bellowstester.com',
+    ]);
+
     Http::fake([
         'certificates/letsencrypt' => Http::response(null, 200),
     ]);
