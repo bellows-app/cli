@@ -24,7 +24,11 @@ class SecurityRules extends Plugin
         $this->securityRules = collect();
 
         do {
-            $groupName = $this->console->ask('Security rule group name', 'Restricted Access');
+            $groupName = $this->console->ask(
+                'Security rule group name',
+                'Restricted Access'
+            );
+
             $path = $this->console->ask(
                 'Path (leave blank to password protect all routes within your site, any valid Nginx location path)'
             );
@@ -44,7 +48,7 @@ class SecurityRules extends Plugin
             $this->securityRules->push([
                 'name'        => $groupName,
                 'path'        => $path,
-                'credentials' => $credentials,
+                'credentials' => $credentials->toArray(),
             ]);
         } while ($this->console->confirm('Add another security rule group?'));
     }
@@ -55,6 +59,8 @@ class SecurityRules extends Plugin
             return;
         }
 
-        $this->securityRules->each(fn ($rule) => Http::forgeSite()->post('security-rules', $rule));
+        $this->securityRules->each(
+            fn ($rule) => Http::forgeSite()->post('security-rules', $rule)
+        );
     }
 }
