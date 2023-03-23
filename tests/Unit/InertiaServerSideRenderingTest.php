@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\DeployScript;
 use Bellows\Plugins\InertiaServerSideRendering;
 use Illuminate\Support\Facades\Http;
 
@@ -102,8 +103,8 @@ it('can create update the depoy script', function () {
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();
 
-    $deployScript = $plugin->updateDeployScript('( flock -w 10 9 || exit 1');
+    $deployScript = $plugin->updateDeployScript(DeployScript::PHP_RELOAD);
 
     expect($deployScript)->toContain('$FORGE_PHP artisan inertia:stop-ssr');
-    expect($deployScript)->toContain('( flock -w 10 9 || exit 1');
+    expect($deployScript)->toContain(DeployScript::PHP_RELOAD);
 })->group('plugin');

@@ -1,6 +1,7 @@
 <?php
 
 use Bellows\Data\ProjectConfig;
+use Bellows\DeployScript;
 use Bellows\Plugins\CompileAssets;
 
 afterEach(function () {
@@ -20,7 +21,9 @@ it('is disabled when there are no lock files', function () {
 
 it('is disabled when is no build script', function () {
     touch(app(ProjectConfig::class)->projectDirectory . '/yarn.lock');
+
     $plugin = app(CompileAssets::class);
+
     expect($plugin->isEnabledByDefault()->enabled)->toBeFalse();
 })->group('plugin');
 
@@ -34,10 +37,12 @@ it('is enabled with a build script and a lock file', function ($lockFile) {
 it('adds the correct commands to the deploy script', function ($lockFile, $expected) {
     touch(app(ProjectConfig::class)->projectDirectory . '/' . $lockFile);
     addNpmScript('build');
+
     $plugin = app(CompileAssets::class);
-    $deployScript = $plugin->updateDeployScript('$FORGE_COMPOSER install');
+    $deployScript = $plugin->updateDeployScript(DeployScript::COMPOSER_INSTALL);
+
     expect($deployScript)->toContain($expected);
-    expect($deployScript)->toContain('$FORGE_COMPOSER install');
+    expect($deployScript)->toContain(DeployScript::COMPOSER_INSTALL);
 })->group('plugin')->with([
     ['yarn.lock', "yarn\nyarn build"],
     ['package-lock.json', "npm install\nnpm run build"],
