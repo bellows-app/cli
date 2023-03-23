@@ -48,6 +48,25 @@ function cdTo(string $dir)
     chdir(dirname(__DIR__, 1) . '/' . $dir);
 }
 
+function overrideProjectConfig(array $params)
+{
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
+
+    app()->bind(ProjectConfig::class, function () use ($projectDir, $params) {
+        return ProjectConfig::from(array_merge([
+            'isolatedUser'     => 'tester',
+            'repositoryUrl'    => 'bellows/tester',
+            'repositoryBranch' => 'main',
+            'phpVersion'       => '8.1',
+            'phpBinary'        => 'php81',
+            'projectDirectory' => $projectDir,
+            'domain'           => 'bellowstester.com',
+            'appName'          => 'Bellows Tester',
+            'secureSite'       => true,
+        ], $params));
+    });
+}
+
 function installNpmPackage(?string $package)
 {
     if (is_null($package)) {
