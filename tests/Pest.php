@@ -75,8 +75,6 @@ function server(array $params)
             'is_ready'           => true,
             'tags'               => [],
             'network'            => [],
-            'php_version'        => 'php81',
-            'php_cli_version'    => 'php81',
         ],
         $params
     );
