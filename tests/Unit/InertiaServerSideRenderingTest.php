@@ -87,7 +87,7 @@ it('can create a daemon', function () {
     ]);
 })->group('plugin');
 
-it('can create update the depoy script', function () {
+it('can create update the deploy script', function () {
     Http::fake([
         'sites' => Http::response([
             'sites' => [

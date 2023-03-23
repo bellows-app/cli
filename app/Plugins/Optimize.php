@@ -19,7 +19,6 @@ class Optimize extends Plugin
             $this->artisan->inDeployScript('route:cache'),
             $this->artisan->inDeployScript('view:cache'),
             $this->artisan->inDeployScript('event:cache'),
-            $this->artisan->inDeployScript('queue:restart'),
         ]);
     }
 }

@@ -126,4 +126,11 @@ class QueueWorker extends Plugin
 
         return $params;
     }
+
+    public function updateDeployScript(string $deployScript): string
+    {
+        return $this->deployScript->addBeforePHPReload($deployScript, [
+            $this->artisan->inDeployScript('queue:restart'),
+        ]);
+    }
 }

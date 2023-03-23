@@ -3,7 +3,7 @@
 use Bellows\DeployScript;
 use Bellows\Plugins\MomentumTrail;
 
-it('can create update the depoy script', function () {
+it('can create update the deploy script', function () {
     $plugin = app(MomentumTrail::class);
     $plugin->setup();
 
