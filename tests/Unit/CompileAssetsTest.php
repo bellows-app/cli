@@ -37,6 +37,7 @@ it('adds the correct commands to the deploy script', function ($lockFile, $expec
     $plugin = app(CompileAssets::class);
     $deployScript = $plugin->updateDeployScript('$FORGE_COMPOSER install');
     expect($deployScript)->toContain($expected);
+    expect($deployScript)->toContain('$FORGE_COMPOSER install');
 })->group('plugin')->with([
     ['yarn.lock', "yarn\nyarn build"],
     ['package-lock.json', "npm install\nnpm run build"],
