@@ -30,10 +30,8 @@ it('can choose an app from the list', function () {
     ]);
 })->group('plugin');
 
-it('can create a new app', function ($package) {
-    if ($package !== 'js') {
-        installNpmPackage($package);
-    }
+it('can create a new app', function ($package, $projectType) {
+    installNpmPackage($package);
 
     Http::fake([
         'projects' => Http::response([
@@ -55,15 +53,19 @@ it('can create a new app', function ($package) {
 
     $mock->validate();
 
-    Http::assertSent(function (Request $request) use ($package) {
-        return Str::contains($request->url(), 'projects') && $request['type'] === $package;
+    Http::assertSent(function (Request $request) use ($projectType) {
+        return Str::contains($request->url(), 'projects') && $request['type'] === $projectType;
     });
 
     expect($plugin->environmentVariables())->toEqual([
         'BUGSNAG_JS_API_KEY'      => 'test-api-key',
         'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
     ]);
-})->group('plugin')->with(['vue', 'react', 'js']);
+})->group('plugin')->with([
+    ['vue', 'vue'],
+    ['react', 'react'],
+    [null, 'js'],
+]);
 
 it('will use the .env variable if there is one', function () {
     setInEnv('BUGSNAG_JS_API_KEY', 'test-api-key');

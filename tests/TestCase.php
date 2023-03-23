@@ -53,6 +53,7 @@ abstract class TestCase extends BaseTestCase
         $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
         $packages['dependencies'] = [];
         $packages['devDependencies'] = [];
+        $packages['scripts'] = [];
         file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
     }
 

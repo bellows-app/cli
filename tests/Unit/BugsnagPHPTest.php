@@ -29,10 +29,8 @@ it('can choose an app from the list', function () {
     ]);
 })->group('plugin');
 
-it('can create a new app', function ($package) {
-    if ($package !== 'php') {
-        installComposerPackage($package);
-    }
+it('can create a new app', function ($package, $projectType) {
+    installComposerPackage($package);
 
     Http::fake([
         'projects' => Http::response([
@@ -54,17 +52,17 @@ it('can create a new app', function ($package) {
 
     $mock->validate();
 
-    Http::assertSent(function (Request $request) use ($package) {
-        return Str::contains($request->url(), 'projects') && $request['type'] === match ($package) {
-            'laravel/framework' => 'laravel',
-            default             => 'php',
-        };
+    Http::assertSent(function (Request $request) use ($projectType) {
+        return Str::contains($request->url(), 'projects') && $request['type'] === $projectType;
     });
 
     expect($plugin->environmentVariables())->toEqual([
         'BUGSNAG_API_KEY' => 'test-api-key',
     ]);
-})->group('plugin')->with(['laravel/framework', 'php']);
+})->group('plugin')->with([
+    ['laravel/framework', 'laravel'],
+    [null, 'php'],
+]);
 
 it('will use the .env variable if there is one', function () {
     setInEnv('BUGSNAG_API_KEY', 'test-api-key');

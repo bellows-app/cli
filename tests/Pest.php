@@ -11,6 +11,7 @@
 |
 */
 
+use Bellows\Data\ProjectConfig;
 use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -47,9 +48,13 @@ function cdTo(string $dir)
     chdir(dirname(__DIR__, 1) . '/' . $dir);
 }
 
-function installNpmPackage(string $package)
+function installNpmPackage(?string $package)
 {
-    $projectDir = __DIR__ . '/stubs/plugins/default';
+    if (is_null($package)) {
+        return;
+    }
+
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
 
     $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
     $packages['dependencies'][$package] = '*';
@@ -57,9 +62,23 @@ function installNpmPackage(string $package)
     file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
 }
 
-function installComposerPackage(string $package)
+function addNpmScript(string $script)
 {
-    $projectDir = __DIR__ . '/stubs/plugins/default';
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
+
+    $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
+    $packages['scripts'][$script] = '*';
+
+    file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
+}
+
+function installComposerPackage(?string $package)
+{
+    if (is_null($package)) {
+        return;
+    }
+
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
 
     $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
     $composer['require'][$package] = '*';
@@ -69,7 +88,7 @@ function installComposerPackage(string $package)
 
 function setInEnv(string $key, string $value)
 {
-    $projectDir = __DIR__ . '/stubs/plugins/default';
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
 
     $env = file_get_contents($projectDir . '/.env');
     $env .= "\n{$key}={$value}";

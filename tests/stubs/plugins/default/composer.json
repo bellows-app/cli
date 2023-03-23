@@ -8,8 +8,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
-        "bugsnag\/bugsnag-laravel": "*"
+        "php": "^8.1"
     },
     "config": {
         "optimize-autoloader": true,
