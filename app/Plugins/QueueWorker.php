@@ -53,12 +53,14 @@ class QueueWorker extends Plugin
 
     public function workers(): array
     {
-        return [
-            new Worker(
-                connection: 'database',
-                queue: 'default',
-            ),
-        ];
+        return $this->queueWorkers;
+    }
+
+    public function updateDeployScript(string $deployScript): string
+    {
+        return $this->deployScript->addBeforePHPReload($deployScript, [
+            $this->artisan->inDeployScript('queue:restart'),
+        ]);
     }
 
     protected function getParams(): array
@@ -125,12 +127,5 @@ class QueueWorker extends Plugin
         }
 
         return $params;
-    }
-
-    public function updateDeployScript(string $deployScript): string
-    {
-        return $this->deployScript->addBeforePHPReload($deployScript, [
-            $this->artisan->inDeployScript('queue:restart'),
-        ]);
     }
 }

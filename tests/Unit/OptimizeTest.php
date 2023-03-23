@@ -13,7 +13,7 @@ it('can update the deploy script', function () {
         '$FORGE_PHP artisan config:cache',
         '$FORGE_PHP artisan route:cache',
         '$FORGE_PHP artisan view:cache',
-        '$FORGE_PHP artisan event:cache'
+        '$FORGE_PHP artisan event:cache',
     ])->each(fn ($toInsert) => expect($deployScript)->toContain($toInsert));
 
     expect($deployScript)->toContain(DeployScript::PHP_RELOAD);
