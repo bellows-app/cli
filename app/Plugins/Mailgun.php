@@ -112,7 +112,7 @@ class Mailgun extends Plugin
         $domain = $this->console->choiceFromCollection(
             'Which domain do you want to use?',
             $domainChoices,
-            'name',
+            'custom_key',
             fn ($domain) => Str::contains($domain['name'], $this->projectConfig->domain),
         );
 

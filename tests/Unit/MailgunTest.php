@@ -41,7 +41,7 @@ it('can choose an existing domain', function () {
         ->expectsQuestion('Which region is your Mailgun account in?', 'US')
         ->expectsQuestion('Select account', 'joe')
         ->expectsConfirmation('Create a new domain?', 'no')
-        ->expectsQuestion('Which domain do you want to use?', 'sandbox316e51ab1d3f41e2a8be2d001a038e59.mailgun.org')
+        ->expectsQuestion('Which domain do you want to use?', 'sandbox316e51ab1d3f41e2a8be2d001a038e59.mailgun.org (sandbox)')
         ->setup();
 
     $plugin = app(Mailgun::class);
