@@ -1,42 +1,7 @@
 <?php
 
-use Bellows\Config;
-use Bellows\Console;
 use Bellows\Dns\DnsFactory;
-use Illuminate\Console\BufferedConsoleOutput;
-use Illuminate\Console\OutputStyle as ConsoleOutputStyle;
 use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-
-beforeEach(function () {
-    $this->app->bind(
-        Config::class,
-        fn () => new Config(__DIR__ . '/../stubs/config'),
-    );
-
-    $this->app->bind(OutputInterface::class, function () {
-        return new BufferedConsoleOutput();
-    });
-
-    $this->app->bind(InputInterface::class, function () {
-        return new ArgvInput();
-    });
-
-    $this->app->bind(
-        Console::class,
-        function () {
-            $console = new Console();
-
-            $console->setOutput(
-                app(ConsoleOutputStyle::class)
-            );
-
-            return $console;
-        }
-    );
-});
 
 it('can match a domain by its nameserver', function ($provider, $domain, $ns) {
     expect($provider::matchByNameserver($ns))->toBe(true);
