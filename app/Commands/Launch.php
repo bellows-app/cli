@@ -108,7 +108,8 @@ class Launch extends Command
             $this->error('No .env file found! Are you in the correct directory?');
             $this->info('Bellows works best when it has access to an .env file.');
             $this->newLine();
-            exit;
+
+            return;
         }
 
         Http::macro(
@@ -136,6 +137,14 @@ class Launch extends Command
         );
 
         $server = $this->getServer();
+
+        if ($server === null) {
+            $this->error('No servers found!');
+            $this->error('Provision a server on Forge first then come on back: https://forge.laravel.com/servers');
+            $this->newLine();
+
+            return;
+        }
 
         App::instance(ForgeServer::class, ForgeServer::from($server));
 
@@ -167,7 +176,7 @@ class Launch extends Command
                 Process::run("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
             }
 
-            exit;
+            return;
         }
 
         $isolatedUser = $this->ask(
@@ -413,7 +422,7 @@ class Launch extends Command
             ['Task', 'Value'],
             collect([
                 ['Environment Variables', $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-'],
-                ['Deploy Script', (string) Http::forgeSite()->get('deployment/script')],
+                ['Deploy Script', $deployScript],
                 ['Daemons', $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-'],
                 ['Workers', $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-'],
                 ['Scheduled Jobs', $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-'],
@@ -458,17 +467,14 @@ class Launch extends Command
         $this->newLine();
     }
 
-    protected function getServer()
+    protected function getServer(): ?array
     {
         $servers = collect(
             Http::forge()->get('servers')->json()['servers']
         )->filter(fn ($s) => !$s['revoked'])->values();
 
         if ($servers->isEmpty()) {
-            $this->error('No servers found!');
-            $this->error('Provision a server on Forge first then come on back: https://forge.laravel.com/servers');
-            $this->newLine();
-            exit;
+            return null;
         }
 
         if ($servers->count() === 1) {

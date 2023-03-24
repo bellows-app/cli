@@ -46,6 +46,7 @@ abstract class TestCase extends BaseTestCase
         });
 
         file_put_contents($projectDir . '/.env', '');
+
         $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
         $composer['require'] = ['php' => '^8.1'];
         file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
