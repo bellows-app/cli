@@ -263,7 +263,7 @@ function envFile(string $type = 'default')
 function fakeForgeRequests(array $server, array $site)
 {
     Http::fake([
-        forgeUrl('user') => Http::response(null, 200),
+        forgeUrl('user')    => Http::response(null, 200),
         forgeUrl('servers') => Http::response([
             'servers' => servers(),
         ]),
