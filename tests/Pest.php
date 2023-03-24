@@ -12,6 +12,7 @@
 */
 
 use Bellows\Data\ProjectConfig;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -45,7 +46,7 @@ uses(Tests\TestCase::class)->in('Unit');
 
 function cdTo(string $dir)
 {
-    chdir(dirname(__DIR__, 1) . '/' . $dir);
+    chdir(base_path('tests/' . $dir));
 }
 
 function overrideProjectConfig(array $params)
@@ -113,6 +114,70 @@ function setInEnv(string $key, string $value)
     $env .= "\n{$key}={$value}";
 
     file_put_contents($projectDir . '/.env', $env);
+}
+
+function forgePhpVersion(array $params)
+{
+    return array_merge([
+        'id'                  => fake()->randomNumber,
+        'version'             => 'php74',
+        'status'              => 'installed',
+        'displayable_version' => 'PHP 7.4',
+        'binary_name'         => 'php7.4',
+        'used_as_default'     => false,
+        'used_on_cli'         => false,
+    ], $params);
+}
+
+function forgePhpVersions()
+{
+    return [
+        forgePhpVersion([
+            'version'             => 'php74',
+            'displayable_version' => 'PHP 7.4',
+            'binary_name'         => 'php7.4',
+            'used_as_default'     => true,
+            'used_on_cli'         => true,
+        ]),
+        forgePhpVersion([
+            'version'             => 'php80',
+            'displayable_version' => 'PHP 8.0',
+            'binary_name'         => 'php8.0',
+        ]),
+        forgePhpVersion([
+            'version'             => 'php81',
+            'displayable_version' => 'PHP 8.1',
+            'binary_name'         => 'php8.1',
+        ]),
+    ];
+}
+
+function sites()
+{
+    return [
+        site([
+            'id'   => 1,
+            'name' => 'testsite.com',
+        ]),
+        site([
+            'id'   => 2,
+            'name' => 'testsite2.com',
+        ]),
+    ];
+}
+
+function servers()
+{
+    return [
+        server([
+            'id'   => 1,
+            'name' => 'testserver',
+        ]),
+        server([
+            'id'   => 2,
+            'name' => 'testserver2',
+        ]),
+    ];
 }
 
 function server(array $params)
@@ -187,7 +252,7 @@ function forgeUrl(string $path = ''): string
 
 function deployScript(string $type = 'default')
 {
-    return file_get_contents(__DIR__ . "/stubs/deploy/{$type}.sh");
+    return file_get_contents(__DIR__ . "/stubs/deploy-scripts/{$type}.bash");
 }
 
 function envFile(string $type = 'default')
@@ -198,10 +263,11 @@ function envFile(string $type = 'default')
 function fakeForgeRequests(array $server, array $site)
 {
     Http::fake([
+        forgeUrl('user') => Http::response(null, 200),
         forgeUrl('servers') => Http::response([
-            'servers' => $servers,
+            'servers' => servers(),
         ]),
-        forgeUrl("servers/{$server['id']}/sites") => function (Request $request, array $options) use ($site, $sites) {
+        forgeUrl("servers/{$server['id']}/sites") => function (Request $request, array $options) use ($site) {
             if ($request->method() === 'POST') {
                 return [
                     'site' => $site,
@@ -209,10 +275,10 @@ function fakeForgeRequests(array $server, array $site)
             }
 
             return [
-                'sites' => $sites,
+                'sites' => sites(),
             ];
         },
-        forgeUrl("servers/{$server['id']}/php")                 => Http::response($phpVersions),
+        forgeUrl("servers/{$server['id']}/php")                 => Http::response(forgePhpVersions()),
         forgeUrl("servers/{$server['id']}/sites/{$site['id']}") => Http::response([
             'site' => array_merge($site, ['status' => 'installed']),
         ]),

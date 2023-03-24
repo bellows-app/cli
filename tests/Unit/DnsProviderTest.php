@@ -3,6 +3,10 @@
 use Bellows\Dns\DnsFactory;
 use Illuminate\Support\Str;
 
+beforeEach(function () {
+    $this->plugin()->setup();
+});
+
 it('can match a domain by its nameserver', function ($provider, $domain, $ns) {
     expect($provider::matchByNameserver($ns))->toBe(true);
     expect($provider::matchByNameserver('somethingelse.com'))->toBe(false);
