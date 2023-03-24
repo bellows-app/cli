@@ -76,7 +76,7 @@ return [
         RayServiceProvider::class,
     ],
 
-    'home_dir' => env('home'),
+    'home_dir' => env('HOME'),
 
     'webhook_signing_secret' => env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),
 
