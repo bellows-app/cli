@@ -1,5 +1,7 @@
 <?php
 
+use Bellows\Commands\PluginTester;
+
 return [
 
     /*
@@ -65,6 +67,7 @@ return [
         LaravelZero\Framework\Commands\StubPublishCommand::class,
         Spatie\LaravelRay\Commands\PublishConfigCommand::class,
         Spatie\LaravelData\Commands\DataMakeCommand::class,
+        PluginTester::class,
     ],
 
     /*
