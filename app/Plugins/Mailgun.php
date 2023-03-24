@@ -60,7 +60,7 @@ class Mailgun extends Plugin
     {
         return [
             'MAILGUN_DOMAIN'   => $this->domain,
-            'MAILGUN_SECRET'   => $this->getApiConfig($this->domain)['token'],
+            'MAILGUN_SECRET'   => $this->http->client()->getOptions()['auth'][1],
             'MAILGUN_ENDPOINT' => $this->endpoint,
         ];
     }
@@ -86,7 +86,7 @@ class Mailgun extends Plugin
 
         collect($result['sending_dns_records'])->each(function ($record) {
             $args = [
-                Domain::getSUbdomain($record['name']),
+                Domain::getSubdomain($record['name']),
                 $record['value'],
                 1800,
             ];
@@ -112,7 +112,7 @@ class Mailgun extends Plugin
         $domain = $this->console->choiceFromCollection(
             'Which domain do you want to use?',
             $domainChoices,
-            'custom_key',
+            'name',
             fn ($domain) => Str::contains($domain['name'], $this->projectConfig->domain),
         );
 
