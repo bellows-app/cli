@@ -89,7 +89,7 @@ class Console
             // Create a pair of socket connections so the two tasks can communicate
             [$socketToTask, $socketToSpinner] = Connection::createPair();
 
-            $result = Fork::new()
+            $result = app(Fork::class)
                 ->run(
                     function () use ($task, $message, $success, $title, $socketToSpinner) {
                         $output = $task();

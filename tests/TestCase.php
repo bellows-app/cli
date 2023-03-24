@@ -6,6 +6,7 @@ use Bellows\Config;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ProjectConfig;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
+use Spatie\Fork\Fork;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -21,6 +22,16 @@ abstract class TestCase extends BaseTestCase
             Config::class,
             fn () => new Config(__DIR__ . '/stubs/config'),
         );
+
+        $this->app->bind(Fork::class, fn () => new class extends Fork
+        {
+            public function run(callable ...$callables): array
+            {
+                // We don't want to actually fork the process for the tests,
+                // just run the actual task and return the result.
+                return [$callables[0]()];
+            }
+        });
 
         $this->app->bind(ProjectConfig::class, function () use ($projectDir) {
             return new ProjectConfig(
