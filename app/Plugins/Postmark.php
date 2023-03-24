@@ -128,6 +128,7 @@ class Postmark extends Plugin
     {
         if ($this->console->confirm('Create new Postmark server?', true)) {
             $name = $this->console->ask('Server name', $this->projectConfig->appName);
+
             $color = $this->console->choice(
                 'Server color',
                 [
