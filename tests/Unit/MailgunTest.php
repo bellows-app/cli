@@ -36,7 +36,6 @@ it('can create a new domain', function () {
 })->group('plugin');
 
 it('can choose an existing domain', function () {
-
     $mock = $this->plugin()
         ->expectsQuestion('Which region is your Mailgun account in?', 'US')
         ->expectsQuestion('Select account', 'joe')

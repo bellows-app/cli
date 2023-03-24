@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\Data\Daemon;
 use Bellows\DeployScript;
 use Bellows\Plugins\InertiaServerSideRendering;
 use Illuminate\Support\Facades\Http;
@@ -79,8 +80,13 @@ it('can create a daemon', function () {
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();
 
-    expect($plugin->daemons())->toHaveCount(1);
-    expect($plugin->daemons()[0]->toArray())->toBe([
+    $daemons = $plugin->daemons();
+
+    expect($daemons)->toHaveCount(1);
+
+    expect($daemons[0])->toBeInstanceOf(Daemon::class);
+
+    expect($daemons[0]->toArray())->toBe([
         'command'   => 'php81 artisan inertia:start-ssr',
         'user'      => null,
         'directory' => null,

@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\Data\Worker;
 use Bellows\DeployScript;
 use Bellows\Plugins\QueueWorker;
 
@@ -17,9 +18,13 @@ it('can create a single queue worker', function () {
 
     $mock->validate();
 
-    expect($plugin->workers())->toHaveCount(1);
+    $workers = $plugin->workers();
 
-    expect($plugin->workers()[0]->toArray())->toBe([
+    expect($workers)->toHaveCount(1);
+
+    expect($workers[0])->toBeInstanceOf(Worker::class);
+
+    expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',
         'queue'        => 'default',
         'timeout'      => 0,
@@ -55,9 +60,13 @@ it('can create multiple queue workers', function () {
 
     $mock->validate();
 
-    expect($plugin->workers())->toHaveCount(2);
+    $workers = $plugin->workers();
 
-    expect($plugin->workers()[0]->toArray())->toBe([
+    expect($workers)->toHaveCount(2);
+
+    expect($workers[0])->toBeInstanceOf(Worker::class);
+
+    expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',
         'queue'        => 'default',
         'timeout'      => 0,
@@ -69,7 +78,7 @@ it('can create multiple queue workers', function () {
         'tries'        => null,
     ]);
 
-    expect($plugin->workers()[1]->toArray())->toBe([
+    expect($workers[1]->toArray())->toBe([
         'connection'   => 'redis',
         'queue'        => 'default',
         'timeout'      => 0,
@@ -108,9 +117,13 @@ it('can create a custom queue worker', function () {
 
     $mock->validate();
 
-    expect($plugin->workers())->toHaveCount(1);
+    $workers = $plugin->workers();
 
-    expect($plugin->workers()[0]->toArray())->toBe([
+    expect($workers)->toHaveCount(1);
+
+    expect($workers[0])->toBeInstanceOf(Worker::class);
+
+    expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',
         'queue'        => 'default',
         'timeout'      => 0,
