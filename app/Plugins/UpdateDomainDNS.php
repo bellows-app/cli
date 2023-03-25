@@ -20,7 +20,7 @@ class UpdateDomainDNS extends Plugin
         $needsUpdating = $this->getDomainsToCheck()->first(
             fn ($subdomain) => $subdomain === 'www'
                 ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [$this->projectConfig->domain, '@'])
-                : $this->dnsProvider->getARecord($subdomain) !== $this->forgeServer->ip_address,
+                : $this->dnsProvider->getARecord($subdomain) !== $this->server->ip_address,
         );
 
         if ($needsUpdating === null) {
@@ -62,14 +62,14 @@ class UpdateDomainDNS extends Plugin
                 ],
             )
             ->filter(
-                fn ($config) => $config['ip_address'] && $config['ip_address'] !== $this->forgeServer->ip_address
+                fn ($config) => $config['ip_address'] && $config['ip_address'] !== $this->server->ip_address
                     ? $this->console->confirm(
-                        "DNS record for [{$config['domain']}] currently points to [{$config['ip_address']}]. Update to [{$this->forgeServer->ip_address}]?",
+                        "DNS record for [{$config['domain']}] currently points to [{$config['ip_address']}]. Update to [{$this->server->ip_address}]?",
                         true
                     )
                     : true,
             )
-            ->filter(fn ($config) => $config['ip_address'] !== $this->forgeServer->ip_address)
+            ->filter(fn ($config) => $config['ip_address'] !== $this->server->ip_address)
             ->each(
                 fn ($config) => $config['subdomain'] === 'www' ? $this->dnsProvider->addCNAMERecord(
                     $config['subdomain'],
@@ -77,7 +77,7 @@ class UpdateDomainDNS extends Plugin
                     1800,
                 ) : $this->dnsProvider->addARecord(
                     $config['subdomain'],
-                    $this->forgeServer->ip_address,
+                    $this->server->ip_address,
                     1800,
                 ),
             );

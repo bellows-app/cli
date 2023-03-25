@@ -3,6 +3,8 @@
 use Bellows\Plugins\RunSchedule;
 
 it('can create the run schedule job', function () {
+    $this->plugin()->setup();
+
     $plugin = app(RunSchedule::class);
     $plugin->setup();
 
@@ -13,5 +15,6 @@ it('can create the run schedule job', function () {
     expect($jobs[0]->toArray())->toBe([
         'command'   => 'php81 /home/tester/bellowstester.com/artisan schedule:run',
         'frequency' => 'minutely',
+        'user'      => null,
     ]);
 })->group('plugin');

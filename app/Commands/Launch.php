@@ -2,7 +2,6 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Config;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\Job;
@@ -12,12 +11,8 @@ use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Env;
 use Bellows\PluginManager;
-use Composer\Semver\Semver;
-use Exception;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\RequestException;
+use Bellows\ServerProviders\Forge\Forge;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
@@ -43,7 +38,7 @@ class Launch extends Command
      *
      * @return mixed
      */
-    public function handle(Config $config, PluginManager $pluginManager)
+    public function handle(PluginManager $pluginManager, Forge $forge)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
@@ -51,56 +46,7 @@ class Launch extends Command
         $this->info("🚀 Launch time! Let's do this.");
         $this->newLine();
 
-        $forgeApiUrl = 'https://forge.laravel.com/api/v1';
-        $apiHost = parse_url($forgeApiUrl, PHP_URL_HOST);
-
-        $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
-
-        if ($token = $config->get($apiConfigKey)) {
-            try {
-                // Do a quick test to make sure it's a valid token
-                Http::baseUrl($forgeApiUrl)
-                    ->withToken($token)
-                    ->acceptJson()
-                    ->asJson()
-                    ->get('user')
-                    ->throw()
-                    ->json();
-            } catch (Exception $e) {
-                $token = null;
-                $this->warn('Your saved Forge token is invalid!');
-                $this->newLine();
-            }
-        }
-
-        if (!isset($token) || $token === null) {
-            $this->info('Looks like we need a Forge API token, you can get one here:');
-            $this->comment('https://forge.laravel.com/user-profile/api');
-
-            do {
-                if (isset($isInvalid)) {
-                    $this->warn('Invalid token, please try again.');
-                }
-
-                $token = $this->secret('Forge API Token');
-
-                try {
-                    // Do a quick test to make sure it's a valid token
-                    Http::baseUrl($forgeApiUrl)
-                        ->withToken($token)
-                        ->acceptJson()
-                        ->asJson()
-                        ->get('user')
-                        ->throw();
-
-                    $isInvalid = false;
-                } catch (Exception $e) {
-                    $isInvalid = true;
-                }
-            } while ($isInvalid);
-
-            $config->set($apiConfigKey, $token);
-        }
+        $forge->setCredentials();
 
         $dir = rtrim(getcwd(), '/');
 
@@ -112,31 +58,7 @@ class Launch extends Command
             return;
         }
 
-        Http::macro(
-            'forge',
-            fn () => Http::baseUrl($forgeApiUrl)
-                ->withToken($config->get($apiConfigKey))
-                ->acceptJson()
-                ->asJson()
-                ->retry(
-                    3,
-                    100,
-                    function (
-                        Exception $exception,
-                        PendingRequest $request
-                    ) {
-                        if ($exception instanceof RequestException && $exception->response->status() === 429) {
-                            sleep($exception->response->header('retry-after') + 1);
-
-                            return true;
-                        }
-
-                        return false;
-                    }
-                )
-        );
-
-        $server = $this->getServer();
+        $server = $forge->getServer();
 
         if ($server === null) {
             $this->error('No servers found!');
@@ -146,12 +68,7 @@ class Launch extends Command
             return;
         }
 
-        App::instance(ForgeServer::class, ForgeServer::from($server));
-
-        Http::macro(
-            'forgeServer',
-            fn () => Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}")
-        );
+        App::instance(ForgeServer::class, $server);
 
         $localEnv = new Env(file_get_contents($dir . '/.env'));
 
@@ -162,18 +79,9 @@ class Launch extends Command
 
         $this->newLine();
 
-        $existingDomain = $this->withSpinner(
-            title: 'Checking for existing domain on server',
-            task: fn () => collect(Http::forgeServer()->get('sites')->json()['sites'])->first(
-                fn ($site) => $site['name'] === $domain
-            ),
-            message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
-            success: fn ($result) => $result === null,
-        );
-
-        if ($existingDomain) {
+        if ($existingSite = $server->getSiteByDomain($domain)) {
             if ($this->confirm('View existing site in Forge?', true)) {
-                Process::run("open https://forge.laravel.com/servers/{$server['id']}/sites/{$existingDomain['id']}");
+                Process::run("open https://forge.laravel.com/servers/{$server->id}/sites/{$existingSite->id}");
             }
 
             return;
@@ -207,7 +115,7 @@ class Launch extends Command
 
         App::instance(DnsProvider::class, $dnsProvider);
 
-        [$phpVersion, $phpVersionBinary] = $this->determinePhpVersion($dir);
+        [$phpVersion, $phpVersionBinary] = $server->phpVersionFromProject($dir);
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
@@ -245,26 +153,10 @@ class Launch extends Command
             ...$pluginManager->createSiteParams($baseParams),
         );
 
+        /** @var \Bellows\ServerProviders\Forge\Site */
         $site = $this->withSpinner(
             title: 'Creating',
-            task: function () use ($createSiteParams) {
-                $siteResponse = Http::forgeServer()->post('sites', $createSiteParams)->json();
-
-                $site = $siteResponse['site'];
-
-                while ($site['status'] !== 'installed') {
-                    sleep(2);
-
-                    $site = Http::forgeServer()->get("sites/{$site['id']}")->json()['site'];
-                }
-
-                return $site;
-            },
-        );
-
-        Http::macro(
-            'forgeSite',
-            fn () => Http::forge()->baseUrl("{$forgeApiUrl}/servers/{$server['id']}/sites/{$site['id']}")
+            task: fn () => $server->createSite($createSiteParams),
         );
 
         $baseRepoParams = [
@@ -283,20 +175,12 @@ class Launch extends Command
 
         $this->withSpinner(
             title: 'Installing',
-            task: function () use ($installRepoParams, $site) {
-                Http::forgeSite()->post('git', $installRepoParams);
-
-                while ($site['repository_status'] !== 'installed') {
-                    sleep(2);
-
-                    $site = Http::forgeSite()->get('')->json()['site'];
-                }
-            },
+            task: fn () => $site->installRepo($installRepoParams),
         );
 
         $this->step('Environment Variables');
 
-        $siteEnv = new Env(Http::forgeSite()->get('env'));
+        $siteEnv = new Env($site->getEnv());
 
         $updatedEnvValues = collect(array_merge(
             [
@@ -315,7 +199,11 @@ class Launch extends Command
             )
         );
 
-        $inLocalButNotInRemote = collect(array_keys($localEnv->all()))->diff(array_keys($siteEnv->all()))->values();
+        $inLocalButNotInRemote = collect(
+            array_keys($localEnv->all())
+        )->diff(
+            array_keys($siteEnv->all())
+        )->values();
 
         if ($inLocalButNotInRemote->isNotEmpty()) {
             $this->newLine();
@@ -341,71 +229,70 @@ class Launch extends Command
 
         $this->withSpinner(
             title: 'Updating',
-            task: fn () => Http::forgeSite()->put('env', ['content' => $siteEnv->toString()]),
+            task: fn () => $site->updateEnv($siteEnv->toString()),
         );
 
         $this->step('Deploy Script');
 
-        $deployScript = (string) Http::forgeSite()->get('deployment/script');
+        $deployScript = $site->getDeploymentScript();
         $deployScript = $pluginManager->updateDeployScript($deployScript);
 
         $this->withSpinner(
             title: 'Updating',
-            task: fn () => Http::forgeSite()->put('deployment/script', ['content' => $deployScript]),
+            task: fn () => $site->updateDeploymentScript($deployScript),
         );
 
-        $this->step('Deamons');
+        $this->step('Daemons');
 
-        $daemons = $pluginManager->daemons()->map(fn (Daemon $daemon) => [
-            'command'   => $daemon->command,
-            'user'      => $daemon->user ?: $projectConfig->isolatedUser,
-            'directory' => $daemon->directory
-                ?: "/home/{$projectConfig->isolatedUser}/{$projectConfig->domain}",
-        ]);
+        $daemons = $pluginManager->daemons()->map(
+            fn (Daemon $daemon) => Daemon::from([
+                'command'   => $daemon->command,
+                'user'      => $daemon->user ?: $projectConfig->isolatedUser,
+                'directory' => $daemon->directory
+                    ?: "/home/{$projectConfig->isolatedUser}/{$projectConfig->domain}",
+            ])
+        );
 
         $this->withSpinner(
             title: 'Creating',
             task: fn () => $daemons->each(
-                fn (array $params) => Http::forgeServer()->post(
-                    'daemons',
-                    $params,
-                )
+                fn ($daemon) => $server->createDaemon($daemon),
             ),
         );
 
         $this->step('Workers');
 
-        $workers = $pluginManager->workers()->map(fn (Worker $worker) => array_merge(
-            ['php_version' => $projectConfig->phpVersion],
-            $worker->toArray()
-        ));
+        $workers = $pluginManager->workers()->map(
+            fn (Worker $worker) => Worker::from(
+                array_merge(
+                    ['php_version' => $projectConfig->phpVersion],
+                    $worker->toArray()
+                )
+            )
+        );
 
         $this->withSpinner(
             title: 'Creating',
             task: fn () => $workers->each(
-                fn (array $params) => Http::forgeSite()->post(
-                    'workers',
-                    $params,
-                )->json()
+                fn ($worker) => $site->createWorker($worker)
             ),
         );
 
         $this->step('Scheduled Jobs');
 
         $jobs = $pluginManager->jobs()->map(
-            fn (Job $job) => array_merge(
-                ['user' => $projectConfig->isolatedUser],
-                $job->toArray()
+            fn (Job $job) => Job::from(
+                array_merge(
+                    ['user' => $projectConfig->isolatedUser],
+                    $job->toArray()
+                ),
             )
         );
 
         $this->withSpinner(
             title: 'Creating',
             task: fn () => $jobs->each(
-                fn (array $params) => Http::forgeServer()->post(
-                    'jobs',
-                    $params,
-                )->json()
+                fn ($job) => $server->createJob($job)
             ),
         );
 
@@ -421,11 +308,26 @@ class Launch extends Command
         $this->table(
             ['Task', 'Value'],
             collect([
-                ['Environment Variables', $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-'],
-                ['Deploy Script', $deployScript],
-                ['Daemons', $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-'],
-                ['Workers', $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-'],
-                ['Scheduled Jobs', $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-'],
+                [
+                    'Environment Variables',
+                    $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-',
+                ],
+                [
+                    'Deploy Script',
+                    $deployScript,
+                ],
+                [
+                    'Daemons',
+                    $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-',
+                ],
+                [
+                    'Workers',
+                    $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-',
+                ],
+                [
+                    'Scheduled Jobs',
+                    $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-',
+                ],
             ])->map(fn ($row) => [
                 "<comment>{$row[0]}</comment>",
                 $row[1] . PHP_EOL,
@@ -465,32 +367,6 @@ class Launch extends Command
         $this->info('|' . str_repeat(' ', $length) . '|');
         $this->info('+' . str_repeat('-', $length) . '+');
         $this->newLine();
-    }
-
-    protected function getServer(): ?array
-    {
-        $servers = collect(
-            Http::forge()->get('servers')->json()['servers']
-        )->filter(fn ($s) => !$s['revoked'])->values();
-
-        if ($servers->isEmpty()) {
-            return null;
-        }
-
-        if ($servers->count() === 1) {
-            $server = $servers->first();
-
-            $this->info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
-
-            return $server;
-        }
-
-        $serverName = $this->choice(
-            'Which server would you like to use?',
-            $servers->pluck('name')->sort()->values()->toArray()
-        );
-
-        return $servers->first(fn ($s) => $s['name'] === $serverName);
     }
 
     protected function getGitInfo(string $dir, string $domain): array
@@ -541,76 +417,5 @@ class Launch extends Command
         }
 
         return [$repo, $repoBranch];
-    }
-
-    protected function determinePhpVersion($projectDir)
-    {
-        $composerJson = file_get_contents($projectDir . '/composer.json');
-        $composerJson = json_decode($composerJson, true);
-        $requiredPhpVersion = $composerJson['require']['php'] ?? null;
-
-        $phpVersion = $this->withSpinner(
-            title: 'Determining PHP Version',
-            task: function () use ($requiredPhpVersion) {
-                $phpVersions = collect(Http::forgeServer()->get('php')->json())->sortByDesc('version');
-
-                return $requiredPhpVersion ? $phpVersions->first(
-                    fn ($p) => Semver::satisfies(
-                        Str::replace('php', '', $p['binary_name']),
-                        $requiredPhpVersion
-                    )
-                ) : $phpVersions->first();
-            },
-            message: fn ($result) => $result['binary_name'] ?? null,
-            success: fn ($result) => $result !== null,
-        );
-
-        if ($phpVersion) {
-            return [$phpVersion['version'], $phpVersion['binary_name']];
-        }
-
-        $available = collect([
-            'php82' => '8.2',
-            'php81' => '8.1',
-            'php80' => '8.0',
-            'php74' => '7.4',
-            'php73' => '7.3',
-            'php72' => '7.2',
-            'php71' => '7.1',
-            'php70' => '7.0',
-            'php56' => '5.6',
-        ]);
-
-        $toInstall = $available->first(
-            fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
-        );
-
-        if (!$toInstall || !$this->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
-            throw new Exception('No PHP version on server found that matches the required version in composer.json');
-        }
-
-        $phpVersion = $this->installPHPVersion($toInstall, $available->search($toInstall));
-
-        return [$phpVersion['version'], $phpVersion['binary_name']];
-    }
-
-    protected function installPHPVersion($name, $version)
-    {
-        return $this->withSpinner(
-            title: 'Installing PHP on server',
-            task: function () use ($version) {
-                Http::forgeServer()->post('php', ['version' => $version]);
-
-                do {
-                    $phpVersion = collect(Http::forgeServer()->get('php')->json())->first(
-                        fn ($p) => $p['version'] === $version
-                    );
-                } while ($phpVersion['status'] !== 'installed');
-
-                return $phpVersion;
-            },
-            message: fn ($result) => $result['binary_name'] ?? null,
-            success: fn ($result) => $result !== null,
-        );
     }
 }

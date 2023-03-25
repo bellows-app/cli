@@ -2,11 +2,12 @@
 
 namespace Bellows;
 
-use Bellows\Data\ForgeServer;
 use Bellows\Data\ProjectConfig;
 use Bellows\Dns\DnsProvider;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
+use Bellows\ServerProviders\Forge\Server;
+use Bellows\ServerProviders\Forge\Site;
 
 abstract class Plugin
 {
@@ -26,7 +27,8 @@ abstract class Plugin
         protected Npm $npm,
         protected DeployScript $deployScript,
         protected Artisan $artisan,
-        protected ForgeServer $forgeServer,
+        protected Server $server,
+        protected Site $site,
         protected ?DnsProvider $dnsProvider = null,
     ) {
         $this->localEnv = new Env(file_get_contents($projectConfig->projectDirectory . '/.env'));

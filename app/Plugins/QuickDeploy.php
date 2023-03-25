@@ -3,7 +3,6 @@
 namespace Bellows\Plugins;
 
 use Bellows\Plugin;
-use Illuminate\Support\Facades\Http;
 
 class QuickDeploy extends Plugin
 {
@@ -14,6 +13,6 @@ class QuickDeploy extends Plugin
 
     public function wrapUp(): void
     {
-        Http::forgeSite()->post('deployment');
+        $this->site->enableQuickDeploy();
     }
 }

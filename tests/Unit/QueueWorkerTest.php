@@ -34,6 +34,7 @@ it('can create a single queue worker', function () {
         'daemon'       => false,
         'force'        => false,
         'tries'        => null,
+        'php_version'  => null,
     ]);
 
     $deployScript = $plugin->updateDeployScript(DeployScript::PHP_RELOAD);
@@ -76,6 +77,7 @@ it('can create multiple queue workers', function () {
         'daemon'       => false,
         'force'        => false,
         'tries'        => null,
+        'php_version'  => null,
     ]);
 
     expect($workers[1]->toArray())->toBe([
@@ -88,6 +90,7 @@ it('can create multiple queue workers', function () {
         'daemon'       => false,
         'force'        => false,
         'tries'        => null,
+        'php_version'  => null,
     ]);
 
     $deployScript = $plugin->updateDeployScript(DeployScript::PHP_RELOAD);
@@ -133,5 +136,6 @@ it('can create a custom queue worker', function () {
         'daemon'       => true,
         'force'        => false,
         'tries'        => null,
+        'php_version'  => null,
     ]);
 })->group('plugin');

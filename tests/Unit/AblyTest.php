@@ -7,7 +7,6 @@ it('can choose an app from the list', function () {
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
         ->expectsConfirmation('Create new app?', 'no')
-        // ->expectsQuestion('Which app do you want to use?', 'Test App')
         ->expectsQuestion('Which app do you want to use?', 'Forge It Test')
         ->expectsQuestion('Which key do you want to use?', 'Subscribe only')
         ->setup();

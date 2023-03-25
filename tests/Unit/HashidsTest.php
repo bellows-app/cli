@@ -2,6 +2,10 @@
 
 use Bellows\Plugins\Hashids;
 
+beforeEach(function () {
+    $this->plugin()->setup();
+});
+
 it('can set the env variable', function () {
     $plugin = app(Hashids::class);
     $plugin->setup();

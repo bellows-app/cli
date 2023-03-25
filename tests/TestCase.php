@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Bellows\Config;
-use Bellows\Data\ForgeServer;
 use Bellows\Data\ProjectConfig;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
 use Spatie\Fork\Fork;
@@ -33,8 +32,9 @@ abstract class TestCase extends BaseTestCase
             }
         });
 
-        $this->app->bind(ProjectConfig::class, function () use ($projectDir) {
-            return new ProjectConfig(
+        $this->app->bind(
+            ProjectConfig::class,
+            fn () => new ProjectConfig(
                 isolatedUser: 'tester',
                 repositoryUrl: 'bellows/tester',
                 repositoryBranch: 'main',
@@ -44,28 +44,24 @@ abstract class TestCase extends BaseTestCase
                 domain: 'bellowstester.com',
                 appName: 'Bellows Tester',
                 secureSite: true,
-            );
-        });
+            )
+        );
 
-        $this->app->bind(ForgeServer::class, function () {
-            return ForgeServer::from([
-                'id'         => 123,
-                'name'       => 'test-server',
-                'type'       => 'php',
-                'ip_address' => '123.123.123.123',
-            ]);
-        });
-
+        // Reset the .env file
         file_put_contents($projectDir . '/.env', '');
 
+        // Reset the composer.json file
         $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
         $composer['require'] = ['php' => '^8.1'];
+
         file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
 
+        // Reset the package.json file
         $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
         $packages['dependencies'] = [];
         $packages['devDependencies'] = [];
         $packages['scripts'] = [];
+
         file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
     }
 

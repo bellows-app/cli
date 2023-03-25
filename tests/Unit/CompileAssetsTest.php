@@ -4,6 +4,10 @@ use Bellows\Data\ProjectConfig;
 use Bellows\DeployScript;
 use Bellows\Plugins\CompileAssets;
 
+beforeEach(function () {
+    $this->plugin()->setup();
+});
+
 afterEach(function () {
     if (file_exists(app(ProjectConfig::class)->projectDirectory . '/yarn.lock')) {
         unlink(app(ProjectConfig::class)->projectDirectory . '/yarn.lock');

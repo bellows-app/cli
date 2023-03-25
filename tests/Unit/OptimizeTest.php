@@ -4,6 +4,8 @@ use Bellows\DeployScript;
 use Bellows\Plugins\Optimize;
 
 it('can update the deploy script', function () {
+    $this->plugin()->setup();
+
     $plugin = app(Optimize::class);
     $plugin->setup();
 

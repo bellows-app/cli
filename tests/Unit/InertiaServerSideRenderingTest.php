@@ -1,37 +1,43 @@
 <?php
 
 use Bellows\Data\Daemon;
+use Bellows\Data\ForgeSite;
 use Bellows\DeployScript;
 use Bellows\Plugins\InertiaServerSideRendering;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
-    Http::macro(
-        'forgeServer',
-        fn () => Http::baseUrl('https://forge.laravel.com/api/v1')
-            ->acceptJson()
-            ->asJson()
-    );
+    Http::fake();
 });
 
 it('can set the env variable if there are other ports in use', function () {
-    Http::fake([
-        'sites' => Http::response([
-            'sites' => [
-                site([
-                    'id'   => 1,
-                    'name' => 'Test Site',
-                ]),
-                site([
-                    'id'   => 2,
-                    'name' => 'Test Site',
-                ]),
-            ],
-        ]),
-        'sites/1/env' => Http::response('SSR_PORT=13716'),
-        'sites/2/env' => Http::response('SSR_PORT=13717'),
-    ]);
+    $this->plugin()
+        ->mockServer(function (MockInterface $mock) {
+            $mock->shouldReceive('getSites')->once()->andReturn(
+                collect([
+                    ForgeSite::from(site([
+                        'id'   => 1,
+                        'name' => 'Test Site',
+                    ])),
+                    ForgeSite::from(site([
+                        'id'   => 2,
+                        'name' => 'Test Site',
+                    ])),
+                ])
+            );
+
+            $mock->shouldReceive('getSiteEnv')
+                ->once()
+                ->with(1)
+                ->andReturn('SSR_PORT=13716');
+
+            $mock->shouldReceive('getSiteEnv')
+                ->once()
+                ->with(2)
+                ->andReturn('SSR_PORT=13717');
+        })
+        ->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();
@@ -43,17 +49,23 @@ it('can set the env variable if there are other ports in use', function () {
 })->group('plugin');
 
 it('can set the env variable if there are no other ports in use', function () {
-    Http::fake([
-        'sites' => Http::response([
-            'sites' => [
-                site([
-                    'id'   => 1,
-                    'name' => 'Test Site',
-                ]),
-            ],
-        ]),
-        'sites/1/env' => Http::response(''),
-    ]);
+    $this->plugin()
+        ->mockServer(function (MockInterface $mock) {
+            $mock->shouldReceive('getSites')->once()->andReturn(
+                collect([
+                    ForgeSite::from(site([
+                        'id'   => 1,
+                        'name' => 'Test Site',
+                    ])),
+                ])
+            );
+
+            $mock->shouldReceive('getSiteEnv')
+                ->once()
+                ->with(1)
+                ->andReturn('');
+        })
+        ->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();
@@ -65,17 +77,23 @@ it('can set the env variable if there are no other ports in use', function () {
 })->group('plugin');
 
 it('can create a daemon', function () {
-    Http::fake([
-        'sites' => Http::response([
-            'sites' => [
-                site([
-                    'id'   => 1,
-                    'name' => 'Test Site',
-                ]),
-            ],
-        ]),
-        'sites/1/env' => Http::response(''),
-    ]);
+    $this->plugin()
+        ->mockServer(function (MockInterface $mock) {
+            $mock->shouldReceive('getSites')->once()->andReturn(
+                collect([
+                    ForgeSite::from(site([
+                        'id'   => 1,
+                        'name' => 'Test Site',
+                    ])),
+                ])
+            );
+
+            $mock->shouldReceive('getSiteEnv')
+                ->once()
+                ->with(1)
+                ->andReturn('');
+        })
+        ->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();
@@ -94,17 +112,23 @@ it('can create a daemon', function () {
 })->group('plugin');
 
 it('can update the deploy script', function () {
-    Http::fake([
-        'sites' => Http::response([
-            'sites' => [
-                site([
-                    'id'   => 1,
-                    'name' => 'Test Site',
-                ]),
-            ],
-        ]),
-        'sites/1/env' => Http::response(''),
-    ]);
+    $this->plugin()
+        ->mockServer(function (MockInterface $mock) {
+            $mock->shouldReceive('getSites')->once()->andReturn(
+                collect([
+                    ForgeSite::from(site([
+                        'id'   => 1,
+                        'name' => 'Test Site',
+                    ])),
+                ])
+            );
+
+            $mock->shouldReceive('getSiteEnv')
+                ->once()
+                ->with(1)
+                ->andReturn('');
+        })
+        ->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
     $plugin->setup();

@@ -4,6 +4,8 @@ use Bellows\DeployScript;
 use Bellows\Plugins\MomentumTrail;
 
 it('can update the deploy script', function () {
+    $this->plugin()->setup();
+
     $plugin = app(MomentumTrail::class);
     $plugin->setup();
 

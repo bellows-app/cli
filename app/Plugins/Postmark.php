@@ -11,9 +11,9 @@ use Illuminate\Support\Str;
 
 class Postmark extends Plugin
 {
-    protected $server;
+    protected array $postmarkServer;
 
-    protected $sendingDomain;
+    protected array $sendingDomain;
 
     protected string $messageStreamId;
 
@@ -43,7 +43,7 @@ class Postmark extends Plugin
             fn (PendingRequest $request) => $request->get('servers', ['count' => 1, 'offset' => 0]),
         );
 
-        $this->server = $this->getServer();
+        $this->postmarkServer = $this->getServer();
         $this->sendingDomain = $this->getDomain();
 
         $this->updateDomainRecordsWithProvider();
@@ -58,7 +58,7 @@ class Postmark extends Plugin
 
     public function getMessageStreamId()
     {
-        $token = $this->server['ApiTokens'][0];
+        $token = $this->postmarkServer['ApiTokens'][0];
 
         $streams = collect(
             Http::withHeaders([
@@ -209,7 +209,7 @@ class Postmark extends Plugin
             'MAIL_MAILER'                => 'postmark',
             'MAIL_FROM_ADDRESS'          => $this->fromEmail,
             'POSTMARK_MESSAGE_STREAM_ID' => $this->messageStreamId,
-            'POSTMARK_TOKEN'             => $this->server['ApiTokens'][0],
+            'POSTMARK_TOKEN'             => $this->postmarkServer['ApiTokens'][0],
         ];
     }
 }

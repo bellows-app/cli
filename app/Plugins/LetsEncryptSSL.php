@@ -4,7 +4,6 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Plugin;
-use Illuminate\Support\Facades\Http;
 
 class LetsEncryptSSL extends Plugin
 {
@@ -19,12 +18,7 @@ class LetsEncryptSSL extends Plugin
 
     public function wrapUp(): void
     {
-        Http::forgeSite()->post(
-            'certificates/letsencrypt',
-            [
-                'domains' => [$this->projectConfig->domain],
-            ],
-        );
+        $this->site->createSslCertificate($this->projectConfig->domain);
     }
 
     public function environmentVariables(): array

@@ -12,6 +12,7 @@ class Job extends Data
         public string $command,
         #[Enum(JobFrequency::class)]
         public JobFrequency $frequency,
+        public ?string $user = null,
     ) {
     }
 }

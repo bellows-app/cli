@@ -3,10 +3,10 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\Daemon;
+use Bellows\Data\ForgeSite;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Http;
 
 class Octane extends Plugin
 {
@@ -22,13 +22,11 @@ class Octane extends Plugin
     {
         $defaultOctanePort = 8000;
 
-        $highestOctanePortInUse = collect(
-            Http::forgeServer()->get('sites')->json()['sites']
-        )
-            ->filter(fn ($s) => $s['project_type'] === 'octane')
-            ->map(fn ($s) => (string) Http::forgeServer()->get("sites/{$s['id']}/env"))
-            ->map(fn ($s) => Dotenv::parse($s))
-            ->map(fn ($s) => Arr::get($s, 'OCTANE_PORT'))
+        $highestOctanePortInUse = $this->server->getSites()
+            ->filter(fn (ForgeSite $s) => $s->project_type === 'octane')
+            ->map(fn (ForgeSite $s) => $this->server->getSiteEnv($s->id))
+            ->map(fn (string $s) => Dotenv::parse($s))
+            ->map(fn (array $s) => Arr::get($s, 'OCTANE_PORT'))
             ->filter()
             ->map(fn ($s) => (int) $s)
             ->max() ?: $defaultOctanePort - 1;

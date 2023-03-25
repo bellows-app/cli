@@ -2,8 +2,11 @@
 
 namespace Bellows\Data;
 
+use Spatie\LaravelData\Attributes\MapName;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
+#[MapName(SnakeCaseMapper::class)]
 class Worker extends Data
 {
     public function __construct(
@@ -16,6 +19,7 @@ class Worker extends Data
         public ?bool $daemon = false,
         public ?bool $force = false,
         public ?int $tries = null,
+        public ?string $phpVersion = null,
     ) {
     }
 }

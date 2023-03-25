@@ -2,13 +2,14 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Data\SecurityRule;
 use Bellows\Plugin;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class SecurityRules extends Plugin
 {
+    /** @var \Illuminate\Support\Collection<\Bellows\Data\SecurityRule> */
     protected Collection $securityRules;
 
     public function enabled(): bool
@@ -45,11 +46,13 @@ class SecurityRules extends Plugin
                 ]);
             } while ($this->console->confirm('Add another user?'));
 
-            $this->securityRules->push([
-                'name'        => $groupName,
-                'path'        => $path,
-                'credentials' => $credentials->toArray(),
-            ]);
+            $this->securityRules->push(
+                SecurityRule::from([
+                    'name'        => $groupName,
+                    'path'        => $path,
+                    'credentials' => $credentials,
+                ])
+            );
         } while ($this->console->confirm('Add another security rule group?'));
     }
 
@@ -60,7 +63,7 @@ class SecurityRules extends Plugin
         }
 
         $this->securityRules->each(
-            fn ($rule) => Http::forgeSite()->post('security-rules', $rule)
+            fn ($rule) => $this->site->addSecurityRule($rule),
         );
     }
 }

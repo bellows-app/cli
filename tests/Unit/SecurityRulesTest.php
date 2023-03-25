@@ -2,23 +2,32 @@
 
 use Bellows\Plugins\SecurityRules;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
-    Http::macro(
-        'forgeSite',
-        fn () => Http::baseUrl('https://forge.laravel.com/api/v1')
-            ->acceptJson()
-            ->asJson()
-    );
+    Http::fake();
 });
 
 it('can create a single security rule', function () {
-    Http::fake([
-        'security-rules' => Http::response(null, 200),
-    ]);
-
     $mock = $this->plugin()
+        ->mockSite(function (MockInterface $mock) {
+            $mock->shouldReceive('addSecurityRule')->once()->with(
+                Mockery::on(
+                    function ($rule) {
+                        return $rule->toArray() === [
+                            'name'          => 'Restricted Access',
+                            'path'          => null,
+                            'credentials'   => [
+                                [
+                                    'username' => 'joe',
+                                    'password' => 'secretstuff',
+                                ],
+                            ],
+                        ];
+                    }
+                )
+            );
+        })
         ->expectsQuestion('Security rule group name', 'Restricted Access')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
@@ -36,29 +45,33 @@ it('can create a single security rule', function () {
     $mock->validate();
 
     $plugin->wrapUp();
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
-            && $request->data() === [
-                'name'          => 'Restricted Access',
-                'path'          => null,
-                'credentials'   => [
-                    [
-                        'username' => 'joe',
-                        'password' => 'secretstuff',
-                    ],
-                ],
-            ];
-    });
 })->group('plugin');
 
 it('can add multiple users to a security group', function () {
-    Http::fake([
-        'security-rules' => Http::response(null, 200),
-    ]);
-
     $mock = $this->plugin()
-        ->expectsQuestion('Security rule group name', 'Restricted Access')
+        ->mockSite(function (MockInterface $mock) {
+            $mock->shouldReceive('addSecurityRule')->once()->with(
+                Mockery::on(
+                    function ($rule) {
+                        return $rule->toArray() === [
+                            'name'          => 'Stripe Webhook',
+                            'path'          => 'stripe/*',
+                            'credentials'   => [
+                                [
+                                    'username' => 'joe',
+                                    'password' => 'secretstuff',
+                                ],
+                                [
+                                    'username' => 'frank',
+                                    'password' => 'noway',
+                                ],
+                            ],
+                        ];
+                    }
+                )
+            );
+        })
+        ->expectsQuestion('Security rule group name', 'Stripe Webhook')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
             'stripe/*'
@@ -78,32 +91,46 @@ it('can add multiple users to a security group', function () {
     $mock->validate();
 
     $plugin->wrapUp();
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
-            && $request->data() === [
-                'name'          => 'Restricted Access',
-                'path'          => 'stripe/*',
-                'credentials'   => [
-                    [
-                        'username' => 'joe',
-                        'password' => 'secretstuff',
-                    ],
-                    [
-                        'username' => 'frank',
-                        'password' => 'noway',
-                    ],
-                ],
-            ];
-    });
 })->group('plugin');
 
 it('can create multiple security rules', function () {
-    Http::fake([
-        'security-rules' => Http::response(null, 200),
-    ]);
-
     $mock = $this->plugin()
+
+        ->mockSite(function (MockInterface $mock) {
+            $mock->shouldReceive('addSecurityRule')->once()->with(
+                Mockery::on(
+                    function ($rule) {
+                        return $rule->toArray() === [
+                            'name'          => 'Restricted Access',
+                            'path'          => null,
+                            'credentials'   => [
+                                [
+                                    'username' => 'joe',
+                                    'password' => 'secretstuff',
+                                ],
+                            ],
+                        ];
+                    }
+                )
+            );
+
+            $mock->shouldReceive('addSecurityRule')->once()->with(
+                Mockery::on(
+                    function ($rule) {
+                        return $rule->toArray() === [
+                            'name'          => 'Admins',
+                            'path'          => null,
+                            'credentials'   => [
+                                [
+                                    'username' => 'gary',
+                                    'password' => 'shhh',
+                                ],
+                            ],
+                        ];
+                    }
+                )
+            );
+        })
         ->expectsQuestion('Security rule group name', 'Restricted Access')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
@@ -130,32 +157,4 @@ it('can create multiple security rules', function () {
     $mock->validate();
 
     $plugin->wrapUp();
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
-            && $request->data() === [
-                'name'          => 'Restricted Access',
-                'path'          => null,
-                'credentials'   => [
-                    [
-                        'username' => 'joe',
-                        'password' => 'secretstuff',
-                    ],
-                ],
-            ];
-    });
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/security-rules'
-            && $request->data() === [
-                'name'          => 'Admins',
-                'path'          => null,
-                'credentials'   => [
-                    [
-                        'username' => 'gary',
-                        'password' => 'shhh',
-                    ],
-                ],
-            ];
-    });
 })->group('plugin');

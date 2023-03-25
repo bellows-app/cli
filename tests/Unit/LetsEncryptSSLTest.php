@@ -2,21 +2,18 @@
 
 use Bellows\Plugins\LetsEncryptSSL;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
-    Http::macro(
-        'forgeSite',
-        fn () => Http::baseUrl('https://forge.laravel.com/api/v1')
-            ->acceptJson()
-            ->asJson()
-    );
+    Http::fake();
 });
 
 it('will be disabled if the secure site flag is off', function () {
     overrideProjectConfig([
         'secureSite' => false,
     ]);
+
+    $this->plugin()->setup();
 
     $plugin = app(LetsEncryptSSL::class);
     $plugin->setup();
@@ -29,6 +26,8 @@ it('will be enabled if the secure site flag is on', function () {
         'secureSite' => true,
     ]);
 
+    $this->plugin()->setup();
+
     $plugin = app(LetsEncryptSSL::class);
     $plugin->setup();
 
@@ -39,6 +38,8 @@ it('can set the env variable', function () {
     overrideProjectConfig([
         'domain' => 'bellowstester.com',
     ]);
+
+    $this->plugin()->setup();
 
     $plugin = app(LetsEncryptSSL::class);
     $plugin->setup();
@@ -53,15 +54,10 @@ it('can wrap up', function () {
         'domain' => 'bellowstester.com',
     ]);
 
-    Http::fake([
-        'certificates/letsencrypt' => Http::response(null, 200),
-    ]);
+    $this->plugin()->mockSite(function (MockInterface $mock) {
+        $mock->shouldReceive('createSslCertificate')->with('bellowstester.com')->once();
+    })->setup();
 
     $plugin = app(LetsEncryptSSL::class);
     $plugin->wrapUp();
-
-    Http::assertSent(function ($request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/certificates/letsencrypt'
-            && $request['domains'] === ['bellowstester.com'];
-    });
 })->group('plugin');
