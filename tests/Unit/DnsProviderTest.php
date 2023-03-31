@@ -3,6 +3,8 @@
 use Bellows\Dns\DnsFactory;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class);
+
 beforeEach(function () {
     $this->plugin()->setup();
 });
