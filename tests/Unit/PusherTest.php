@@ -2,6 +2,8 @@
 
 use Bellows\Plugins\Pusher;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can select a pusher app from the list', function () {
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
@@ -20,7 +22,7 @@ it('can select a pusher app from the list', function () {
         'PUSHER_APP_SECRET'  => '382ae76b47a6a1403066',
         'PUSHER_APP_CLUSTER' => 'us2',
     ]);
-})->group('plugin');
+});
 
 it('can refresh the list', function () {
     $mock = $this->plugin()
@@ -41,4 +43,4 @@ it('can refresh the list', function () {
         'PUSHER_APP_SECRET'  => '382ae76b47a6a1403066',
         'PUSHER_APP_CLUSTER' => 'us2',
     ]);
-})->group('plugin');
+});

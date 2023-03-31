@@ -4,6 +4,8 @@ use Bellows\Plugins\Mailgun;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can create a new domain', function () {
     Http::fake([
         'domains' => Http::response(null, 200),
@@ -33,7 +35,7 @@ it('can create a new domain', function () {
                 'name' => 'mail.bellowstest.com',
             ];
     });
-})->group('plugin');
+});
 
 it('can choose an existing domain', function () {
     $mock = $this->plugin()
@@ -53,4 +55,4 @@ it('can choose an existing domain', function () {
         'MAILGUN_SECRET'   => '1b1c897b6b99c08558b3c75f37695532-b0aac6d0-0cf7a3c2',
         'MAILGUN_ENDPOINT' => 'api.mailgun.net',
     ]);
-})->group('plugin');
+});

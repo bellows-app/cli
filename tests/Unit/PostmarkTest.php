@@ -4,6 +4,7 @@ use Bellows\Plugins\Postmark;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
 it('can create a new user and database', function () {
     Http::fake([
         'servers' => Http::response([
@@ -77,7 +78,7 @@ it('can create a new user and database', function () {
                 'Name' => 'mail.bellowstest.com',
             ];
     });
-})->group('plugin');
+});
 
 it('can select an existing server and domain from the list', function () {
     $mock = $this->plugin()
@@ -101,4 +102,4 @@ it('can select an existing server and domain from the list', function () {
         'POSTMARK_MESSAGE_STREAM_ID' => 'outbound',
         'POSTMARK_TOKEN'             => '77138ddb-8679-489b-9f9c-b624a13d192e',
     ]);
-})->group('plugin');
+});

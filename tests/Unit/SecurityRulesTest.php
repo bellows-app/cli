@@ -1,8 +1,10 @@
 <?php
 
 use Bellows\Plugins\SecurityRules;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\Http;
-use Mockery\MockInterface;
+
+uses(Tests\PluginTestCase::class)->group('plugin');
 
 beforeEach(function () {
     Http::fake();
@@ -10,24 +12,6 @@ beforeEach(function () {
 
 it('can create a single security rule', function () {
     $mock = $this->plugin()
-        ->mockSite(function (MockInterface $mock) {
-            $mock->shouldReceive('addSecurityRule')->once()->with(
-                Mockery::on(
-                    function ($rule) {
-                        return $rule->toArray() === [
-                            'name'          => 'Restricted Access',
-                            'path'          => null,
-                            'credentials'   => [
-                                [
-                                    'username' => 'joe',
-                                    'password' => 'secretstuff',
-                                ],
-                            ],
-                        ];
-                    }
-                )
-            );
-        })
         ->expectsQuestion('Security rule group name', 'Restricted Access')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
@@ -39,38 +23,33 @@ it('can create a single security rule', function () {
         ->expectsConfirmation('Add another security rule group?', 'no')
         ->setup();
 
+    $site = app(SiteInterface::class);
+
     $plugin = app(SecurityRules::class);
+    $plugin->setSite($site);
     $plugin->setup();
 
     $mock->validate();
 
     $plugin->wrapUp();
-})->group('plugin');
+
+    $site->assertMethodWasCalled(
+        'addSecurityRule',
+        fn ($args) => $args[0]->toArray() === [
+            'name'          => 'Restricted Access',
+            'path'          => null,
+            'credentials'   => [
+                [
+                    'username' => 'joe',
+                    'password' => 'secretstuff',
+                ],
+            ],
+        ],
+    );
+});
 
 it('can add multiple users to a security group', function () {
     $mock = $this->plugin()
-        ->mockSite(function (MockInterface $mock) {
-            $mock->shouldReceive('addSecurityRule')->once()->with(
-                Mockery::on(
-                    function ($rule) {
-                        return $rule->toArray() === [
-                            'name'          => 'Stripe Webhook',
-                            'path'          => 'stripe/*',
-                            'credentials'   => [
-                                [
-                                    'username' => 'joe',
-                                    'password' => 'secretstuff',
-                                ],
-                                [
-                                    'username' => 'frank',
-                                    'password' => 'noway',
-                                ],
-                            ],
-                        ];
-                    }
-                )
-            );
-        })
         ->expectsQuestion('Security rule group name', 'Stripe Webhook')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
@@ -85,52 +64,37 @@ it('can add multiple users to a security group', function () {
         ->expectsConfirmation('Add another security rule group?', 'no')
         ->setup();
 
+    $site = app(SiteInterface::class);
+
     $plugin = app(SecurityRules::class);
+    $plugin->setSite($site);
     $plugin->setup();
 
     $mock->validate();
 
     $plugin->wrapUp();
-})->group('plugin');
+
+    $site->assertMethodWasCalled(
+        'addSecurityRule',
+        fn ($args) => $args[0]->toArray() === [
+            'name'          => 'Stripe Webhook',
+            'path'          => 'stripe/*',
+            'credentials'   => [
+                [
+                    'username' => 'joe',
+                    'password' => 'secretstuff',
+                ],
+                [
+                    'username' => 'frank',
+                    'password' => 'noway',
+                ],
+            ],
+        ],
+    );
+});
 
 it('can create multiple security rules', function () {
     $mock = $this->plugin()
-
-        ->mockSite(function (MockInterface $mock) {
-            $mock->shouldReceive('addSecurityRule')->once()->with(
-                Mockery::on(
-                    function ($rule) {
-                        return $rule->toArray() === [
-                            'name'          => 'Restricted Access',
-                            'path'          => null,
-                            'credentials'   => [
-                                [
-                                    'username' => 'joe',
-                                    'password' => 'secretstuff',
-                                ],
-                            ],
-                        ];
-                    }
-                )
-            );
-
-            $mock->shouldReceive('addSecurityRule')->once()->with(
-                Mockery::on(
-                    function ($rule) {
-                        return $rule->toArray() === [
-                            'name'          => 'Admins',
-                            'path'          => null,
-                            'credentials'   => [
-                                [
-                                    'username' => 'gary',
-                                    'password' => 'shhh',
-                                ],
-                            ],
-                        ];
-                    }
-                )
-            );
-        })
         ->expectsQuestion('Security rule group name', 'Restricted Access')
         ->expectsQuestion(
             'Path (leave blank to password protect all routes within your site, any valid Nginx location path)',
@@ -151,10 +115,41 @@ it('can create multiple security rules', function () {
         ->expectsConfirmation('Add another security rule group?', 'no')
         ->setup();
 
+    $site = app(SiteInterface::class);
+
     $plugin = app(SecurityRules::class);
+    $plugin->setSite($site);
     $plugin->setup();
 
     $mock->validate();
 
     $plugin->wrapUp();
-})->group('plugin');
+
+    $site->assertMethodWasCalled(
+        'addSecurityRule',
+        fn ($args) => $args[0]->toArray() === [
+            'name'          => 'Restricted Access',
+            'path'          => null,
+            'credentials'   => [
+                [
+                    'username' => 'joe',
+                    'password' => 'secretstuff',
+                ],
+            ],
+        ]
+    );
+
+    $site->assertMethodWasCalled(
+        'addSecurityRule',
+        fn ($args) => $args[0]->toArray() === [
+            'name'          => 'Admins',
+            'path'          => null,
+            'credentials'   => [
+                [
+                    'username' => 'gary',
+                    'password' => 'shhh',
+                ],
+            ],
+        ],
+    );
+});

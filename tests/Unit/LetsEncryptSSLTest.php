@@ -1,8 +1,10 @@
 <?php
 
 use Bellows\Plugins\LetsEncryptSSL;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\Http;
-use Mockery\MockInterface;
+
+uses(Tests\PluginTestCase::class)->group('plugin');
 
 beforeEach(function () {
     Http::fake();
@@ -19,7 +21,7 @@ it('will be disabled if the secure site flag is off', function () {
     $plugin->setup();
 
     expect($plugin->isEnabledByDefault()->enabled)->toBeFalse();
-})->setUpBeforeClass();
+});
 
 it('will be enabled if the secure site flag is on', function () {
     overrideProjectConfig([
@@ -47,17 +49,20 @@ it('can set the env variable', function () {
     expect($plugin->environmentVariables())->toBe([
         'APP_URL' => 'https://bellowstester.com',
     ]);
-})->group('plugin');
+});
 
 it('can wrap up', function () {
     overrideProjectConfig([
         'domain' => 'bellowstester.com',
     ]);
 
-    $this->plugin()->mockSite(function (MockInterface $mock) {
-        $mock->shouldReceive('createSslCertificate')->with('bellowstester.com')->once();
-    })->setup();
+    $this->plugin()->setup();
+
+    $site = app(SiteInterface::class);
 
     $plugin = app(LetsEncryptSSL::class);
+    $plugin->setSite($site);
     $plugin->wrapUp();
-})->group('plugin');
+
+    $site->assertMethodWasCalled('createSslCertificate', 'bellowstester.com');
+});

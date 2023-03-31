@@ -5,6 +5,8 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 beforeEach(function () {
     installNpmPackage('@bugsnag/js');
 });
@@ -28,7 +30,7 @@ it('can choose an app from the list', function () {
         'BUGSNAG_JS_API_KEY'      => '51d176679b06ba1dfdce09077cbc696c',
         'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
     ]);
-})->group('plugin');
+});
 
 it('can create a new app', function ($package, $projectType) {
     installNpmPackage($package);
@@ -82,4 +84,4 @@ it('will use the .env variable if there is one', function () {
         'BUGSNAG_JS_API_KEY'      => 'test-api-key',
         'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
     ]);
-})->group('plugin');
+});

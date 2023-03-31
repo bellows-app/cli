@@ -3,6 +3,8 @@
 use Bellows\Plugins\FathomAnalytics;
 use Illuminate\Support\Facades\Http;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can choose an app from the list', function () {
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
@@ -19,7 +21,7 @@ it('can choose an app from the list', function () {
     expect($plugin->environmentVariables())->toEqual([
         'FATHOM_SITE_ID' => 'SKPAQITB',
     ]);
-})->group('plugin');
+});
 
 it('can create a new app', function () {
     Http::fake([
@@ -44,4 +46,4 @@ it('can create a new app', function () {
     expect($plugin->environmentVariables())->toEqual([
         'FATHOM_SITE_ID' => '789',
     ]);
-})->group('plugin');
+});

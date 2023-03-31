@@ -3,6 +3,8 @@
 use Bellows\Plugins\Ably;
 use Illuminate\Support\Facades\Http;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can choose an app from the list', function () {
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
@@ -21,7 +23,7 @@ it('can choose an app from the list', function () {
         'BROADCAST_DRIVER' => 'ably',
         'ABLY_KEY'         => 'pyveqA.ie2olA:8cq-T_FK1kCjwB04wvTbvNqgv0LSIRCRARQ93zDYgyY',
     ]);
-})->group('plugin');
+});
 
 it('can create a new app', function () {
     Http::fake([
@@ -58,4 +60,4 @@ it('can create a new app', function () {
         'BROADCAST_DRIVER' => 'ably',
         'ABLY_KEY'         => 'test-key',
     ]);
-})->group('plugin');
+});

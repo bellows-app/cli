@@ -4,6 +4,8 @@ use Bellows\Plugins\DigitalOceanDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can create a new user and database', function () {
     Http::fake([
         'databases/54526830-1694-46b3-99da-39376e35ba0e/users' => Http::response([
@@ -41,7 +43,7 @@ it('can create a new user and database', function () {
                 'name' => 'test_app',
             ];
     });
-})->group('plugin');
+});
 
 it('can opt for an existing user and database', function () {
     $mock = $this->plugin()
@@ -66,4 +68,4 @@ it('can opt for an existing user and database', function () {
         'DB_PASSWORD'          => 'AVNS_OWsCMvRHbLc0mloU43l',
         'DB_ALLOW_DISABLED_PK' => 'true',
     ]);
-})->group('plugin');
+});

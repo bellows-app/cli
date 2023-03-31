@@ -1,42 +1,47 @@
 <?php
 
+use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Plugins\Octane;
+use Bellows\ServerProviders\ServerInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Mockery\MockInterface;
+use Tests\Fakes\FakeServer;
+
+uses(Tests\PluginTestCase::class)->group('plugin');
 
 beforeEach(function () {
     Http::fake();
 });
 
 it('can set the env variable if there are other ports in use', function () {
-    $mock = $this->plugin()
-        ->mockServer(function (MockInterface $mock) {
-            $mock->shouldReceive('getSites')->once()->andReturn(
-                collect([
-                    ForgeSite::from(site([
-                        'id'           => 1,
-                        'name'         => 'Test Site',
-                        'project_type' => 'octane',
-                    ])),
-                    ForgeSite::from(site([
+    $this->app->bind(ServerInterface::class, fn () => new class(app(ForgeServer::class)) extends FakeServer
+    {
+        public function getSites(): Collection
+        {
+            return collect([
+                ForgeSite::from(site([
+                    'id'           => 1,
+                    'name'         => 'Test Site',
+                    'project_type' => 'octane',
+                ])),
+                ForgeSite::from(
+                    site([
                         'id'           => 2,
                         'name'         => 'Test Site',
                         'project_type' => 'octane',
-                    ])),
-                ])
-            );
+                    ])
+                ),
+            ]);
+        }
 
-            $mock->shouldReceive('getSiteEnv')
-                ->once()
-                ->with(1)
-                ->andReturn('OCTANE_PORT=8000');
+        public function getSiteEnv(int $siteId): string
+        {
+            return $siteId === 1 ? 'OCTANE_PORT=8000' : 'OCTANE_PORT=8001';
+        }
+    });
 
-            $mock->shouldReceive('getSiteEnv')
-                ->once()
-                ->with(2)
-                ->andReturn('OCTANE_PORT=8001');
-        })
+    $mock = $this->plugin()
         ->expectsQuestion('Which server would you like to use for Octane?', 'swoole')
         ->setup();
 
@@ -67,26 +72,29 @@ it('can set the env variable if there are other ports in use', function () {
         'user'      => null,
         'directory' => null,
     ]);
-})->group('plugin');
+});
 
 it('can set the env variable if there are no other ports in use', function () {
-    $mock = $this->plugin()
-        ->mockServer(function (MockInterface $mock) {
-            $mock->shouldReceive('getSites')->once()->andReturn(
-                collect([
-                    ForgeSite::from(site([
-                        'id'           => 1,
-                        'name'         => 'Test Site',
-                        'project_type' => 'octane',
-                    ])),
-                ])
-            );
+    $this->app->bind(ServerInterface::class, fn () => new class(app(ForgeServer::class)) extends FakeServer
+    {
+        public function getSites(): Collection
+        {
+            return collect([
+                ForgeSite::from(site([
+                    'id'           => 1,
+                    'name'         => 'Test Site',
+                    'project_type' => 'octane',
+                ])),
+            ]);
+        }
 
-            $mock->shouldReceive('getSiteEnv')
-                ->once()
-                ->with(1)
-                ->andReturn('');
-        })
+        public function getSiteEnv(int $siteId): string
+        {
+            return '';
+        }
+    });
+
+    $mock = $this->plugin()
         ->expectsQuestion('Which server would you like to use for Octane?', 'swoole')
         ->setup();
 
@@ -112,4 +120,4 @@ it('can set the env variable if there are no other ports in use', function () {
         'user'      => null,
         'directory' => null,
     ]);
-})->group('plugin');
+});

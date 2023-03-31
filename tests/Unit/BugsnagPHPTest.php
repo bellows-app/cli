@@ -5,6 +5,8 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 beforeEach(function () {
     installComposerPackage('bugsnag/bugsnag-laravel');
 });
@@ -27,7 +29,7 @@ it('can choose an app from the list', function () {
     expect($plugin->environmentVariables())->toEqual([
         'BUGSNAG_API_KEY' => '3bff5a44f63b77591cbd049356e758fb',
     ]);
-})->group('plugin');
+});
 
 it('can create a new app', function ($package, $projectType) {
     installComposerPackage($package);
@@ -78,4 +80,4 @@ it('will use the .env variable if there is one', function () {
     expect($plugin->environmentVariables())->toEqual([
         'BUGSNAG_API_KEY' => 'test-api-key',
     ]);
-})->group('plugin');
+});

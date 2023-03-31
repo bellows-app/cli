@@ -3,6 +3,8 @@
 use Bellows\DeployScript;
 use Bellows\Plugins\Optimize;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can update the deploy script', function () {
     $this->plugin()->setup();
 
@@ -19,4 +21,4 @@ it('can update the deploy script', function () {
     ])->each(fn ($toInsert) => expect($deployScript)->toContain($toInsert));
 
     expect($deployScript)->toContain(DeployScript::PHP_RELOAD);
-})->group('plugin');
+});

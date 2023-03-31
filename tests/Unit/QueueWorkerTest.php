@@ -4,6 +4,8 @@ use Bellows\Data\Worker;
 use Bellows\DeployScript;
 use Bellows\Plugins\QueueWorker;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
+
 it('can create a single queue worker', function () {
     $mock = $this->plugin()
         ->expectsQuestion('Connection', 'database')
@@ -41,7 +43,7 @@ it('can create a single queue worker', function () {
 
     expect($deployScript)->toContain('$FORGE_PHP artisan queue:restart');
     expect($deployScript)->toContain(DeployScript::PHP_RELOAD);
-})->group('plugin');
+});
 
 it('can create multiple queue workers', function () {
     $mock = $this->plugin()
@@ -97,7 +99,7 @@ it('can create multiple queue workers', function () {
 
     expect($deployScript)->toContain('$FORGE_PHP artisan queue:restart');
     expect($deployScript)->toContain(DeployScript::PHP_RELOAD);
-})->group('plugin');
+});
 
 it('can create a custom queue worker', function () {
     $mock = $this->plugin()
@@ -138,4 +140,4 @@ it('can create a custom queue worker', function () {
         'tries'        => null,
         'php_version'  => null,
     ]);
-})->group('plugin');
+});

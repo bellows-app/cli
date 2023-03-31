@@ -1,18 +1,23 @@
 <?php
 
 use Bellows\Plugins\QuickDeploy;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\Http;
-use Mockery\MockInterface;
+
+uses(Tests\PluginTestCase::class)->group('plugin');
 
 beforeEach(function () {
     Http::fake();
 });
 
 it('can wrap up', function () {
-    $this->plugin()->mockSite(function (MockInterface $mock) {
-        $mock->shouldReceive('enableQuickDeploy')->once();
-    })->setup();
+    $this->plugin()->setup();
+
+    $site = app(SiteInterface::class);
 
     $plugin = app(QuickDeploy::class);
+    $plugin->setSite($site);
     $plugin->wrapUp();
-})->group('plugin');
+
+    $site->assertMethodWasCalled('enableQuickDeploy');
+});

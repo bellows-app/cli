@@ -2,6 +2,7 @@
 
 use Bellows\Plugins\RunSchedule;
 
+uses(Tests\PluginTestCase::class)->group('plugin');
 it('can create the run schedule job', function () {
     $this->plugin()->setup();
 
@@ -17,4 +18,4 @@ it('can create the run schedule job', function () {
         'frequency' => 'minutely',
         'user'      => null,
     ]);
-})->group('plugin');
+});
