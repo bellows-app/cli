@@ -12,8 +12,6 @@
 */
 
 use Bellows\Data\ProjectConfig;
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Http;
 
 uses(Tests\TestCase::class)->in('Feature');
 uses(Tests\TestCase::class)->in('Unit');
@@ -44,12 +42,12 @@ uses(Tests\TestCase::class)->in('Unit');
 |
 */
 
-function cdTo(string $dir)
+function cdTo(string $dir): void
 {
     chdir(base_path('tests/' . $dir));
 }
 
-function overrideProjectConfig(array $params)
+function overrideProjectConfig(array $params): void
 {
     $projectDir = app(ProjectConfig::class)->projectDirectory;
 
@@ -68,7 +66,7 @@ function overrideProjectConfig(array $params)
     });
 }
 
-function installNpmPackage(?string $package)
+function installNpmPackage(?string $package): void
 {
     if (is_null($package)) {
         return;
@@ -82,7 +80,7 @@ function installNpmPackage(?string $package)
     file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
 }
 
-function addNpmScript(string $script)
+function addNpmScript(string $script): void
 {
     $projectDir = app(ProjectConfig::class)->projectDirectory;
 
@@ -92,7 +90,7 @@ function addNpmScript(string $script)
     file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
 }
 
-function installComposerPackage(?string $package)
+function installComposerPackage(?string $package): void
 {
     if (is_null($package)) {
         return;
@@ -106,7 +104,7 @@ function installComposerPackage(?string $package)
     file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
 }
 
-function setInEnv(string $key, string $value)
+function setInEnv(string $key, string $value): void
 {
     $projectDir = app(ProjectConfig::class)->projectDirectory;
 
@@ -116,57 +114,7 @@ function setInEnv(string $key, string $value)
     file_put_contents($projectDir . '/.env', $env);
 }
 
-function forgePhpVersion(array $params)
-{
-    return array_merge([
-        'id'                  => fake()->randomNumber,
-        'version'             => 'php74',
-        'status'              => 'installed',
-        'displayable_version' => 'PHP 7.4',
-        'binary_name'         => 'php7.4',
-        'used_as_default'     => false,
-        'used_on_cli'         => false,
-    ], $params);
-}
-
-function forgePhpVersions()
-{
-    return [
-        forgePhpVersion([
-            'version'             => 'php74',
-            'displayable_version' => 'PHP 7.4',
-            'binary_name'         => 'php7.4',
-            'used_as_default'     => true,
-            'used_on_cli'         => true,
-        ]),
-        forgePhpVersion([
-            'version'             => 'php80',
-            'displayable_version' => 'PHP 8.0',
-            'binary_name'         => 'php8.0',
-        ]),
-        forgePhpVersion([
-            'version'             => 'php81',
-            'displayable_version' => 'PHP 8.1',
-            'binary_name'         => 'php8.1',
-        ]),
-    ];
-}
-
-function sites()
-{
-    return [
-        site([
-            'id'   => 1,
-            'name' => 'testsite.com',
-        ]),
-        site([
-            'id'   => 2,
-            'name' => 'testsite2.com',
-        ]),
-    ];
-}
-
-function servers()
+function servers(): array
 {
     return [
         server([
@@ -180,7 +128,7 @@ function servers()
     ];
 }
 
-function server(array $params)
+function server(array $params): array
 {
     return array_merge(
         [
@@ -213,7 +161,7 @@ function server(array $params)
     );
 }
 
-function site(array $params)
+function site(array $params): array
 {
     return array_merge(
         [
@@ -245,54 +193,12 @@ function site(array $params)
     );
 }
 
-function forgeUrl(string $path = ''): string
-{
-    return 'https://forge.laravel.com/api/v1/' . ltrim($path, '/');
-}
-
-function deployScript(string $type = 'default')
+function deployScript(string $type = 'default'): bool|string
 {
     return file_get_contents(__DIR__ . "/stubs/deploy-scripts/{$type}.bash");
 }
 
-function envFile(string $type = 'default')
+function envFile(string $type = 'default'): bool|string
 {
     return file_get_contents(__DIR__ . "/stubs/env/{$type}.ini");
-}
-
-function fakeForgeRequests(array $server, array $site)
-{
-    Http::fake([
-        forgeUrl('user')    => Http::response(null, 200),
-        forgeUrl('servers') => Http::response([
-            'servers' => servers(),
-        ]),
-        forgeUrl("servers/{$server['id']}/sites") => function (Request $request, array $options) use ($site) {
-            if ($request->method() === 'POST') {
-                return [
-                    'site' => $site,
-                ];
-            }
-
-            return [
-                'sites' => sites(),
-            ];
-        },
-        forgeUrl("servers/{$server['id']}/php")                 => Http::response(forgePhpVersions()),
-        forgeUrl("servers/{$server['id']}/sites/{$site['id']}") => Http::response([
-            'site' => array_merge($site, ['status' => 'installed']),
-        ]),
-        forgeUrl("servers/{$server['id']}/sites/{$site['id']}/") => Http::response([
-            'site' => array_merge($site, ['repository_status' => 'installed']),
-        ]),
-        forgeUrl("servers/{$server['id']}/sites/{$site['id']}/git") => Http::sequence()->push([
-            'site' => array_merge($site, ['repository_status' => 'installed']),
-        ]),
-        forgeUrl("servers/{$server['id']}/sites/{$site['id']}/env") => Http::sequence()
-            ->push(envFile())
-            ->push(envFile()),
-        forgeUrl("servers/{$server['id']}/sites/{$site['id']}/deployment/script") => Http::sequence()
-            ->push(deployScript('octane'))
-            ->push(deployScript('octane')),
-    ]);
 }
