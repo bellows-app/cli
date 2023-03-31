@@ -75,7 +75,7 @@ class Server implements ServerInterface
             fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
         );
 
-        if (! $toInstall || ! $this->console->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
+        if (!$toInstall || !$this->console->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
             throw new Exception('No PHP version on server found that matches the required version in composer.json');
         }
 

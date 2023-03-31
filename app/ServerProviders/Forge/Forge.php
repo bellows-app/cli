@@ -31,7 +31,7 @@ class Forge implements ServerProviderInterface
     {
         $servers = collect(
             Http::forge()->get('servers')->json()['servers']
-        )->filter(fn ($s) => ! $s['revoked'])->values();
+        )->filter(fn ($s) => !$s['revoked'])->values();
 
         if ($servers->isEmpty()) {
             return null;
@@ -83,7 +83,7 @@ class Forge implements ServerProviderInterface
             $token = $this->console->secret('Forge API Token');
 
             $isValid = $this->isValidToken($token);
-        } while (! $isValid);
+        } while (!$isValid);
 
         $this->config->set($apiConfigKey, $token);
 
