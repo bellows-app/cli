@@ -1,6 +1,8 @@
 <?php
 
-use Bellows\ServerProviders\Forge\Forge;
+use Bellows\Data\ForgeServer;
+use Bellows\Data\ForgeSite;
+use Bellows\Data\ProjectConfig;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 
@@ -25,6 +27,24 @@ beforeEach(function () {
     $this->app->bind(
         \Bellows\ServerProviders\SiteInterface::class,
         fn () => app(\Tests\Fakes\FakeSite::class),
+    );
+
+    $this->app->bind(
+        ForgeServer::class,
+        fn () => ForgeServer::from(server([
+            'id'         => 123,
+            'name'       => 'test-server',
+            'type'       => 'php',
+            'ip_address' => '123.123.123.123',
+        ])),
+    );
+
+    $this->app->bind(
+        ForgeSite::class,
+        fn () => ForgeSite::from(site([
+            'id'   => 123,
+            'name' => app(ProjectConfig::class)->domain ?? 'testsite.com',
+        ])),
     );
 });
 
