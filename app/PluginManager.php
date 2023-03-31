@@ -2,11 +2,15 @@
 
 namespace Bellows;
 
+use Bellows\Data\Daemon;
+use Bellows\Data\Job;
+use Bellows\Data\Worker;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 use ReflectionClass;
 use Spatie\StructureDiscoverer\Discover;
 
-class PluginManager
+class PluginManager implements PluginManagerInterface
 {
     protected Collection $activePlugins;
 
@@ -88,7 +92,7 @@ class PluginManager
     }
 
     /**
-     * @return \Illuminate\Support\Collection<\Bellows\Data\Daemon>
+     * @return Collection<Daemon>
      */
     public function daemons(): Collection
     {
@@ -96,7 +100,7 @@ class PluginManager
     }
 
     /**
-     * @return \Illuminate\Support\Collection<\Bellows\Data\Worker>
+     * @return Collection<Worker>
      */
     public function workers(): Collection
     {
@@ -104,16 +108,23 @@ class PluginManager
     }
 
     /**
-     * @return \Illuminate\Support\Collection<\Bellows\Data\Job>
+     * @return Collection<Job>
      */
     public function jobs(): Collection
     {
         return $this->call('jobs')->run()->flatMap(fn ($r) => $r)->filter()->values();
     }
 
-    public function wrapUp()
+    public function wrapUp(): void
     {
         $this->call('wrapUp')->run();
+    }
+
+    public function setSite(SiteInterface $site): void
+    {
+        $this->call('setSite')
+            ->withArgs($site)
+            ->run();
     }
 
     protected function getAllPlugins(): Collection
@@ -149,7 +160,7 @@ class PluginManager
         return $enabled;
     }
 
-    protected function call(string $method, Plugin $plugin = null)
+    protected function call(string $method, Plugin $plugin = null): PluginCommandRunner
     {
         return new PluginCommandRunner($plugin ? collect([$plugin]) : $this->activePlugins, $method);
     }

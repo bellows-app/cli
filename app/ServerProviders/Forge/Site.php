@@ -7,10 +7,11 @@ use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class Site
+class Site implements SiteInterface
 {
     protected PendingRequest $client;
 

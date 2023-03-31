@@ -3,15 +3,17 @@
 namespace Bellows\Commands;
 
 use Bellows\Data\Daemon;
-use Bellows\Data\ForgeServer;
 use Bellows\Data\Job;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Env;
-use Bellows\PluginManager;
-use Bellows\ServerProviders\Forge\Forge;
+use Bellows\Git\Repo;
+use Bellows\PluginManagerInterface;
+use Bellows\ServerProviders\ServerInterface;
+use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -19,26 +21,11 @@ use LaravelZero\Framework\Commands\Command;
 
 class Launch extends Command
 {
-    /**
-     * The signature of the command.
-     *
-     * @var string
-     */
     protected $signature = 'launch';
 
-    /**
-     * The description of the command.
-     *
-     * @var string
-     */
     protected $description = 'Launch the current repository as a site on a Forge server.';
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle(PluginManager $pluginManager, Forge $forge)
+    public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $forge)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
@@ -68,7 +55,7 @@ class Launch extends Command
             return;
         }
 
-        App::instance(ForgeServer::class, $server);
+        App::instance(ServerInterface::class, $server);
 
         $localEnv = new Env(file_get_contents($dir . '/.env'));
 
@@ -77,8 +64,6 @@ class Launch extends Command
         $appName = $this->ask('App Name', $localEnv->get('APP_NAME'));
         $domain = $this->ask('Domain', Str::replace('.test', '.com', $host));
 
-        $this->newLine();
-
         if ($existingSite = $server->getSiteByDomain($domain)) {
             if ($this->confirm('View existing site in Forge?', true)) {
                 Process::run("open https://forge.laravel.com/servers/{$server->id}/sites/{$existingSite->id}");
@@ -86,6 +71,8 @@ class Launch extends Command
 
             return;
         }
+
+        $this->newLine();
 
         $isolatedUser = $this->ask(
             'Isolated User',
@@ -115,14 +102,14 @@ class Launch extends Command
 
         App::instance(DnsProvider::class, $dnsProvider);
 
-        [$phpVersion, $phpVersionBinary] = $server->phpVersionFromProject($dir);
+        $phpVersion = $server->phpVersionFromProject($dir);
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
-            phpVersion: $phpVersion,
-            phpBinary: $phpVersionBinary,
+            phpVersion: $phpVersion->name,
+            phpBinary: $phpVersion->binary,
             projectDirectory: $dir,
             domain: $domain,
             appName: $appName,
@@ -153,11 +140,13 @@ class Launch extends Command
             ...$pluginManager->createSiteParams($baseParams),
         );
 
-        /** @var \Bellows\ServerProviders\Forge\Site */
+        /** @var $site SiteInterface */
         $site = $this->withSpinner(
             title: 'Creating',
             task: fn () => $server->createSite($createSiteParams),
         );
+
+        $pluginManager->setSite($site);
 
         $baseRepoParams = [
             'provider'   => 'github',
@@ -338,7 +327,7 @@ class Launch extends Command
         $this->info('🎉 Site created successfully!');
         $this->newLine();
 
-        $siteUrl = "https://forge.laravel.com/servers/{$server['id']}/sites/{$site['id']}/application";
+        $siteUrl = "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
 
         $this->info($siteUrl);
 
@@ -380,37 +369,16 @@ class Launch extends Command
             ];
         }
 
-        $repoUrlResult = trim(
-            Process::run('git config --get remote.origin.url')->output()
-        );
+        $info = Repo::getInfoFromCurrentDirectory();
 
-        $branchesResult = Process::run('git branch -a')->output();
+        $repo = $this->ask('Repository', $info->name);
 
-        $branches = collect(explode(PHP_EOL, $branchesResult))
-            ->map(fn ($b) => trim($b))
-            ->filter()
-            ->values();
-
-        $mainBranch = Str::of($branches->first(fn ($b) => Str::startsWith($b, '*')))->replace('*', '')->trim();
-
-        $devBranch = $branches->first(fn ($b) => in_array($b, ['develop', 'dev', 'development']));
-
-        $branchChoices = $branches->map(
-            fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
-        )->filter(fn ($b) => !Str::startsWith($b, 'HEAD ->'))->filter()->values();
-
-        $defaultRepo = collect(explode(':', $repoUrlResult))->map(
-            fn ($p) => Str::replace('.git', '', $p)
-        )->last();
-
-        $repo = $this->ask('Repository', $defaultRepo);
-
-        if ($repo === $defaultRepo) {
+        if ($repo === $info->name) {
             // Only offer up possible branches if this is the repo we thought it was
             $repoBranch = $this->anticipate(
                 'Repository Branch',
-                $branchChoices,
-                Str::contains($domain, 'dev.') ? $devBranch : $mainBranch
+                $info->branches->toArray(),
+                Str::contains($domain, 'dev.') ? $info->devBranch : $info->mainBranch
             );
         } else {
             $repoBranch = $this->ask('Repository Branch');

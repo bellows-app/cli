@@ -5,6 +5,7 @@ namespace Bellows\PackageManagers;
 use Bellows\Console;
 use Bellows\Data\ProjectConfig;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 
 class Npm extends PackageManager
 {
@@ -33,12 +34,13 @@ class Npm extends PackageManager
 
     protected function getPackageJson(): array
     {
-        if (!file_exists($this->config->projectDirectory . '/package.json')) {
+        $path = $this->config->projectDirectory . '/package.json';
+
+        if (!file_exists($path)) {
             return [];
         }
 
-        $file = file_get_contents($this->config->projectDirectory . '/package.json');
-        $json = json_decode($file, true);
+        $json = File::json($path);
 
         return $json;
     }

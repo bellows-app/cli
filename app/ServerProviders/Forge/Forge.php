@@ -5,12 +5,14 @@ namespace Bellows\ServerProviders\Forge;
 use Bellows\Config;
 use Bellows\Console;
 use Bellows\Data\ForgeServer;
+use Bellows\ServerProviders\ServerInterface;
+use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
-class Forge
+class Forge implements ServerProviderInterface
 {
     const API_URL = 'https://forge.laravel.com/api/v1';
 
@@ -25,11 +27,11 @@ class Forge
         $this->setupBaseClient($this->getToken());
     }
 
-    public function getServer(): ?Server
+    public function getServer(): ?ServerInterface
     {
         $servers = collect(
             Http::forge()->get('servers')->json()['servers']
-        )->filter(fn ($s) => !$s['revoked'])->values();
+        )->filter(fn ($s) => ! $s['revoked'])->values();
 
         if ($servers->isEmpty()) {
             return null;
@@ -81,7 +83,7 @@ class Forge
             $token = $this->console->secret('Forge API Token');
 
             $isValid = $this->isValidToken($token);
-        } while (!$isValid);
+        } while (! $isValid);
 
         $this->config->set($apiConfigKey, $token);
 

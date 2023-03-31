@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 
 class Config
 {
@@ -60,6 +61,6 @@ class Config
 
     protected function cacheConfig(): void
     {
-        $this->config = json_decode(file_get_contents($this->path), true) ?: [];
+        $this->config = File::json($this->path) ?: [];
     }
 }

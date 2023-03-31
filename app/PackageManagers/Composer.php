@@ -4,6 +4,7 @@ namespace Bellows\PackageManagers;
 
 use Bellows\Console;
 use Bellows\Data\ProjectConfig;
+use Illuminate\Support\Facades\File;
 
 class Composer extends PackageManager
 {
@@ -13,8 +14,13 @@ class Composer extends PackageManager
 
     public function packageIsInstalled(string $package): bool
     {
-        $composerJson = file_get_contents($this->config->projectDirectory . '/composer.json');
-        $composerJson = json_decode($composerJson, true);
+        $path = $this->config->projectDirectory . '/composer.json';
+
+        if (!file_exists($path)) {
+            return false;
+        }
+
+        $composerJson = File::json($path);
 
         return isset($composerJson['require'][$package]);
     }

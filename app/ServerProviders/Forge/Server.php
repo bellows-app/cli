@@ -7,14 +7,17 @@ use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
+use Bellows\Data\PhpVersion;
+use Bellows\ServerProviders\ServerInterface;
 use Composer\Semver\Semver;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class Server
+class Server implements ServerInterface
 {
     protected PendingRequest $client;
 
@@ -27,11 +30,13 @@ class Server
         );
     }
 
-    // TODO: Better return type
-    public function phpVersionFromProject($projectDir): array
+    /**
+     * @throws Exception
+     */
+    public function phpVersionFromProject($projectDir): PhpVersion
     {
-        $composerJson = file_get_contents($projectDir . '/composer.json');
-        $composerJson = json_decode($composerJson, true);
+        $composerJson = File::json($projectDir . '/composer.json');
+
         $requiredPhpVersion = $composerJson['require']['php'] ?? null;
 
         $phpVersion = $this->console->withSpinner(
@@ -51,7 +56,7 @@ class Server
         );
 
         if ($phpVersion) {
-            return [$phpVersion['version'], $phpVersion['binary_name']];
+            return new PhpVersion(name:$phpVersion['version'], binary: $phpVersion['binary_name']);
         }
 
         $available = collect([
@@ -70,13 +75,13 @@ class Server
             fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
         );
 
-        if (!$toInstall || !$this->console->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
+        if (! $toInstall || ! $this->console->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
             throw new Exception('No PHP version on server found that matches the required version in composer.json');
         }
 
         $phpVersion = $this->installPhpVersion($available->search($toInstall));
 
-        return [$phpVersion['version'], $phpVersion['binary_name']];
+        return new PhpVersion(name:$phpVersion['version'], binary: $phpVersion['binary_name']);
     }
 
     /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */

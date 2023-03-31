@@ -82,9 +82,9 @@ class Console
             $this->hideCursor();
 
             // If they quit, wrap things up nicely (TODO: this isn't working?)
-            $this->trap([SIGTERM, SIGQUIT], function () {
-                $this->showCursor();
-            });
+            // $this->trap([SIGTERM, SIGQUIT], function () {
+            //     $this->showCursor();
+            // });
 
             // Create a pair of socket connections so the two tasks can communicate
             [$socketToTask, $socketToSpinner] = Connection::createPair();

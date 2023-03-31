@@ -5,6 +5,10 @@ namespace Bellows\Providers;
 use Bellows\Config;
 use Bellows\Console;
 use Bellows\Mixins\Console as MixinsConsole;
+use Bellows\PluginManager;
+use Bellows\PluginManagerInterface;
+use Bellows\ServerProviders\Forge\Forge;
+use Bellows\ServerProviders\ServerProviderInterface;
 use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Signals;
@@ -62,5 +66,8 @@ class AppServiceProvider extends ServiceProvider
 
         Console::mixin(new MixinsConsole);
         Command::mixin(new MixinsConsole);
+
+        $this->app->bind(PluginManagerInterface::class, fn () => app(PluginManager::class));
+        $this->app->bind(ServerProviderInterface::class, fn () => app(Forge::class));
     }
 }

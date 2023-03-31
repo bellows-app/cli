@@ -2,21 +2,26 @@
 
 namespace Bellows;
 
+use Bellows\Data\Daemon;
+use Bellows\Data\Job;
 use Bellows\Data\ProjectConfig;
+use Bellows\Data\Worker;
 use Bellows\Dns\DnsProvider;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
-use Bellows\ServerProviders\Forge\Server;
-use Bellows\ServerProviders\Forge\Site;
+use Bellows\ServerProviders\ServerInterface;
+use Bellows\ServerProviders\SiteInterface;
 
 abstract class Plugin
 {
     use InteractsWithConfig;
     use MakesEnabledDecisions;
 
-    public $priority = 0;
+    public int $priority = 0;
 
     protected Env $localEnv;
+
+    protected SiteInterface $site;
 
     public function __construct(
         protected ProjectConfig $projectConfig,
@@ -27,11 +32,17 @@ abstract class Plugin
         protected Npm $npm,
         protected DeployScript $deployScript,
         protected Artisan $artisan,
-        protected Server $server,
-        protected Site $site,
+        protected ServerInterface $server,
         protected ?DnsProvider $dnsProvider = null,
     ) {
         $this->localEnv = new Env(file_get_contents($projectConfig->projectDirectory . '/.env'));
+    }
+
+    public function setSite(SiteInterface $site): self
+    {
+        $this->site = $site;
+
+        return $this;
     }
 
     public function setup(): void
@@ -60,7 +71,7 @@ abstract class Plugin
     }
 
     /**
-     * @return \Bellows\Data\Worker[]
+     * @return Worker[]
      */
     public function workers(): array
     {
@@ -68,7 +79,7 @@ abstract class Plugin
     }
 
     /**
-     * @return \Bellows\Data\Job[]
+     * @return Job[]
      */
     public function jobs(): array
     {
@@ -76,7 +87,7 @@ abstract class Plugin
     }
 
     /**
-     * @return \Bellows\Data\Daemon[]
+     * @return Daemon[]
      */
     public function daemons(): array
     {

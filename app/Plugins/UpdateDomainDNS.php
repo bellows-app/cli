@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class UpdateDomainDNS extends Plugin
 {
-    public $priority = 100;
+    public int $priority = 100;
 
     public function isEnabledByDefault(): ?DefaultEnabledDecision
     {
