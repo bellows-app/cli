@@ -2,6 +2,7 @@
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\Forge\Site;
 use Illuminate\Support\Facades\Http;
@@ -228,6 +229,118 @@ it('can create a worker', function () {
                 'daemon'       => false,
                 'force'        => false,
                 'tries'        => 0,
+            ];
+    });
+});
+
+it('can create a lets encrypt certificate', function () {
+    Http::fake([
+        'servers/456/sites/123/certificates/letsencrypt' => Http::response(),
+    ]);
+
+    $server = app(
+        Site::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+            'site' => ForgeSite::from(site([
+                'id'   => 123,
+                'name' => 'testsite.com',
+            ])),
+        ],
+    );
+
+    $server->createSslCertificate('sslsite.com');
+
+    Http::assertSent(function ($request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/certificates/letsencrypt'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'domains' => ['sslsite.com'],
+            ];
+    });
+});
+
+it('can enable quick deploy', function () {
+    Http::fake([
+        'servers/456/sites/123/deployment' => Http::response(),
+    ]);
+
+    $server = app(
+        Site::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+            'site' => ForgeSite::from(site([
+                'id'   => 123,
+                'name' => 'testsite.com',
+            ])),
+        ],
+    );
+
+    $server->enableQuickDeploy();
+
+    Http::assertSent(function ($request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/deployment'
+            && $request->method() === 'POST';
+    });
+});
+
+it('can enable add security rules', function () {
+    Http::fake([
+        'servers/456/sites/123/security-rules' => Http::response([]),
+    ]);
+
+    $server = app(
+        Site::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+            'site' => ForgeSite::from(site([
+                'id'   => 123,
+                'name' => 'testsite.com',
+            ])),
+        ],
+    );
+
+    $server->addSecurityRule(
+        SecurityRule::from([
+            'name'        => 'restrict',
+            'path'        => '/admin',
+            'credentials' => collect([
+                [
+                    'username' => 'admin',
+                    'password' => 'secretstuff',
+                ],
+            ]),
+        ]),
+    );
+
+    Http::assertSent(function ($request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/security-rules'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'name'        => 'restrict',
+                'path'        => '/admin',
+                'credentials' => [
+                    [
+
+                        'username' => 'admin',
+                        'password' => 'secretstuff',
+                    ],
+                ],
             ];
     });
 });
