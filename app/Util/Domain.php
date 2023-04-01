@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 class Domain
 {
-    public static function isBaseDomain(string $domain): string
+    public static function isBaseDomain(string $domain): bool
     {
         return $domain === self::getBaseDomain($domain);
     }
