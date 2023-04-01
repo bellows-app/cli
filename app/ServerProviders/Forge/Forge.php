@@ -42,7 +42,10 @@ class Forge implements ServerProviderInterface
 
             $this->console->info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
 
-            return $server;
+            return new Server(
+                ForgeServer::from($server),
+                $this->console,
+            );
         }
 
         $serverName = $this->console->choice(
