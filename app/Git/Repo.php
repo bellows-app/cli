@@ -25,9 +25,9 @@ class Repo
             ->filter()
             ->values();
 
-        $mainBranch = Str::of(
-            $branches->first(fn ($b) => Str::startsWith($b, '*'))
-        )->replace('*', '')->trim();
+        $mainBranch =  $branches->first(
+            fn ($b) => in_array($b, ['main', 'master'])
+        );
 
         $devBranch = $branches->first(
             fn ($b) => in_array($b, ['develop', 'dev', 'development'])
@@ -37,7 +37,7 @@ class Repo
             fn ($b) => Str::of($b)->replace(['*', 'remotes/origin/'], '')->trim()->toString()
         )->filter(
             fn ($b) => !Str::startsWith($b, 'HEAD ->')
-        )->filter()->values();
+        )->filter()->sort()->unique()->values();
 
         return new GitRepo(
             name: $defaultRepo,
