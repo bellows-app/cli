@@ -1,6 +1,6 @@
 <?php
 
-use Bellows\Data\Worker;
+use Bellows\Data\PluginWorker;
 use Bellows\DeployScript;
 use Bellows\Plugins\QueueWorker;
 
@@ -24,7 +24,7 @@ it('can create a single queue worker', function () {
 
     expect($workers)->toHaveCount(1);
 
-    expect($workers[0])->toBeInstanceOf(Worker::class);
+    expect($workers[0])->toBeInstanceOf(PluginWorker::class);
 
     expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',
@@ -67,7 +67,7 @@ it('can create multiple queue workers', function () {
 
     expect($workers)->toHaveCount(2);
 
-    expect($workers[0])->toBeInstanceOf(Worker::class);
+    expect($workers[0])->toBeInstanceOf(PluginWorker::class);
 
     expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',
@@ -126,7 +126,7 @@ it('can create a custom queue worker', function () {
 
     expect($workers)->toHaveCount(1);
 
-    expect($workers[0])->toBeInstanceOf(Worker::class);
+    expect($workers[0])->toBeInstanceOf(PluginWorker::class);
 
     expect($workers[0]->toArray())->toBe([
         'connection'   => 'database',

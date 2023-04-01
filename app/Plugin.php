@@ -4,8 +4,8 @@ namespace Bellows;
 
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
+use Bellows\Data\PluginWorker;
 use Bellows\Data\ProjectConfig;
-use Bellows\Data\Worker;
 use Bellows\Dns\DnsProvider;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
@@ -71,7 +71,7 @@ abstract class Plugin
     }
 
     /**
-     * @return Worker[]
+     * @return PluginWorker[]
      */
     public function workers(): array
     {

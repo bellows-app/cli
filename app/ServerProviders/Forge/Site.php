@@ -2,7 +2,6 @@
 
 namespace Bellows\ServerProviders\Forge;
 
-use Bellows\Console;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\SecurityRule;
@@ -18,13 +17,13 @@ class Site implements SiteInterface
     public function __construct(
         protected ForgeSite $site,
         protected ForgeServer $server,
-        protected Console $console
     ) {
         $this->client = Http::forge()->baseUrl(
             Forge::API_URL . "/servers/{$server->id}/sites/{$site->id}"
         );
     }
 
+    // TODO: DTO as params
     public function installRepo(array $params): void
     {
         $this->client->post('git', $params);

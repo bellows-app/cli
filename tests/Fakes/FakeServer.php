@@ -20,7 +20,7 @@ class FakeServer implements \Bellows\ServerProviders\ServerInterface
         $this->recorded = collect();
     }
 
-    public function phpVersionFromProject($projectDir): PhpVersion
+    public function phpVersionFromProject(string $projectDir): PhpVersion
     {
         $this->record(__FUNCTION__, $projectDir);
 

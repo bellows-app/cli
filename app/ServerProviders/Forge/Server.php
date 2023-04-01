@@ -33,7 +33,7 @@ class Server implements ServerInterface
     /**
      * @throws Exception
      */
-    public function phpVersionFromProject($projectDir): PhpVersion
+    public function phpVersionFromProject(string $projectDir): PhpVersion
     {
         $composerJson = File::json($projectDir . '/composer.json');
 
@@ -112,6 +112,7 @@ class Server implements ServerInterface
         return $existingDomain;
     }
 
+    // TODO: DTO for params
     public function createSite(array $params): Site
     {
         $siteResponse = $this->client->post('sites', $params)->json();

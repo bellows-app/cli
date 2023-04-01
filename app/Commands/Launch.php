@@ -6,6 +6,7 @@ use Bellows\Data\Daemon;
 use Bellows\Data\Job;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
+use Bellows\Data\PluginWorker;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
@@ -253,7 +254,7 @@ class Launch extends Command
         $this->step('Workers');
 
         $workers = $pluginManager->workers()->map(
-            fn (Worker $worker) => Worker::from(
+            fn (PluginWorker $worker) => Worker::from(
                 array_merge(
                     ['php_version' => $projectConfig->phpVersion],
                     $worker->toArray()

@@ -2,7 +2,7 @@
 
 namespace Bellows\Plugins;
 
-use Bellows\Data\Worker;
+use Bellows\Data\PluginWorker;
 use Bellows\Plugin;
 
 class QueueWorker extends Plugin
@@ -41,7 +41,7 @@ class QueueWorker extends Plugin
                 fn ($item, $key) => [$key => $item['value']]
             )->toArray());
 
-            $this->queueWorkers[] = Worker::from($worker);
+            $this->queueWorkers[] = PluginWorker::from($worker);
 
             $addAnother = $this->console->confirm('Do you want to add another queue worker?');
 

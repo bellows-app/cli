@@ -7,12 +7,11 @@ use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 
 #[MapName(SnakeCaseMapper::class)]
-class Worker extends Data
+class PluginWorker extends Data
 {
     public function __construct(
         public string $connection,
         public string $queue,
-        public string $phpVersion,
         public ?int $timeout = 0,
         public ?int $sleep = 60,
         public ?int $processes = 1,
@@ -20,6 +19,7 @@ class Worker extends Data
         public ?bool $daemon = false,
         public ?bool $force = false,
         public ?int $tries = null,
+        public ?string $phpVersion = null,
     ) {
     }
 }

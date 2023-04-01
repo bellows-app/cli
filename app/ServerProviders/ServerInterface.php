@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 interface ServerInterface
 {
-    public function phpVersionFromProject($projectDir): PhpVersion;
+    public function phpVersionFromProject(string $projectDir): PhpVersion;
 
     /** @return Collection<ForgeSite> */
     public function getSites(): Collection;
