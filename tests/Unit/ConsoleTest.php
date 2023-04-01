@@ -4,11 +4,7 @@ use Bellows\Console;
 
 uses(Tests\PluginTestCase::class);
 
-beforeEach(function () {
-    $this->plugin()->setup();
-});
-
-it('it will assign the only choice as the default option when there is one', function () {
+it('will assign the only choice as the default option when there is one', function () {
     // TODO: This is sort of a dumb test, and a dumb method?
     // Why offer choices if there is only one option?
     // Can't remember why I did this.
