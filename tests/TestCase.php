@@ -47,6 +47,23 @@ abstract class TestCase extends BaseTestCase
             )
         );
 
+        $this->resetStubFiles($projectDir);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->resetStubFiles(app(ProjectConfig::class)->projectDirectory);
+
+        parent::tearDown();
+    }
+
+    public function plugin(): PendingPlugin
+    {
+        return new PendingPlugin($this, $this->app, '', []);
+    }
+
+    protected function resetStubFiles(string $projectDir): void
+    {
         // Reset the .env file
         file_put_contents($projectDir . '/.env', '');
 
@@ -86,10 +103,5 @@ JSON);
     "dependencies": []
 }
 JSON);
-    }
-
-    public function plugin(): PendingPlugin
-    {
-        return new PendingPlugin($this, $this->app, '', []);
     }
 }
