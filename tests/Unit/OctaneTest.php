@@ -65,7 +65,7 @@ it('can set the env variable if there are other ports in use', function () {
 
     expect($daemons)->toHaveCount(1);
 
-    expect($daemons[0])->toBeInstanceOf(\Bellows\Data\Daemon::class);
+    expect($daemons[0])->toBeInstanceOf(\Bellows\Data\PluginDaemon::class);
 
     expect($daemons[0]->toArray())->toBe([
         'command'   => 'php81 artisan octane:start --port=8002 --no-interaction',
@@ -113,7 +113,7 @@ it('can set the env variable if there are no other ports in use', function () {
 
     expect($daemons)->toHaveCount(1);
 
-    expect($daemons[0])->toBeInstanceOf(\Bellows\Data\Daemon::class);
+    expect($daemons[0])->toBeInstanceOf(\Bellows\Data\PluginDaemon::class);
 
     expect($daemons[0]->toArray())->toBe([
         'command'   => 'php81 artisan octane:start --port=8000 --no-interaction',

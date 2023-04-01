@@ -2,8 +2,8 @@
 
 namespace Bellows;
 
-use Bellows\Data\Daemon;
 use Bellows\Data\Job;
+use Bellows\Data\PluginDaemon;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsProvider;
@@ -87,7 +87,7 @@ abstract class Plugin
     }
 
     /**
-     * @return Daemon[]
+     * @return PluginDaemon[]
      */
     public function daemons(): array
     {

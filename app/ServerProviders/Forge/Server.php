@@ -135,9 +135,6 @@ class Server implements ServerInterface
         return new Site($site, $this->server, $this->console);
     }
 
-    // TODO: This object has optional properties that are actually required,
-    // so we probably need something like PluginDaemon instead and make these
-    // required.
     public function createDaemon(Daemon $daemon): array
     {
         return $this->client->post('daemons', $daemon->toArray())->json();

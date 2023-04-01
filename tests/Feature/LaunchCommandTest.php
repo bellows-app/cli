@@ -60,7 +60,6 @@ it('launches a simple site', function () {
         ->expectsQuestion('Isolated User', 'test_project')
         ->expectsQuestion('Repository', 'joetannenbaum/test-project')
         ->expectsQuestion('Repository Branch', 'main')
-        ->expectsConfirmation('Would you like to add any of them? They will be added with their existing values.', 'no')
         ->expectsConfirmation('Open site in Forge?', 'no')
         ->assertExitCode(0);
 });

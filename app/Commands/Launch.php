@@ -4,6 +4,7 @@ namespace Bellows\Commands;
 
 use Bellows\Data\Daemon;
 use Bellows\Data\Job;
+use Bellows\Data\PluginDaemon;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
@@ -124,6 +125,7 @@ class Launch extends Command
 
         $this->step('Site');
 
+        // TODO: DTO?
         $baseParams = [
             'domain'       => $domain,
             'project_type' => 'php',
@@ -232,7 +234,7 @@ class Launch extends Command
         $this->step('Daemons');
 
         $daemons = $pluginManager->daemons()->map(
-            fn (Daemon $daemon) => Daemon::from([
+            fn (PluginDaemon $daemon) => Daemon::from([
                 'command'   => $daemon->command,
                 'user'      => $daemon->user ?: $projectConfig->isolatedUser,
                 'directory' => $daemon->directory

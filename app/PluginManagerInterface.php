@@ -2,8 +2,8 @@
 
 namespace Bellows;
 
-use Bellows\Data\Daemon;
 use Bellows\Data\Job;
+use Bellows\Data\PluginDaemon;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
@@ -23,7 +23,7 @@ interface PluginManagerInterface
     public function updateDeployScript(string $deployScript): string;
 
     /**
-     * @return Collection<Daemon>
+     * @return Collection<PluginDaemon>
      */
     public function daemons(): Collection;
 

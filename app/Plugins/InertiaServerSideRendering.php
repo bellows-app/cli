@@ -2,8 +2,8 @@
 
 namespace Bellows\Plugins;
 
-use Bellows\Data\Daemon;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\PluginDaemon;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
@@ -42,7 +42,7 @@ class InertiaServerSideRendering extends Plugin
     public function daemons(): array
     {
         return [
-            new Daemon(
+            new PluginDaemon(
                 $this->artisan->forDaemon('inertia:start-ssr'),
             ),
         ];
