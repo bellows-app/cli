@@ -35,7 +35,7 @@ class DeployScript
 
     public function addAfterLine(string $currentScript, string $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = $this->fineLine($currentScript, $toFind);
+        [$parts, $index] = $this->findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
@@ -50,7 +50,7 @@ class DeployScript
 
     public function addBeforeLine(string $currentScript, string|array $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = $this->fineLine($currentScript, $toFind);
+        [$parts, $index] = $this->findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
@@ -63,7 +63,7 @@ class DeployScript
         return $this->cleanUp($parts->implode(PHP_EOL));
     }
 
-    public function formatLines(string|array $toAdd, Collection $parts, int $index)
+    protected function formatLines(string|array $toAdd, Collection $parts, int $index)
     {
         $toAdd = collect($toAdd)->map('trim');
 
@@ -91,12 +91,12 @@ class DeployScript
         return Str::wrap($toAdd->implode(PHP_EOL), PHP_EOL);
     }
 
-    public function cleanUp(string $currentScript): string
+    protected function cleanUp(string $currentScript): string
     {
         return preg_replace('/\n{3,}/', PHP_EOL . PHP_EOL, $currentScript);
     }
 
-    public function fineLine(string $currentScript, string|array $toFind): array
+    protected function findLine(string $currentScript, string|array $toFind): array
     {
         $parts = collect(explode(PHP_EOL, $currentScript));
 
