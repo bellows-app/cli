@@ -28,31 +28,9 @@ class Env
 
     public function update($key, $value, $quote = false): string
     {
-        $this->parsed[$key] = (string) $value;
+        $this->raw = $this->getUpdatedRaw($key, $value, $quote);
 
-        if ($this->shouldQuote($value, $key, $quote)) {
-            $value = '"' . $value . '"';
-        }
-
-        if (Str::contains($this->raw, "{$key}=")) {
-            $this->raw = preg_replace("/{$key}=.*/", "{$key}={$value}", $this->raw);
-
-            return $this->raw;
-        }
-
-        // Look for other keys that are part of the same potential grouping
-        $match = $this->getGroupingKeys($key)->map(
-            fn ($gk) => Str::matchAll("/^{$gk}_[A-Z0-9_]+=.+/m", $this->raw)->last()
-        )->filter()->first();
-
-        if (!$match) {
-            // Not part of any grouping, just tack it onto the end
-            $this->raw .= PHP_EOL . PHP_EOL . "{$key}={$value}";
-
-            return $this->raw;
-        }
-
-        $this->raw = Str::replaceFirst($match, "{$match}\n{$key}={$value}", $this->raw);
+        $this->parsed = Dotenv::parse($this->raw);
 
         return $this->raw;
     }
@@ -63,6 +41,29 @@ class Env
         $this->raw = preg_replace('/\n{3,}/', PHP_EOL . PHP_EOL, $this->raw);
 
         return $this->raw;
+    }
+
+    protected function getUpdatedRaw($key, $value, $quote = false): string
+    {
+        if ($this->shouldQuote($value, $key, $quote)) {
+            $value = '"' . $value . '"';
+        }
+
+        if (Str::contains($this->raw, "{$key}=")) {
+            return preg_replace("/{$key}=.*/", "{$key}={$value}", $this->raw);
+        }
+
+        // Look for other keys that are part of the same potential grouping
+        $match = $this->getGroupingKeys($key)->map(
+            fn ($gk) => Str::matchAll("/^{$gk}_[A-Z0-9_]+=.+/m", $this->raw)->last()
+        )->filter()->first();
+
+        if (!$match) {
+            // Not part of any grouping, just tack it onto the end
+            return $this->raw . PHP_EOL . PHP_EOL . "{$key}={$value}";
+        }
+
+        return Str::replaceFirst($match, "{$match}\n{$key}={$value}", $this->raw);
     }
 
     /**
