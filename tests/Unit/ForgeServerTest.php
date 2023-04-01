@@ -118,7 +118,6 @@ it('it will throw an exception when a matching php version cannot be found and i
     $mock->validate();
 })->throws('No PHP version on server found that matches the required version in composer.json');
 
-
 it('it will offer to install correct php version if it cannot be found', function () {
     overrideProjectConfig([
         'projectDirectory' => base_path('tests/stubs/plugins/default'),

@@ -1,6 +1,7 @@
 <?php
 
 use Bellows\Artisan;
+use Bellows\Data\PhpVersion;
 
 uses(Tests\TestCase::class);
 
@@ -11,7 +12,7 @@ it('can format an artisan command for a deploy script', function () {
 
 it('can format an artisan command for a daemon', function () {
     overrideProjectConfig([
-        'phpBinary' => 'php81',
+        'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
     ]);
 
     $artisan = app(Artisan::class);
@@ -21,9 +22,9 @@ it('can format an artisan command for a daemon', function () {
 
 it('can format an artisan command for a job', function () {
     overrideProjectConfig([
-        'phpBinary'    => 'php81',
-        'isolatedUser' => 'tester',
-        'domain'       => 'bellowstester.com',
+        'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
+        'isolatedUser'     => 'tester',
+        'domain'           => 'bellowstester.com',
     ]);
 
     $artisan = app(Artisan::class);

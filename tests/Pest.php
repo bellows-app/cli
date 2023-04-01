@@ -11,6 +11,7 @@
 |
 */
 
+use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Tests\DuskyCommand;
 
@@ -63,8 +64,7 @@ function overrideProjectConfig(array $params): void
             'isolatedUser'     => 'tester',
             'repositoryUrl'    => 'bellows/tester',
             'repositoryBranch' => 'main',
-            'phpVersion'       => '8.1',
-            'phpBinary'        => 'php81',
+            'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
             'projectDirectory' => $projectDir,
             'domain'           => 'bellowstester.com',
             'appName'          => 'Bellows Tester',

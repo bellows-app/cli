@@ -13,7 +13,6 @@ use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -108,8 +107,7 @@ class Launch extends Command
             isolatedUser: $isolatedUser,
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
-            phpVersion: $phpVersion->name,
-            phpBinary: $phpVersion->binary,
+            phpVersion: $phpVersion,
             projectDirectory: $dir,
             domain: $domain,
             appName: $appName,
