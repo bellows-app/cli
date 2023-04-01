@@ -69,3 +69,6 @@ it('will auto select the server when there is only one', function () {
     expect($server)->toBeInstanceOf(ServerInterface::class);
     expect($server->id)->toBe(1);
 });
+
+it('can set credentials')->todo();
+it('can set new credentials when the old ones are invalid')->todo();
