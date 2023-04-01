@@ -11,7 +11,7 @@ it('can detect git info from the current directory', function () {
 
     Process::fake([
         'git config --get remote.origin.url' => Process::result('git@github.com:joetannenbaum/deploy-mate.git'),
-        'git branch -a' => Process::result(collect([
+        'git branch -a'                      => Process::result(collect([
             'console-facade',
             'fix-db-permissions-plugin',
             'http-fooling',

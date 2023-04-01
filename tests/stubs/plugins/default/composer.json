@@ -1,10 +1,10 @@
 {
-    "name": "laravel\/laravel",
+    "name": "bellows/cli",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "Test file for Bellows CLI",
     "keywords": [
-        "framework",
-        "laravel"
+        "cli",
+        "bellows"
     ],
     "license": "MIT",
     "require": {
@@ -15,7 +15,7 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp\/pest-plugin": true
+            "pestphp/pest-plugin": true
         }
     },
     "minimum-stability": "stable",

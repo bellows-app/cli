@@ -51,18 +51,41 @@ abstract class TestCase extends BaseTestCase
         file_put_contents($projectDir . '/.env', '');
 
         // Reset the composer.json file
-        $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
-        $composer['require'] = ['php' => '^8.1'];
-
-        file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+        file_put_contents($projectDir . '/composer.json', <<<'JSON'
+{
+    "name": "bellows/cli",
+    "type": "project",
+    "description": "Test file for Bellows CLI",
+    "keywords": [
+        "cli",
+        "bellows"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.1"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+JSON);
 
         // Reset the package.json file
-        $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
-        $packages['dependencies'] = [];
-        $packages['devDependencies'] = [];
-        $packages['scripts'] = [];
-
-        file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
+        file_put_contents($projectDir . '/package.json', <<<'JSON'
+{
+    "private": true,
+    "scripts": [],
+    "devDependencies": [],
+    "dependencies": []
+}
+JSON);
     }
 
     public function plugin(): PendingPlugin

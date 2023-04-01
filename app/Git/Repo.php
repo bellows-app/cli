@@ -25,7 +25,7 @@ class Repo
             ->filter()
             ->values();
 
-        $mainBranch =  $branches->first(
+        $mainBranch = $branches->first(
             fn ($b) => in_array($b, ['main', 'master'])
         );
 

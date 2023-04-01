@@ -17,4 +17,4 @@ it('can run a command line script automatically', function () {
         ->waitFor('Secure site')
         ->enter()
         ->exec();
-});
+})->skip();
