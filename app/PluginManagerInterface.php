@@ -2,8 +2,8 @@
 
 namespace Bellows;
 
-use Bellows\Data\Job;
 use Bellows\Data\PluginDaemon;
+use Bellows\Data\PluginJob;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
@@ -33,7 +33,7 @@ interface PluginManagerInterface
     public function workers(): Collection;
 
     /**
-     * @return Collection<Job>
+     * @return Collection<PluginJob>
      */
     public function jobs(): Collection;
 

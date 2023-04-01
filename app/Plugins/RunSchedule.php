@@ -3,7 +3,7 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
-use Bellows\Data\Job;
+use Bellows\Data\PluginJob;
 use Bellows\Enums\JobFrequency;
 use Bellows\Plugin;
 
@@ -17,7 +17,7 @@ class RunSchedule extends Plugin
     public function jobs(): array
     {
         return [
-            new Job(
+            new PluginJob(
                 command: $this->artisan->forJob('schedule:run'),
                 frequency: JobFrequency::MINUTELY,
             ),

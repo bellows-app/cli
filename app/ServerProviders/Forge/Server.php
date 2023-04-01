@@ -83,13 +83,7 @@ class Server implements ServerInterface
             throw new Exception('No PHP version on server found that matches the required version in composer.json');
         }
 
-        $phpVersion = $this->installPhpVersion($available->search($toInstall));
-
-        return new PhpVersion(
-            name: $phpVersion['version'],
-            binary: $phpVersion['binary_name'],
-            display: $phpVersion['displayable_version'],
-        );
+        return $this->installPhpVersion($available->search($toInstall));
     }
 
     /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */
@@ -140,7 +134,6 @@ class Server implements ServerInterface
         return $this->client->post('daemons', $daemon->toArray())->json();
     }
 
-    // TODO: See above
     public function createJob(Job $job): array
     {
         return $this->client->post('jobs', $job->toArray())->json();
@@ -153,8 +146,7 @@ class Server implements ServerInterface
         return (string) $this->client->get("sites/{$id}/env");
     }
 
-    // TODO: Better return type
-    protected function installPhpVersion(string $version): ?array
+    protected function installPhpVersion(string $version): ?PhpVersion
     {
         return $this->console->withSpinner(
             title: 'Installing PHP on server',
@@ -167,9 +159,13 @@ class Server implements ServerInterface
                     );
                 } while ($phpVersion['status'] !== 'installed');
 
-                return $phpVersion;
+                return new PhpVersion(
+                    name: $phpVersion['version'],
+                    binary: $phpVersion['binary_name'],
+                    display: $phpVersion['displayable_version'],
+                );
             },
-            message: fn ($result) => $result['binary_name'] ?? null,
+            message: fn ($result) => $result->binary ?? null,
             success: fn ($result) => $result !== null,
         );
     }

@@ -5,6 +5,7 @@ namespace Bellows\Commands;
 use Bellows\Data\Daemon;
 use Bellows\Data\Job;
 use Bellows\Data\PluginDaemon;
+use Bellows\Data\PluginJob;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
@@ -270,7 +271,7 @@ class Launch extends Command
         $this->step('Scheduled Jobs');
 
         $jobs = $pluginManager->jobs()->map(
-            fn (Job $job) => Job::from(
+            fn (PluginJob $job) => Job::from(
                 array_merge(
                     ['user' => $projectConfig->isolatedUser],
                     $job->toArray()
