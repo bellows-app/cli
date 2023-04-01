@@ -12,6 +12,7 @@
 */
 
 use Bellows\Data\ProjectConfig;
+use Tests\DuskyCommand;
 
 uses(Tests\TestCase::class)->in('Feature');
 //uses(Tests\TestCase::class)->in('Unit');
@@ -42,6 +43,11 @@ uses(Tests\TestCase::class)->in('Feature');
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+function command(string $command): DuskyCommand
+{
+    return new DuskyCommand($command);
+}
 
 function cdTo(string $dir): void
 {
