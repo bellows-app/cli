@@ -1,9 +1,14 @@
 <?php
 
+use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
+use Bellows\Data\ForgeSite;
+use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
 use Bellows\ServerProviders\Forge\Server;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 uses(Tests\PluginTestCase::class);
@@ -214,4 +219,253 @@ it('it will offer to install correct php version if it cannot be found', functio
                 'version' => 'php81',
             ];
     });
+});
+
+it('can retrieve a list of sites', function () {
+    Http::fake([
+        'sites' => Http::response([
+            'sites' => [
+                site([
+                    'id'   => 1,
+                    'name' => 'testsite.com',
+                ]),
+                site([
+                    'id'   => 2,
+                    'name' => 'anothersite.com',
+                ]),
+            ],
+        ]),
+    ]);
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->getSites();
+
+    expect($result)->toBeInstanceOf(Collection::class);
+    expect($result->count())->toBe(2);
+
+    expect($result->first())->toBeInstanceOf(ForgeSite::class);
+    expect($result->first()->id)->toBe(1);
+    expect($result->first()->name)->toBe('testsite.com');
+
+    expect($result->last())->toBeInstanceOf(ForgeSite::class);
+    expect($result->last()->id)->toBe(2);
+    expect($result->last()->name)->toBe('anothersite.com');
+});
+
+it('can get a site by its domain', function () {
+    Http::fake([
+        'sites' => Http::response([
+            'sites' => [
+                site([
+                    'id'   => 1,
+                    'name' => 'testsite.com',
+                ]),
+                site([
+                    'id'   => 2,
+                    'name' => 'anothersite.com',
+                ]),
+            ],
+        ]),
+    ]);
+
+    $this->plugin()->setup();
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->getSiteByDomain('testsite.com');
+
+    expect($result)->toBeInstanceOf(ForgeSite::class);
+    expect($result->id)->toBe(1);
+    expect($result->name)->toBe('testsite.com');
+});
+
+it('will return null if a site does not exist on the server', function () {
+    Http::fake([
+        'sites' => Http::response([
+            'sites' => [
+                site([
+                    'id'   => 1,
+                    'name' => 'testsite.com',
+                ]),
+                site([
+                    'id'   => 2,
+                    'name' => 'anothersite.com',
+                ]),
+            ],
+        ]),
+    ]);
+
+    $this->plugin()->setup();
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->getSiteByDomain('nada.com');
+
+    expect($result)->toBeNull();
+});
+
+it('can create a site', function () {
+    Http::fake([
+        'sites' => Http::response(
+            [
+                'site' => site([
+                    'id'   => 123,
+                    'name' => 'datnewsite.com',
+                ]),
+            ]
+        ),
+        'sites/123' => Http::response(
+            [
+                'site' => site([
+                    'id'     => 123,
+                    'name'   => 'datnewsite.com',
+                    'status' => 'installed',
+                ]),
+            ]
+        ),
+    ]);
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->createSite([
+        'domain'       => 'datnewsite.com',
+        'project_type' => 'php',
+        'directory'    => '/public',
+        'isolated'     => true,
+        'username'     => 'date_new_site',
+        'php_version'  => 'php80',
+    ]);
+
+    expect($result)->toBeInstanceOf(SiteInterface::class);
+    expect($result->id)->toBe(123);
+    expect($result->name)->toBe('datnewsite.com');
+});
+
+it('can create a daemon', function () {
+    Http::fake(['*' => Http::response([])]);
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->createDaemon(Daemon::from([
+        'command'   => 'php artisan queue:work',
+        'user'      => 'forge',
+        'directory' => '/home/forge/datnewsite.com',
+    ]));
+
+    expect($result)->toBeArray();
+
+    Http::assertSent(function (Request $request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/daemons'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'command'   => 'php artisan queue:work',
+                'user'      => 'forge',
+                'directory' => '/home/forge/datnewsite.com',
+            ];
+    });
+});
+
+it('can create a job', function () {
+    Http::fake(['*' => Http::response([])]);
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->createJob(Job::from([
+        'command'   => 'php artisan queue:work',
+        'frequency' => 'hourly',
+        'user'      => 'forge',
+    ]));
+
+    expect($result)->toBeArray();
+
+    Http::assertSent(function (Request $request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/jobs'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'command'   => 'php artisan queue:work',
+                'frequency' => 'hourly',
+                'user'      => 'forge',
+            ];
+    });
+});
+
+it('can get a site env', function () {
+    Http::fake(['sites/123/env' => Http::response('FOO=bar')]);
+
+    $server = app(
+        Server::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+        ]
+    );
+
+    $result = $server->getSiteEnv(123);
+
+    expect($result)->toBe('FOO=bar');
 });

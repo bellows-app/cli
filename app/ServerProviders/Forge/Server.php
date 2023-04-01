@@ -95,7 +95,9 @@ class Server implements ServerInterface
     /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */
     public function getSites(): Collection
     {
-        return collect($this->client->get('sites')->json()['sites'])->map(fn ($site) => ForgeSite::from($site));
+        return collect(
+            $this->client->get('sites')->json()['sites']
+        )->map(fn ($site) => ForgeSite::from($site));
     }
 
     public function getSiteByDomain(string $domain): ?ForgeSite
@@ -133,11 +135,15 @@ class Server implements ServerInterface
         return new Site($site, $this->server, $this->console);
     }
 
+    // TODO: This object has optional properties that are actually required,
+    // so we probably need something like PluginDaemon instead and make these
+    // required.
     public function createDaemon(Daemon $daemon): array
     {
         return $this->client->post('daemons', $daemon->toArray())->json();
     }
 
+    // TODO: See above
     public function createJob(Job $job): array
     {
         return $this->client->post('jobs', $job->toArray())->json();
