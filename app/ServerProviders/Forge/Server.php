@@ -51,24 +51,28 @@ class Server implements ServerInterface
                     )
                 ) : $phpVersions->first();
             },
-            message: fn ($result) => $result['binary_name'] ?? null,
+            message: fn ($result) => $result['displayable_version'] ?? null,
             success: fn ($result) => $result !== null,
         );
 
         if ($phpVersion) {
-            return new PhpVersion(name:$phpVersion['version'], binary: $phpVersion['binary_name']);
+            return new PhpVersion(
+                name: $phpVersion['version'],
+                binary: $phpVersion['binary_name'],
+                display: $phpVersion['displayable_version'],
+            );
         }
 
         $available = collect([
-            'php82' => '8.2',
-            'php81' => '8.1',
-            'php80' => '8.0',
-            'php74' => '7.4',
-            'php73' => '7.3',
-            'php72' => '7.2',
-            'php71' => '7.1',
-            'php70' => '7.0',
             'php56' => '5.6',
+            'php70' => '7.0',
+            'php71' => '7.1',
+            'php72' => '7.2',
+            'php73' => '7.3',
+            'php74' => '7.4',
+            'php80' => '8.0',
+            'php81' => '8.1',
+            'php82' => '8.2',
         ]);
 
         $toInstall = $available->first(
@@ -81,7 +85,11 @@ class Server implements ServerInterface
 
         $phpVersion = $this->installPhpVersion($available->search($toInstall));
 
-        return new PhpVersion(name:$phpVersion['version'], binary: $phpVersion['binary_name']);
+        return new PhpVersion(
+            name: $phpVersion['version'],
+            binary: $phpVersion['binary_name'],
+            display: $phpVersion['displayable_version'],
+        );
     }
 
     /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */
@@ -148,10 +156,10 @@ class Server implements ServerInterface
         return $this->console->withSpinner(
             title: 'Installing PHP on server',
             task: function () use ($version) {
-                $this->cient->post('php', ['version' => $version]);
+                $this->client->post('php', ['version' => $version]);
 
                 do {
-                    $phpVersion = collect($this->cient->get('php')->json())->first(
+                    $phpVersion = collect($this->client->get('php')->json())->first(
                         fn ($p) => $p['version'] === $version
                     );
                 } while ($phpVersion['status'] !== 'installed');

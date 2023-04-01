@@ -9,6 +9,7 @@ class PhpVersion extends Data
     public function __construct(
         public string $name,
         public string $binary,
+        public string $display,
     ) {
     }
 }

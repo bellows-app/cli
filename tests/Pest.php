@@ -111,6 +111,16 @@ function installComposerPackage(?string $package): void
     file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
 }
 
+function setPhpVersionForProject(string $phpVersion): void
+{
+    $projectDir = app(ProjectConfig::class)->projectDirectory;
+
+    $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
+    $composer['require']['php'] = $phpVersion;
+
+    file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+}
+
 function setInEnv(string $key, string $value): void
 {
     $projectDir = app(ProjectConfig::class)->projectDirectory;
