@@ -6,12 +6,11 @@ use Illuminate\Support\Collection;
 
 class PluginCommandRunner
 {
+    protected array $args = [];
+
     public function __construct(
         protected Collection $plugins,
         protected string $methodToRun,
-        protected array $args = [],
-        protected bool $reduce = false,
-        protected mixed $initialReduceValue = null,
     ) {
     }
 
@@ -40,6 +39,8 @@ class PluginCommandRunner
 
     public function run(): Collection
     {
-        return $this->plugins->map(fn (Plugin $plugin) => $plugin->{$this->methodToRun}(...$this->args));
+        return $this->plugins->map(
+            fn (Plugin $plugin) => $plugin->{$this->methodToRun}(...$this->args)
+        );
     }
 }
