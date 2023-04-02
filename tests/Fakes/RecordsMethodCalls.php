@@ -22,7 +22,15 @@ trait RecordsMethodCalls
             );
         }
 
-        Assert::assertNotNull($match);
+        Assert::assertNotNull(
+            $match,
+            sprintf(
+                'Method was not called: %s on %s with args: %s',
+                $method,
+                get_class($this),
+                json_encode($args),
+            )
+        );
     }
 
     protected function record($method, ...$args)
