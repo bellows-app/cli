@@ -43,7 +43,7 @@ abstract class DnsProvider
 
     public function setCredentials(): bool
     {
-        $config = $this->getApiConfig($this->apiHost);
+        $config = $this->getAllConfigsForApi($this->apiHost);
 
         if (!$config) {
             if ($this->console->confirm('Do you want to allow Bellows to manage your DNS records?', true)) {
@@ -146,7 +146,7 @@ abstract class DnsProvider
 
     protected function setConfig(string $name, array $payload): void
     {
-        $this->setApiConfig($this->apiHost, $name, $payload);
+        $this->setApiConfigValue($this->apiHost, $name, $payload);
     }
 
     protected function setClient(PendingRequest $base): void

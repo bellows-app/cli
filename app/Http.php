@@ -110,14 +110,14 @@ class Http
 
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
-        if (!$this->getApiConfig($host)) {
+        if (!$this->getAllConfigsForApi($host)) {
             $this->console->miniTask('No credentials found for', $addCredentialsPrompt->displayName, false);
             $this->console->newLine();
 
             return $this->addNewCredentials($host, $addCredentialsPrompt);
         }
 
-        $choices = collect(array_keys($this->getApiConfig($host)));
+        $choices = collect(array_keys($this->getAllConfigsForApi($host)));
 
         $addNewAccountText = 'Add new account';
 
@@ -153,7 +153,7 @@ class Http
 
             $value = ['token' => $token];
 
-            $this->setApiConfig($host, $accountName, $value);
+            $this->setApiConfigValue($host, $accountName, $value);
 
             return $value;
         }
@@ -168,11 +168,11 @@ class Http
         do {
             $accountName = $this->console->ask('Account Name (for your own reference)');
         } while (
-            $this->getApiConfig($host, $accountName)
+            $this->getApiConfigValue($host, $accountName)
             && !$this->console->confirm('Overwrite existing account?')
         );
 
-        $this->setApiConfig($host, $accountName, $value);
+        $this->setApiConfigValue($host, $accountName, $value);
 
         return $value;
     }
