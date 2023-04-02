@@ -80,7 +80,7 @@ it('launches a simple site', function () {
     $this->pluginManager->assertMethodWasCalled('workers');
     $this->pluginManager->assertMethodWasCalled('jobs');
     $this->pluginManager->assertMethodWasCalled('wrapUp');
-})->only();
+});
 
 it('will exit if there is no .env file', function () {
     cdTo('stubs/empty-test-app');
