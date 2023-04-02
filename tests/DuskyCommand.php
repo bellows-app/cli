@@ -38,6 +38,20 @@ class DuskyCommand
         return $this;
     }
 
+    public function confirm()
+    {
+        $this->type('y');
+
+        return $this;
+    }
+
+    public function deny()
+    {
+        $this->type('n');
+
+        return $this;
+    }
+
     public function type(string $text)
     {
         $this->script->push('send -- "' . addslashes($text) . '\r"');
@@ -47,8 +61,6 @@ class DuskyCommand
 
     public function exec()
     {
-        glob(storage_path('*.exp')) && collect(glob(storage_path('*.exp')))->each(fn ($file) => unlink($file));
-
         $this->script->prepend(
             'spawn ' . $this->command
         );
@@ -59,19 +71,22 @@ class DuskyCommand
 
         $script = $this->script->implode(';');
 
-        $filename = storage_path(Str::random() . '.exp');
+        $cliScript = addslashes($script);
+        $cliScript = str_replace(['[', ']'], ['\\[', '\\]'], $cliScript);
 
-        file_put_contents($filename, $script);
+        ray($cliScript);
 
-        chmod($filename, 0777);
+        chdir($this->dir ?? base_path());
 
         while (@ob_end_flush());
 
-        $proc = popen('expect -c "' . addslashes($script) . '"', 'r');
+        $proc = popen('expect -c "' . $cliScript . '"', 'r');
 
         while (!feof($proc)) {
             echo fread($proc, 4096);
             @flush();
         }
+
+        pclose($proc);
     }
 }
