@@ -16,6 +16,7 @@ use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -142,7 +143,7 @@ class Launch extends Command
             ...$pluginManager->createSiteParams($baseParams),
         );
 
-        /** @var $site SiteInterface */
+        /** @var SiteInterface $site */
         $site = $this->withSpinner(
             title: 'Creating',
             task: fn () => $server->createSite($createSiteParams),
