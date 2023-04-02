@@ -22,7 +22,7 @@ beforeEach(function () {
     }
 });
 
-it('can create a default client with new credentials', function () {
+it('can create a default client with new credentials', function ($clientMethod, $validateRequestCallback) {
     FacadesHttp::preventStrayRequests();
     FacadesHttp::fake([
         'test/endpoint' => FacadesHttp::response(),
@@ -36,7 +36,7 @@ it('can create a default client with new credentials', function () {
         ->expectsQuestion('Account Name (for your own reference)', 'example')
         ->setup();
 
-    app(Http::class)->createClient(
+    app(Http::class)->$clientMethod(
         'https://example.com',
         fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
         new AddApiCredentialsPrompt(
@@ -50,13 +50,14 @@ it('can create a default client with new credentials', function () {
 
     $mock->validate();
 
-    FacadesHttp::assertSent(function (Request $request) {
+    FacadesHttp::assertSent(function (Request $request) use ($validateRequestCallback) {
         return $request->url() === 'https://example.com/test/endpoint'
-            && $request->hasHeader('Authorization', 'Bearer secretstuff');
+            && $request->hasHeader('Authorization', 'Bearer secretstuff')
+            && $validateRequestCallback($request);
     });
-});
+})->with('http_client_types');
 
-it('will prompt for account selection when there are existing credentials', function () {
+it('will prompt for account selection when there are existing credentials', function ($clientMethod, $validateRequestCallback) {
     $contents = File::json(base_path('tests/stubs/config/config.json'));
 
     $contents['apiCredentials']['example-com'] = [
@@ -81,7 +82,7 @@ it('will prompt for account selection when there are existing credentials', func
         ->expectsChoice('Select account', 'example', ['example', 'Add new account'])
         ->setup();
 
-    app(Http::class)->createClient(
+    app(Http::class)->$clientMethod(
         'https://example.com',
         fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
         new AddApiCredentialsPrompt(
@@ -95,13 +96,14 @@ it('will prompt for account selection when there are existing credentials', func
 
     $mock->validate();
 
-    FacadesHttp::assertSent(function (Request $request) {
+    FacadesHttp::assertSent(function (Request $request) use ($validateRequestCallback) {
         return $request->url() === 'https://example.com/test/endpoint'
-            && $request->hasHeader('Authorization', 'Bearer secretstuff');
+            && $request->hasHeader('Authorization', 'Bearer secretstuff')
+            && $validateRequestCallback($request);
     });
-});
+})->with('http_client_types');
 
-it('will add a new account when add new account is selected', function () {
+it('will add a new account when add new account is selected', function ($clientMethod, $validateRequestCallback) {
     $contents = File::json(base_path('tests/stubs/config/config.json'));
 
     $contents['apiCredentials']['example-com'] = [
@@ -128,7 +130,7 @@ it('will add a new account when add new account is selected', function () {
         ->expectsQuestion('Account Name (for your own reference)', 'another-example')
         ->setup();
 
-    app(Http::class)->createClient(
+    app(Http::class)->$clientMethod(
         'https://example.com',
         fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
         new AddApiCredentialsPrompt(
@@ -142,8 +144,9 @@ it('will add a new account when add new account is selected', function () {
 
     $mock->validate();
 
-    FacadesHttp::assertSent(function (Request $request) {
+    FacadesHttp::assertSent(function (Request $request) use ($validateRequestCallback) {
         return $request->url() === 'https://example.com/test/endpoint'
-            && $request->hasHeader('Authorization', 'Bearer shhh');
+            && $request->hasHeader('Authorization', 'Bearer shhh')
+            && $validateRequestCallback($request);
     });
-});
+})->with('http_client_types');
