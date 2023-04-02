@@ -12,9 +12,11 @@ beforeEach(function () {
 
     Process::preventStrayProcesses();
 
+    $this->pluginManager = new \Tests\Fakes\FakePluginManager;
+
     $this->app->bind(
         \Bellows\PluginManagerInterface::class,
-        fn () => new \Tests\Fakes\FakePluginManager,
+        fn () => $this->pluginManager,
     );
     $this->app->bind(
         \Bellows\ServerProviders\ServerProviderInterface::class,
@@ -24,6 +26,7 @@ beforeEach(function () {
         \Bellows\ServerProviders\ServerInterface::class,
         fn () => app(\Tests\Fakes\FakeServer::class),
     );
+
     $this->app->bind(
         \Bellows\ServerProviders\SiteInterface::class,
         fn () => app(\Tests\Fakes\FakeSite::class),
@@ -62,7 +65,22 @@ it('launches a simple site', function () {
         ->expectsQuestion('Repository Branch', 'main')
         ->expectsConfirmation('Open site in Forge?', 'no')
         ->assertExitCode(0);
-});
+
+    $this->pluginManager->assertMethodWasCalled('setActive');
+    $this->pluginManager->assertMethodWasCalled('setSite', fn ($args) => $args[0]->id === 123);
+    $this->pluginManager->assertMethodWasCalled('installRepoParams', [
+        'provider'   => 'github',
+        'repository' => 'joetannenbaum/test-project',
+        'branch'     => 'main',
+        'composer'   => true,
+    ]);
+    $this->pluginManager->assertMethodWasCalled('environmentVariables');
+    $this->pluginManager->assertMethodWasCalled('updateDeployScript', '');
+    $this->pluginManager->assertMethodWasCalled('daemons');
+    $this->pluginManager->assertMethodWasCalled('workers');
+    $this->pluginManager->assertMethodWasCalled('jobs');
+    $this->pluginManager->assertMethodWasCalled('wrapUp');
+})->only();
 
 it('will exit if there is no .env file', function () {
     cdTo('stubs/empty-test-app');
