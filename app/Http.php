@@ -24,7 +24,7 @@ class Http
     public function createClient(
         string $baseUrl,
         callable $factory,
-        AddApiCredentialsPrompt $addCredentialsPrompt = null,
+        AddApiCredentialsPrompt $addCredentialsPrompt,
         callable $test,
     ): void {
         $name = 'default';
@@ -72,7 +72,7 @@ class Http
     public function createJsonClient(
         string $baseUrl,
         callable $factory,
-        AddApiCredentialsPrompt $addCredentialsPrompt = null,
+        AddApiCredentialsPrompt $addCredentialsPrompt,
         callable $test,
     ): void {
         $this->createClient(
@@ -140,24 +140,8 @@ class Http
         throw new Exception("Could not find credentials for {$host} {$result}");
     }
 
-    protected function addNewCredentials(string $host, ?AddApiCredentialsPrompt $addCredentialsPrompt = null): array
+    protected function addNewCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
-        // TODO: Can we make this whole method less repetitive?
-
-        if (!$addCredentialsPrompt) {
-            // We'll just assume they need a personal access token and proceed accordingly
-            $token = $this->console->secret('Token');
-            $accountName = $this->console->ask('Account Name (for your own reference)');
-            // TODO: Re-implement this, it was useful I think (maybe it's not common enough)
-            // $accountName = $this->ask('Account Name (for your own reference)', $this->getDefaultNewAccountName($token));
-
-            $value = ['token' => $token];
-
-            $this->setApiConfigValue($host, $accountName, $value);
-
-            return $value;
-        }
-
         $this->console->info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
         $this->console->comment($addCredentialsPrompt->url);
 
