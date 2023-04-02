@@ -168,7 +168,7 @@ it('can make a request with the default client', function ($clientMethod, $valid
     FacadesHttp::preventStrayRequests();
     FacadesHttp::fake([
         'test/endpoint' => FacadesHttp::response(),
-        'testaroo' => FacadesHttp::response(),
+        'testaroo'      => FacadesHttp::response(),
     ]);
 
     $mock = $this->plugin()
@@ -204,7 +204,6 @@ it('can make a request with the default client', function ($clientMethod, $valid
     });
 })->with('http_client_types');
 
-
 it('can extend an existing client', function ($clientMethod, $validateRequestCallback) {
     $contents = File::json(base_path('tests/stubs/config/config.json'));
 
@@ -222,7 +221,7 @@ it('can extend an existing client', function ($clientMethod, $validateRequestCal
     FacadesHttp::preventStrayRequests();
     FacadesHttp::fake([
         'test/endpoint' => FacadesHttp::response(),
-        'api/testaroo' => FacadesHttp::response(),
+        'api/testaroo'  => FacadesHttp::response(),
     ]);
 
     $mock = $this->plugin()

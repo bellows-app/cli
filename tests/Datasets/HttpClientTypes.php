@@ -8,7 +8,7 @@ dataset('http_client_types', function () {
         [
             'createJsonClient',
             fn (Request $request) => $request->hasHeader('Accept', 'application/json')
-                && $request->hasHeader('Content-Type', 'application/json')
+                && $request->hasHeader('Content-Type', 'application/json'),
         ],
     ];
 });

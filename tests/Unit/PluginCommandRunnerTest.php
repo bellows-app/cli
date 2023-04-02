@@ -1,31 +1,12 @@
 <?php
 
-use Bellows\Artisan;
-use Bellows\Config;
-use Bellows\Console;
-use Bellows\Data\ProjectConfig;
-use Bellows\DeployScript;
-use Bellows\Http;
-use Bellows\PackageManagers\Composer;
-use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
 use Bellows\PluginCommandRunner;
-use Bellows\ServerProviders\ServerInterface;
 
 uses(Tests\PluginTestCase::class);
 
 it('can run a command on a collection of plugins', function () {
-    $fakePlugin = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing(): array
         {
@@ -35,17 +16,7 @@ it('can run a command on a collection of plugins', function () {
         }
     };
 
-    $fakePlugin2 = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin2 = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing(): array
         {
@@ -69,17 +40,7 @@ it('can run a command on a collection of plugins', function () {
 });
 
 it('can run a command on a collection of plugins with arguments', function () {
-    $fakePlugin = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing($name): array
         {
@@ -89,17 +50,7 @@ it('can run a command on a collection of plugins with arguments', function () {
         }
     };
 
-    $fakePlugin2 = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin2 = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing($name): array
         {
@@ -123,17 +74,7 @@ it('can run a command on a collection of plugins with arguments', function () {
 });
 
 it('can reduce an array', function () {
-    $fakePlugin = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing(): array
         {
@@ -143,17 +84,7 @@ it('can reduce an array', function () {
         }
     };
 
-    $fakePlugin2 = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin2 = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing(): array
         {
@@ -171,23 +102,13 @@ it('can reduce an array', function () {
     $result = $runner->reduce([]);
 
     expect($result)->toBe([
-        'first' => 'first one',
+        'first'  => 'first one',
         'second' => 'second one',
     ]);
 });
 
 it('can reduce a string', function () {
-    $fakePlugin = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing($val): string
         {
@@ -195,17 +116,7 @@ it('can reduce a string', function () {
         }
     };
 
-    $fakePlugin2 = new class(
-        app(ProjectConfig::class),
-        app(Config::class),
-        app(Http::class),
-        app(Console::class),
-        app(Composer::class),
-        app(Npm::class),
-        app(DeployScript::class),
-        app(Artisan::class),
-        app(ServerInterface::class),
-    ) extends Plugin
+    $fakePlugin2 = new class(...pluginConstructorArgs()) extends Plugin
     {
         public function testing($val): string
         {

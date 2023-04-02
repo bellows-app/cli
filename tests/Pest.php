@@ -11,8 +11,16 @@
 |
 */
 
+use Bellows\Artisan;
+use Bellows\Config;
+use Bellows\Console;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
+use Bellows\DeployScript;
+use Bellows\Http;
+use Bellows\PackageManagers\Composer;
+use Bellows\PackageManagers\Npm;
+use Bellows\ServerProviders\ServerInterface;
 use Tests\DuskyCommand;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -44,6 +52,21 @@ uses(Tests\TestCase::class)->in('Feature');
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+function pluginConstructorArgs()
+{
+    return [
+        app(ProjectConfig::class),
+        app(Config::class),
+        app(Http::class),
+        app(Console::class),
+        app(Composer::class),
+        app(Npm::class),
+        app(DeployScript::class),
+        app(Artisan::class),
+        app(ServerInterface::class),
+    ];
+}
 
 function command(string $command): DuskyCommand
 {
