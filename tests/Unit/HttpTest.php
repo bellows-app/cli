@@ -151,6 +151,60 @@ it('will add a new account when add new account is selected', function ($clientM
     });
 })->with('http_client_types');
 
+it('can make a request with the default client', function ($clientMethod, $validateRequestCallback) {
+    $contents = File::json(base_path('tests/stubs/config/config.json'));
+
+    $contents['apiCredentials']['example-com'] = [
+        'example' => [
+            'token' => 'secretstuff',
+        ],
+    ];
+
+    File::put(
+        base_path('tests/stubs/config/config.json'),
+        json_encode($contents, JSON_PRETTY_PRINT),
+    );
+
+    FacadesHttp::preventStrayRequests();
+    FacadesHttp::fake([
+        'test/endpoint' => FacadesHttp::response(),
+        'testaroo' => FacadesHttp::response(),
+    ]);
+
+    $mock = $this->plugin()
+        ->doesntExpectOutput('Go ahead, get your token from the url.')
+        ->doesntExpectOutput('https://example.com/settings/tokens')
+        ->expectsChoice('Select account', 'example', ['example', 'Add new account'])
+        ->setup();
+
+    $http = app(Http::class);
+
+    $http->$clientMethod(
+        'https://example.com',
+        fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
+        new AddApiCredentialsPrompt(
+            url: 'https://example.com/settings/tokens',
+            credentials: ['token'],
+            displayName: 'Example API',
+            helpText: 'Go ahead, get your token from the url.',
+        ),
+        fn (PendingRequest $request) => $request->get('test/endpoint'),
+    );
+
+    $mock->validate();
+
+    $http->extendClient('https://example.com/api', 'extended-client');
+
+    $http->client()->get('testaroo');
+
+    FacadesHttp::assertSent(function (Request $request) use ($validateRequestCallback) {
+        return $request->url() === 'https://example.com/testaroo'
+            && $request->hasHeader('Authorization', 'Bearer secretstuff')
+            && $validateRequestCallback($request);
+    });
+})->with('http_client_types');
+
+
 it('can extend an existing client', function ($clientMethod, $validateRequestCallback) {
     $contents = File::json(base_path('tests/stubs/config/config.json'));
 
