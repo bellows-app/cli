@@ -70,7 +70,12 @@ class PluginManager implements PluginManagerInterface
 
     public function createSiteParams(array $params): array
     {
-        return $this->call('createSiteParams')->withArgs($params)->run()->toArray();
+        return $this->call('createSiteParams')
+            ->withArgs($params)
+            ->run()
+            ->filter(fn ($arr) => count($arr) > 0)
+            ->values()
+            ->toArray();
     }
 
     public function installRepoParams(array $baseParams): array
@@ -78,6 +83,8 @@ class PluginManager implements PluginManagerInterface
         return $this->call('installRepoParams')
             ->withArgs($baseParams)
             ->run()
+            ->filter(fn ($arr) => count($arr) > 0)
+            ->values()
             ->toArray();
     }
 
