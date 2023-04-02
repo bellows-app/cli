@@ -68,7 +68,7 @@ class Http
         );
     }
 
-    // TODO: This is starting to feel more like a builder object that params.
+    // TODO: This is starting to feel more like a builder object than params.
     public function createJsonClient(
         string $baseUrl,
         callable $factory,
