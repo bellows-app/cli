@@ -150,7 +150,10 @@ class PluginManager implements PluginManagerInterface
             })
             ->values()
             ->map(fn (string $plugin) => app($plugin))
-            ->sortByDesc(fn (Plugin $plugin) => $plugin->priority);
+            ->sortBy([
+                fn (Plugin $a, Plugin $b) => $b->priority <=> $a->priority,
+                fn (Plugin $a, Plugin $b) => get_class($a) <=> get_class($b),
+            ]);
     }
 
     protected function configure(Plugin $p, ?bool $isEnabled = null): bool

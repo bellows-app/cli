@@ -25,7 +25,7 @@ class FakeServer implements \Bellows\ServerProviders\ServerInterface
         $this->record(__FUNCTION__, $projectDir);
 
         return new PhpVersion(
-            name: 'php81',
+            version: 'php81',
             binary: 'php8.1',
             display: 'PHP 8.1',
         );

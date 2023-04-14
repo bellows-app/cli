@@ -71,7 +71,7 @@ it('can get the php version from the project', function () {
     $mock->validate();
 
     expect($phpVersion)->toBeInstanceOf(PhpVersion::class);
-    expect($phpVersion->name)->toBe('php81');
+    expect($phpVersion->version)->toBe('php81');
     expect($phpVersion->binary)->toBe('php8.1');
     expect($phpVersion->display)->toBe('PHP 8.1');
 });

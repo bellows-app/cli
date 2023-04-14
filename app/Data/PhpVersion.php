@@ -7,7 +7,7 @@ use Spatie\LaravelData\Data;
 class PhpVersion extends Data
 {
     public function __construct(
-        public string $name,
+        public string $version,
         public string $binary,
         public string $display,
     ) {

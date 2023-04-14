@@ -135,7 +135,7 @@ class Launch extends Command
             'directory'    => '/public',
             'isolated'     => true,
             'username'     => $isolatedUser,
-            'php_version'  => $phpVersion,
+            'php_version'  => $phpVersion->version,
         ];
 
         $createSiteParams = array_merge(
@@ -257,8 +257,8 @@ class Launch extends Command
         $workers = $pluginManager->workers()->map(
             fn (PluginWorker $worker) => Worker::from(
                 array_merge(
-                    ['php_version' => $projectConfig->phpVersion],
-                    $worker->toArray()
+                    $worker->toArray(),
+                    ['php_version' => $worker->phpVersion ?? $projectConfig->phpVersion->version],
                 )
             )
         );
@@ -275,8 +275,8 @@ class Launch extends Command
         $jobs = $pluginManager->jobs()->map(
             fn (PluginJob $job) => Job::from(
                 array_merge(
-                    ['user' => $projectConfig->isolatedUser],
-                    $job->toArray()
+                    $job->toArray(),
+                    ['user' => $job->user ?? $projectConfig->isolatedUser],
                 ),
             )
         );

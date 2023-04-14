@@ -25,8 +25,13 @@ class Server implements ServerInterface
         protected ForgeServer $server,
         protected Console $console
     ) {
+        $this->setClient();
+    }
+
+    public function setClient(): void
+    {
         $this->client = Http::forge()->baseUrl(
-            Forge::API_URL . "/servers/{$server->id}"
+            Forge::API_URL . "/servers/{$this->server->id}"
         );
     }
 
@@ -57,7 +62,7 @@ class Server implements ServerInterface
 
         if ($phpVersion) {
             return new PhpVersion(
-                name: $phpVersion['version'],
+                version: $phpVersion['version'],
                 binary: $phpVersion['binary_name'],
                 display: $phpVersion['displayable_version'],
             );
@@ -174,5 +179,20 @@ class Server implements ServerInterface
     public function __get($name)
     {
         return $this->server->{$name};
+    }
+
+    public function __serialize(): array
+    {
+        return [
+            'server'  => $this->server,
+            'console' => $this->console,
+        ];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->server = $data['server'];
+        $this->console = $data['console'];
+        $this->setClient();
     }
 }

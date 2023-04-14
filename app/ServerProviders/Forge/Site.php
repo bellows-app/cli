@@ -18,9 +18,7 @@ class Site implements SiteInterface
         protected ForgeSite $site,
         protected ForgeServer $server,
     ) {
-        $this->client = Http::forge()->baseUrl(
-            Forge::API_URL . "/servers/{$server->id}/sites/{$site->id}"
-        );
+        $this->setClient();
     }
 
     // TODO: DTO as params
@@ -82,8 +80,31 @@ class Site implements SiteInterface
         return $this->client->post('security-rules', $rule->toArray())->json();
     }
 
+    protected function setClient(): void
+    {
+        $this->client = Http::forge()->baseUrl(
+            Forge::API_URL . "/servers/{$this->server->id}/sites/{$this->site->id}"
+        );
+    }
+
     public function __get($name)
     {
         return $this->site->{$name};
+    }
+
+    public function __serialize(): array
+    {
+        return [
+            'site'   => $this->site,
+            'server' => $this->server,
+        ];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->site = $data['site'];
+        $this->server = $data['server'];
+
+        $this->setClient();
     }
 }
