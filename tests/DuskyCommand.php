@@ -145,8 +145,6 @@ class DuskyCommand
 
         // dd($filename, 'expect -c "' . $cliScript . '"');
 
-        ray($filename);
-
         chdir($this->dir ?? base_path());
 
         while (@ob_end_flush());
