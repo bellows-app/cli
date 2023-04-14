@@ -166,7 +166,7 @@ class Server implements ServerInterface
                 } while ($phpVersion['status'] !== 'installed');
 
                 return new PhpVersion(
-                    name: $phpVersion['version'],
+                    version: $phpVersion['version'],
                     binary: $phpVersion['binary_name'],
                     display: $phpVersion['displayable_version'],
                 );
