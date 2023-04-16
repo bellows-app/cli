@@ -10,7 +10,8 @@ use Illuminate\Support\Collection;
 
 interface ServerInterface
 {
-    public function phpVersionFromProject(string $projectDir): PhpVersion;
+    /** @return Collection<PhpVersion> */
+    public function validPhpVersionsFromProject(string $projectDir): Collection;
 
     /** @return Collection<ForgeSite> */
     public function getSites(): Collection;
@@ -24,4 +25,8 @@ interface ServerInterface
     public function createJob(Job $job): array;
 
     public function getSiteEnv(int $id): string;
+
+    public function installPhpVersion(string $version): ?PhpVersion;
+
+    public function determinePhpVersionFromProject(string $projectDir): PhpVersion;
 }

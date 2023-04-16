@@ -14,13 +14,7 @@ class Composer extends PackageManager
 
     public function packageIsInstalled(string $package): bool
     {
-        $path = $this->config->projectDirectory . '/composer.json';
-
-        if (!file_exists($path)) {
-            return false;
-        }
-
-        $composerJson = File::json($path);
+        $composerJson = $this->getComposerJson();
 
         return isset($composerJson['require'][$package]);
     }
@@ -29,5 +23,16 @@ class Composer extends PackageManager
     {
         $this->console->info("Installing {$package}...");
         exec("cd {$this->config->projectDirectory} && composer require {$package}");
+    }
+
+    protected function getComposerJson(): array
+    {
+        $path = $this->config->projectDirectory . '/composer.json';
+
+        if (!file_exists($path)) {
+            return [];
+        }
+
+        return File::json($path);
     }
 }

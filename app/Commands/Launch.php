@@ -4,6 +4,7 @@ namespace Bellows\Commands;
 
 use Bellows\Data\Daemon;
 use Bellows\Data\Job;
+use Bellows\Data\PhpVersion;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
@@ -17,6 +18,7 @@ use Bellows\PluginManagerInterface;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -58,54 +60,45 @@ class Launch extends Command
             return;
         }
 
-        App::instance(ServerInterface::class, $server);
+        if ($server->type === 'loadbalancer') {
+            $this->miniTask('Detected', 'Load Balancer', true);
+
+            $loadBalancedSite = $forge->getLoadBalancedSite($server->id);
+
+            /** @var Collection<ServerInterface> $servers */
+            $servers = $forge->getLoadBalancedServers($server->id, $loadBalancedSite->id);
+        } else {
+            /** @var Collection<ServerInterface> $servers */
+            $servers = collect([$server]);
+        }
 
         $localEnv = new Env(file_get_contents($dir . '/.env'));
 
         $host = parse_url($localEnv->get('APP_URL'), PHP_URL_HOST);
 
         $appName = $this->ask('App Name', $localEnv->get('APP_NAME'));
-        $domain = $this->ask('Domain', Str::replace('.test', '.com', $host));
 
-        if ($existingSite = $server->getSiteByDomain($domain)) {
-            if ($this->confirm('View existing site in Forge?', true)) {
-                Process::run("open https://forge.laravel.com/servers/{$server->id}/sites/{$existingSite->id}");
-            }
+        $domain = $this->getDomain($loadBalancedSite ?? null, $host);
 
+        if ($this->siteAlreadyExists($servers, $domain)) {
             return;
         }
 
         $this->newLine();
 
-        $isolatedUser = $this->ask(
-            'Isolated User',
-            Str::snake($appName),
-        );
+        $isolatedUser = $this->ask('Isolated User', Str::snake($appName));
 
         [$repo, $repoBranch] = $this->getGitInfo($dir, $domain);
 
-        $dnsProvider = DnsFactory::fromDomain($domain);
+        $dnsProvider = $this->getDnsProvider($domain);
 
-        if (!$dnsProvider) {
-            $this->miniTask('Unsupported DNS provider', $domain, false);
-        } else {
-            $this->miniTask('Detected DNS provider', $dnsProvider->getName());
-
-            if (!$dnsProvider->setCredentials()) {
-                // We found a DNS provider, but they don't want to use it
-                $dnsProvider = null;
-            }
-        }
-
-        if ($dnsProvider) {
-            $secureSite = $this->confirm('Secure site (enable SSL)?', true);
-        }
+        $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
 
         $this->newLine();
 
         App::instance(DnsProvider::class, $dnsProvider);
 
-        $phpVersion = $server->phpVersionFromProject($dir);
+        $phpVersion = $this->determinePhpVersion($servers, $dir);
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
@@ -122,20 +115,154 @@ class Launch extends Command
 
         $this->step('Plugins');
 
+        $pluginManager->setLoadBalancingServer($server);
+
+        if (isset($loadBalancedSite)) {
+            $pluginManager->setLoadBalancingSite($loadBalancedSite);
+        }
+
         $pluginManager->setActive();
 
         $this->info('💨 Off we go!');
+
+        $siteUrls = $servers->map(
+            fn (ServerInterface $server) => $this->createSite($server, $pluginManager, $projectConfig, $localEnv)
+        );
+
+        if ($siteUrls->count() === 1) {
+            $siteUrl = $siteUrls->first();
+
+            $this->info($siteUrl);
+            $this->newLine();
+
+            if ($this->confirm('Open site in Forge?', true)) {
+                Process::run("open {$siteUrl}");
+            }
+        } else {
+            $this->info('Sites created:');
+            $siteUrls->each(fn (string $siteUrl) => $this->info($siteUrl));
+            $this->newLine();
+        }
+    }
+
+    protected function determinePhpVersion(Collection $servers, string $dir): PhpVersion
+    {
+        if ($servers->count() === 1) {
+            // If it's just the one server, we can just ask the server what's up
+            return $this->withSpinner(
+                title: 'Determining PHP version',
+                task: fn () => $servers->first()->determinePhpVersionFromProject($dir),
+                message: fn (?PhpVersion $result) => $result?->display,
+                success: fn ($result) => $result !== null,
+            );
+        }
+
+        // Figure out the PHP version for the load balanced sites
+        $versions = $this->withSpinner(
+            title: 'Determining installed PHP versions',
+            task: fn () => $servers->map(fn (ServerInterface $server) => $server->validPhpVersionsFromProject($dir)),
+            message: fn ($result) => $result->flatten()->unique('version')->sortByDesc('version')->values()->map(fn (PhpVersion $version) => $version->display)->join(', '),
+            success: fn ($result) => true,
+        );
+
+        $flattened = $versions->flatten();
+
+        $byVersion = $flattened->groupBy('version');
+
+        $commonVersion = $byVersion->first(fn ($versions) => $versions->count() === $servers->count());
+
+        if ($commonVersion) {
+            $this->miniTask('Using PHP version', $commonVersion->first()->display, true);
+
+            return $commonVersion->first();
+        }
+
+        $phpVersions = $flattened->unique('version')->sortByDesc('version')->values();
+
+        $selectedVersion = $this->choice(
+            'Select PHP version',
+            $phpVersions->map(
+                fn (PhpVersion $version) => Str::replace('PHP ', '', $version->display)
+            )->toArray(),
+        );
+
+        $phpVersion = $phpVersions->first(
+            fn (PhpVersion $version) => Str::replace('PHP ', '', $version->display) === $selectedVersion
+        );
+
+        $servers->each(fn (ServerInterface $server) => $server->installPhpVersion($phpVersion->version));
+
+        return $phpVersion;
+    }
+
+    protected function getDnsProvider(string $domain): ?DnsProvider
+    {
+        $dnsProvider = DnsFactory::fromDomain($domain);
+
+        if (!$dnsProvider) {
+            $this->miniTask('Unsupported DNS provider', $domain, false);
+
+            return null;
+        }
+
+        $this->miniTask('Detected DNS provider', $dnsProvider->getName());
+
+        if (!$dnsProvider->setCredentials()) {
+            // We found a DNS provider, but they don't want to use it
+            return null;
+        }
+
+        return $dnsProvider;
+    }
+
+    protected function getDomain(?SiteInterface $loadBalancedSite, string $host): string
+    {
+        if ($loadBalancedSite) {
+            $this->miniTask('Domain', $loadBalancedSite->name, true);
+
+            return $loadBalancedSite->name;
+        }
+
+        return $this->ask('Domain', Str::replace('.test', '.com', $host));
+    }
+
+    protected function siteAlreadyExists(Collection $servers, string $domain): bool
+    {
+        return $servers->first(function (ServerInterface $server) use ($domain) {
+            $existing = $server->getSiteByDomain($domain);
+
+            if (!$existing) {
+                return false;
+            }
+
+            if ($this->confirm('View existing site in Forge?', true)) {
+                Process::run("open https://forge.laravel.com/servers/{$server->id}/sites/{$existing->id}");
+            }
+
+            return true;
+        }) !== null;
+    }
+
+    protected function createSite(
+        ServerInterface $server,
+        PluginManagerInterface $pluginManager,
+        ProjectConfig $projectConfig,
+        Env $localEnv
+    ): string {
+        $pluginManager->setServer($server);
+
+        $this->step("Launching on {$server->name}");
 
         $this->step('Site');
 
         // TODO: DTO?
         $baseParams = [
-            'domain'       => $domain,
+            'domain'       => $projectConfig->domain,
             'project_type' => 'php',
             'directory'    => '/public',
             'isolated'     => true,
-            'username'     => $isolatedUser,
-            'php_version'  => $phpVersion->version,
+            'username'     => $projectConfig->isolatedUser,
+            'php_version'  => $projectConfig->phpVersion->version,
         ];
 
         $createSiteParams = array_merge(
@@ -153,8 +280,8 @@ class Launch extends Command
 
         $baseRepoParams = [
             'provider'   => 'github',
-            'repository' => $repo,
-            'branch'     => $repoBranch,
+            'repository' => $projectConfig->repositoryUrl,
+            'branch'     => $projectConfig->repositoryBranch,
             'composer'   => true,
         ];
 
@@ -176,8 +303,8 @@ class Launch extends Command
 
         $updatedEnvValues = collect(array_merge(
             [
-                'APP_NAME'     => $appName,
-                'APP_URL'      => "http://{$domain}",
+                'APP_NAME'     => $projectConfig->appName,
+                'APP_URL'      => "http://{$projectConfig->domain}",
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
             $pluginManager->environmentVariables(),
@@ -332,15 +459,10 @@ class Launch extends Command
 
         $siteUrl = "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
 
-        $this->info($siteUrl);
-
-        $this->newLine();
-
-        if ($this->confirm('Open site in Forge?', true)) {
-            Process::run("open {$siteUrl}");
-        }
+        return $siteUrl;
     }
 
+    // TODO: Move this to Console mixin
     protected function step($title)
     {
         $padding = 2;

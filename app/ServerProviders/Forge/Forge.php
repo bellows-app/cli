@@ -5,11 +5,14 @@ namespace Bellows\ServerProviders\Forge;
 use Bellows\Config;
 use Bellows\Console;
 use Bellows\Data\ForgeServer;
+use Bellows\Data\ForgeSite;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\ServerProviders\SiteInterface;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class Forge implements ServerProviderInterface
@@ -56,6 +59,33 @@ class Forge implements ServerProviderInterface
         $server = ForgeServer::from($servers->first(fn ($s) => $s['name'] === $serverName));
 
         return new Server($server, $this->console);
+    }
+
+    public function getLoadBalancedSite(int $serverId): SiteInterface
+    {
+        $sites = collect(Http::forge()->get("/servers/{$serverId}/sites")->json()['sites']);
+        $server = Http::forge()->get("servers/{$serverId}")->json()['server'];
+
+        $site = $this->console->choiceFromCollection(
+            'Which load balancer do you want to use?',
+            $sites,
+            'name',
+        );
+
+        return new Site(ForgeSite::from($site), ForgeServer::from($server));
+    }
+
+    /** @return Collection<ServerInterface> */
+    public function getLoadBalancedServers(int $serverId, int $siteId): Collection
+    {
+        $nodes = Http::forge()->get("servers/{$serverId}/sites/{$siteId}/balancing")->json()['nodes'];
+
+        return collect($nodes)->map(
+            fn ($node) => Http::forge()->get("servers/{$node['server_id']}")['server']
+        )->map(fn ($server) => new Server(
+            ForgeServer::from($server),
+            $this->console,
+        ));
     }
 
     protected function getToken(): string

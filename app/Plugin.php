@@ -21,7 +21,17 @@ abstract class Plugin
 
     protected Env $localEnv;
 
+    // The site we're currently deploying to
     protected SiteInterface $site;
+
+    // If load balancing, the primary site, if not, the same as the $site property
+    protected SiteInterface $loadBalancingSite;
+
+    // The server we're currently deploying to
+    protected ServerInterface $server;
+
+    // If load balancing, the primary server, if not, the same as the $server property
+    protected ServerInterface $loadBalancingServer;
 
     public function __construct(
         protected ProjectConfig $projectConfig,
@@ -32,7 +42,6 @@ abstract class Plugin
         protected Npm $npm,
         protected DeployScript $deployScript,
         protected Artisan $artisan,
-        protected ServerInterface $server,
         protected ?DnsProvider $dnsProvider = null,
     ) {
         $this->localEnv = new Env(file_get_contents($projectConfig->projectDirectory . '/.env'));
@@ -41,6 +50,33 @@ abstract class Plugin
     public function setSite(SiteInterface $site): self
     {
         $this->site = $site;
+
+        if (!isset($this->loadBalancingSite)) {
+            // If we don't have a primary site at this point, also set this as the primary site
+            // TODO: Is this an ugly/unexpected side effect? Oof.
+            $this->loadBalancingSite = $site;
+        }
+
+        return $this;
+    }
+
+    public function setLoadBalancingSite(SiteInterface $site): self
+    {
+        $this->loadBalancingSite = $site;
+
+        return $this;
+    }
+
+    public function setServer(ServerInterface $server): self
+    {
+        $this->server = $server;
+
+        return $this;
+    }
+
+    public function setLoadBalancingServer(ServerInterface $primaryServer): self
+    {
+        $this->loadBalancingServer = $primaryServer;
 
         return $this;
     }

@@ -18,7 +18,7 @@ class LetsEncryptSSL extends Plugin
 
     public function wrapUp(): void
     {
-        $this->site->createSslCertificate($this->projectConfig->domain);
+        $this->loadBalancingSite->createSslCertificate($this->projectConfig->domain);
     }
 
     public function environmentVariables(): array

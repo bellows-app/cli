@@ -5,6 +5,7 @@ namespace Bellows;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
+use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 use ReflectionClass;
@@ -127,10 +128,31 @@ class PluginManager implements PluginManagerInterface
         $this->call('wrapUp')->run();
     }
 
+    public function setLoadBalancingSite(SiteInterface $site): void
+    {
+        $this->call('setLoadBalancingSite')
+            ->withArgs($site)
+            ->run();
+    }
+
     public function setSite(SiteInterface $site): void
     {
         $this->call('setSite')
             ->withArgs($site)
+            ->run();
+    }
+
+    public function setLoadBalancingServer(ServerInterface $server): void
+    {
+        $this->call('setLoadBalancingServer')
+            ->withArgs($server)
+            ->run();
+    }
+
+    public function setServer(ServerInterface $server): void
+    {
+        $this->call('setServer')
+            ->withArgs($server)
             ->run();
     }
 

@@ -5,6 +5,7 @@ namespace Bellows;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
+use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 
@@ -39,5 +40,11 @@ interface PluginManagerInterface
 
     public function wrapUp();
 
+    public function setLoadBalancingSite(SiteInterface $site): void;
+
     public function setSite(SiteInterface $site): void;
+
+    public function setLoadBalancingServer(ServerInterface $primaryServer): void;
+
+    public function setServer(ServerInterface $server): void;
 }

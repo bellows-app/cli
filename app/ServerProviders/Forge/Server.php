@@ -12,6 +12,7 @@ use Bellows\ServerProviders\ServerInterface;
 use Composer\Semver\Semver;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -35,37 +36,12 @@ class Server implements ServerInterface
         );
     }
 
-    /**
-     * @throws Exception
-     */
-    public function phpVersionFromProject(string $projectDir): PhpVersion
+    public function determinePhpVersionFromProject(string $projectDir): PhpVersion
     {
-        $composerJson = File::json($projectDir . '/composer.json');
+        $validPhpVersions = $this->validPhpVersionsFromProject($projectDir);
 
-        $requiredPhpVersion = $composerJson['require']['php'] ?? null;
-
-        $phpVersion = $this->console->withSpinner(
-            title: 'Determining PHP Version',
-            task: function () use ($requiredPhpVersion) {
-                $phpVersions = collect($this->client->get('php')->json())->sortByDesc('version');
-
-                return $requiredPhpVersion ? $phpVersions->first(
-                    fn ($p) => Semver::satisfies(
-                        Str::replace('php', '', $p['binary_name']),
-                        $requiredPhpVersion
-                    )
-                ) : $phpVersions->first();
-            },
-            message: fn ($result) => $result['displayable_version'] ?? null,
-            success: fn ($result) => $result !== null,
-        );
-
-        if ($phpVersion) {
-            return new PhpVersion(
-                version: $phpVersion['version'],
-                binary: $phpVersion['binary_name'],
-                display: $phpVersion['displayable_version'],
-            );
+        if (!$validPhpVersions->isEmpty()) {
+            return $validPhpVersions->first();
         }
 
         $available = collect([
@@ -80,6 +56,8 @@ class Server implements ServerInterface
             'php82' => '8.2',
         ]);
 
+        $requiredPhpVersion = $this->getRequiredPhpVersion($projectDir);
+
         $toInstall = $available->first(
             fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
         );
@@ -89,6 +67,27 @@ class Server implements ServerInterface
         }
 
         return $this->installPhpVersion($available->search($toInstall));
+    }
+
+    /** @return Collection<PhpVersion> */
+    public function validPhpVersionsFromProject(string $projectDir): Collection
+    {
+        $requiredPhpVersion = $this->getRequiredPhpVersion($projectDir);
+
+        $phpVersions = collect($this->client->get('php')->json())->sortByDesc('version');
+
+        return $phpVersions->filter(
+            fn ($p) => Semver::satisfies(
+                Str::replace('php', '', $p['binary_name']),
+                $requiredPhpVersion
+            )
+        )->map(
+            fn ($phpVersion) => new PhpVersion(
+                version: $phpVersion['version'],
+                binary: $phpVersion['binary_name'],
+                display: $phpVersion['displayable_version'],
+            )
+        )->values();
     }
 
     /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */
@@ -102,7 +101,7 @@ class Server implements ServerInterface
     public function getSiteByDomain(string $domain): ?ForgeSite
     {
         $existingDomain = $this->console->withSpinner(
-            title: 'Checking for existing domain on server',
+            title: 'Checking for existing domain on ' . $this->server->name,
             task: fn () => collect($this->client->get('sites')->json()['sites'])->first(
                 fn ($site) => $site['name'] === $domain
             ),
@@ -152,17 +151,36 @@ class Server implements ServerInterface
         return (string) $this->client->get("sites/{$id}/env");
     }
 
-    protected function installPhpVersion(string $version): ?PhpVersion
+    public function installPhpVersion(string $version): ?PhpVersion
     {
         return $this->console->withSpinner(
             title: 'Installing PHP on server',
             task: function () use ($version) {
-                $this->client->post('php', ['version' => $version]);
+                try {
+                    $this->client->post('php', ['version' => $version]);
+                } catch (RequestException $e) {
+                    if ($e->getCode() === 422) {
+                        // PHP version already installed
+                        $phpVersion = collect($this->client->get('php')->json())->first(
+                            fn ($p) => $p['version'] === $version
+                        );
+
+                        return new PhpVersion(
+                            version: $phpVersion['version'],
+                            binary: $phpVersion['binary_name'],
+                            display: $phpVersion['displayable_version'],
+                        );
+                    }
+
+                    throw $e;
+                }
 
                 do {
                     $phpVersion = collect($this->client->get('php')->json())->first(
                         fn ($p) => $p['version'] === $version
                     );
+
+                    sleep(2);
                 } while ($phpVersion['status'] !== 'installed');
 
                 return new PhpVersion(
@@ -173,7 +191,27 @@ class Server implements ServerInterface
             },
             message: fn ($result) => $result->binary ?? null,
             success: fn ($result) => $result !== null,
+            longProcessMessages: [
+                5   => 'This is going to take a little while...',
+                25  => 'Still working...',
+                45  => 'One moment...',
+                60  => 'Almost done...',
+                75  => 'Just a little longer...',
+                90  => 'Almost there...',
+                120 => 'Wrapping up...',
+            ],
         );
+    }
+
+    protected function getRequiredPhpVersion(string $projectDir): string
+    {
+        $path = $projectDir . '/composer.json';
+
+        if (!file_exists($path)) {
+            return '*';
+        }
+
+        return File::json($path)['require']['php'] ?? '*';
     }
 
     public function __get($name)
