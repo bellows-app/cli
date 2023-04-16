@@ -32,7 +32,6 @@ class Playground extends Command
             validator: ['required'],
         );
 
-
         $confirmed = $this->interactiveConfirm(
             question: 'You sure?',
         );
