@@ -1,6 +1,8 @@
 <?php
 
 use Bellows\Providers\AppServiceProvider;
+use Illuminate\Translation\TranslationServiceProvider;
+use Illuminate\Validation\ValidationServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\LaravelRay\RayServiceProvider;
 
@@ -59,6 +61,8 @@ return [
 
     'timezone' => 'UTC',
 
+    'locale' => 'en',
+
     /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
@@ -74,6 +78,8 @@ return [
         AppServiceProvider::class,
         LaravelDataServiceProvider::class,
         RayServiceProvider::class,
+        // ValidationServiceProvider::class,
+        // TranslationServiceProvider::class,
     ],
 
     'home_dir' => env('HOME'),

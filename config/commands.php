@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\Commands\Playground;
 use Bellows\Commands\PluginTester;
 
 return [
@@ -68,6 +69,7 @@ return [
         Spatie\LaravelRay\Commands\PublishConfigCommand::class,
         Spatie\LaravelData\Commands\DataMakeCommand::class,
         PluginTester::class,
+        Playground::class,
     ],
 
     /*
