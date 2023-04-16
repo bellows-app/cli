@@ -13,7 +13,6 @@ class Foolin
     public function interactiveChoice()
     {
         return function (string $question, array $items, $default = null, $multiple = false, $validator = null, string $errorMessage = null) {
-
             $inputStream = fopen('php://stdin', 'rb');
 
             $cursor = new Cursor($this->output, $inputStream);
@@ -37,7 +36,7 @@ class Foolin
 
             $this->output->writeln($this->dim('│'));
             $this->output->writeln(($errorMessage ? $this->warning('▲') : $this->active('◆')) . " {$question}");
-            $this->writeChoices($cursor, $items, $index, $selected, $multiple, $errorMessage,  true);
+            $this->writeChoices($cursor, $items, $index, $selected, $multiple, $errorMessage, true);
 
             // Read a keypress
             while (!feof($inputStream)) {
@@ -65,25 +64,24 @@ class Foolin
                         'D' => $index++, // Right
                     };
 
-
                     if ($index < 0) {
                         $index = count($items) - 1;
-                    } else if ($index >= count($items)) {
+                    } elseif ($index >= count($items)) {
                         $index = 0;
                     }
 
                     $this->writeChoices($cursor, $items, $index, $selected, $multiple, $errorMessage);
-                } else  if ($c === ' ') {
+                } elseif ($c === ' ') {
                     if (!$multiple) {
                         $selected = collect([$index]);
-                    } else if ($selected->contains($index)) {
+                    } elseif ($selected->contains($index)) {
                         $selected = $selected->reject(fn ($i) => $i === $index);
                     } else {
                         $selected->push($index);
                     }
 
                     $this->writeChoices($cursor, $items, $index, $selected, $multiple, $errorMessage);
-                } else if ($c === "\n") {
+                } elseif ($c === "\n") {
                     break;
                 }
             }
@@ -115,10 +113,10 @@ class Foolin
             return $selectedItems->toArray();
         };
     }
+
     public function interactiveConfirm()
     {
         return function (string $question, $default = false) {
-
             $inputStream = fopen('php://stdin', 'rb');
 
             $cursor = new Cursor($this->output, $inputStream);
@@ -167,8 +165,8 @@ class Foolin
                         'D' => $selected = !$selected, // Right
                     };
 
-                    $this->writeConfirm($cursor,  $selected);
-                } else if ($c === "\n") {
+                    $this->writeConfirm($cursor, $selected);
+                } elseif ($c === "\n") {
                     break;
                 }
             }
@@ -194,6 +192,7 @@ class Foolin
     {
         return function (string $text) {
             $this->output->getFormatter()->setStyle('unfocused', new OutputFormatterStyle('gray'));
+
             return "<unfocused>{$text}</unfocused>";
         };
     }
@@ -208,7 +207,6 @@ class Foolin
     public function warning()
     {
         return function (string $text) {
-
             if (!$this->output->getFormatter()->hasStyle('warning')) {
                 $style = new OutputFormatterStyle('yellow');
 
@@ -309,7 +307,7 @@ class Foolin
 
             $index = $selected ? 0 : 1;
 
-            $result = collect(['Yes', 'No'])->map(function ($item, $i) use ($selected, $index) {
+            $result = collect(['Yes', 'No'])->map(function ($item, $i) use ($index) {
                 $tag = $index === $i ? 'focused' : 'unfocused';
                 $radioTag = $index === $i ? 'radio_selected' : 'radio_unselected';
                 $checked = $index === $i ? '●' : '○';
@@ -317,7 +315,7 @@ class Foolin
                 return "<{$radioTag}>{$checked}</{$radioTag}> <{$tag}>{$item}</{$tag}>";
             });
 
-            $this->output->writeln($this->active('│') . " " . $result->join(' / '));
+            $this->output->writeln($this->active('│') . ' ' . $result->join(' / '));
 
             $this->output->writeln($this->active('└'));
         };
