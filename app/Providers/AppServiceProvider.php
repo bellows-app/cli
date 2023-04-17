@@ -33,12 +33,6 @@ class AppServiceProvider extends ServiceProvider
                 mkdir(env('HOME') . '/.bellows/logs');
             }
         }
-
-        config([
-            'logging.channels.single.path' => Phar::running()
-                ? env('HOME') . '/.bellows/logs/cli.log'
-                : storage_path('logs/laravel.log'),
-        ]);
     }
 
     /**
