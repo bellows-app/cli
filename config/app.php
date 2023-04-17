@@ -82,8 +82,6 @@ return [
         // TranslationServiceProvider::class,
     ],
 
-    'home_dir' => env('HOME'),
-
     'webhook_signing_secret' => env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),
 
     'url' => env('BELLOWS_URL', 'https://bellows.dev'),

@@ -56,7 +56,9 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path'   => storage_path('logs/laravel.log'),
+            'path'   => Phar::running()
+                ? env('HOME') . '/.bellows/logs/cli.log'
+                : storage_path('logs/laravel.log'),
             'level'  => env('LOG_LEVEL', 'debug'),
         ],
 

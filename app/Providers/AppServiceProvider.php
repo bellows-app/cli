@@ -25,20 +25,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (Phar::running()) {
-            if (!is_dir(config('app.home_dir') . '/.bellows')) {
-                mkdir(config('app.home_dir') . '/.bellows');
+            if (!is_dir(env('HOME') . '/.bellows')) {
+                mkdir(env('HOME') . '/.bellows');
             }
 
-            if (!is_dir(config('app.home_dir') . '/.bellows/logs')) {
-                mkdir(config('app.home_dir') . '/.bellows/logs');
+            if (!is_dir(env('HOME') . '/.bellows/logs')) {
+                mkdir(env('HOME') . '/.bellows/logs');
             }
         }
-
-        config([
-            'logging.channels.single.path' => Phar::running()
-                ? config('app.home_dir') . '/.bellows/logs/cli.log'
-                : storage_path('logs/laravel.log'),
-        ]);
     }
 
     /**

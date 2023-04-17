@@ -14,8 +14,7 @@ class Config
     public function __construct(?string $configDir = null)
     {
         if ($configDir === null) {
-            $home = config('app.home_dir');
-            $configDir = $home . '/.bellows';
+            $configDir = env('HOME') . '/.bellows';
         }
 
         $this->path = $configDir . '/config.json';
