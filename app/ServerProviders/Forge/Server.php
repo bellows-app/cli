@@ -2,13 +2,14 @@
 
 namespace Bellows\ServerProviders\Forge;
 
-use Bellows\Console;
 use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
+use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\ServerProviders\ServerInterface;
 use Composer\Semver\Semver;
 use Exception;
@@ -16,7 +17,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class Server implements ServerInterface
@@ -25,21 +25,20 @@ class Server implements ServerInterface
 
     public function __construct(
         protected ForgeServer $server,
-        protected Console $console
     ) {
         $this->setClient();
     }
 
     public function setClient(): void
     {
-        $this->client = Http::forge()->baseUrl(
-            Forge::API_URL . "/servers/{$this->server->id}"
+        $this->client = Client::getInstance()->http()->baseUrl(
+            Client::API_URL . "/servers/{$this->server->id}"
         );
     }
 
-    public function determinePhpVersionFromProject(string $projectDir): PhpVersion
+    public function determinePhpVersionFromProject(): PhpVersion
     {
-        $validPhpVersions = $this->validPhpVersionsFromProject($projectDir);
+        $validPhpVersions = $this->validPhpVersionsFromProject(Project::dir());
 
         if (!$validPhpVersions->isEmpty()) {
             return $validPhpVersions->first();
@@ -57,13 +56,13 @@ class Server implements ServerInterface
             'php82' => '8.2',
         ]);
 
-        $requiredPhpVersion = $this->getRequiredPhpVersion($projectDir);
+        $requiredPhpVersion = $this->getRequiredPhpVersion(Project::dir());
 
         $toInstall = $available->first(
             fn ($v, $k) => Semver::satisfies($v, $requiredPhpVersion)
         );
 
-        if (!$toInstall || !$this->console->confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
+        if (!$toInstall || !Console::confirm("PHP {$toInstall} is required, but not installed. Install it now?", true)) {
             throw new Exception('No PHP version on server found that matches the required version in composer.json');
         }
 
@@ -71,9 +70,9 @@ class Server implements ServerInterface
     }
 
     /** @return Collection<PhpVersion> */
-    public function validPhpVersionsFromProject(string $projectDir): Collection
+    public function validPhpVersionsFromProject(): Collection
     {
-        $requiredPhpVersion = $this->getRequiredPhpVersion($projectDir);
+        $requiredPhpVersion = $this->getRequiredPhpVersion(Project::dir());
 
         $phpVersions = collect($this->client->get('php')->json())->sortByDesc('version');
 
@@ -101,7 +100,7 @@ class Server implements ServerInterface
 
     public function getSiteByDomain(string $domain): ?ForgeSite
     {
-        $existingDomain = $this->console->withSpinner(
+        $existingDomain = Console::withSpinner(
             title: 'Checking for existing domain on ' . $this->server->name,
             task: fn () => collect($this->client->get('sites')->json()['sites'])->first(
                 fn ($site) => $site['name'] === $domain
@@ -131,7 +130,7 @@ class Server implements ServerInterface
 
         $site = ForgeSite::from($site);
 
-        return new Site($site, $this->server, $this->console);
+        return new Site($site, $this->server);
     }
 
     public function createDaemon(Daemon $daemon): array
@@ -153,7 +152,7 @@ class Server implements ServerInterface
 
     public function installPhpVersion(string $version): ?PhpVersion
     {
-        return $this->console->withSpinner(
+        return Console::withSpinner(
             title: 'Installing PHP on server',
             task: function () use ($version) {
                 try {
@@ -203,6 +202,11 @@ class Server implements ServerInterface
         );
     }
 
+    public function serverData(): ForgeServer
+    {
+        return $this->server;
+    }
+
     protected function getRequiredPhpVersion(string $projectDir): string
     {
         $path = $projectDir . '/composer.json';
@@ -230,7 +234,6 @@ class Server implements ServerInterface
     public function __unserialize(array $data): void
     {
         $this->server = $data['server'];
-        $this->console = $data['console'];
         $this->setClient();
     }
 }

@@ -6,7 +6,6 @@ use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Data\Job;
-use Bellows\Data\PhpVersion;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
@@ -35,7 +34,7 @@ class Launch extends Command
 
     protected $description = 'Launch the current repository as a site on a Forge server.';
 
-    public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $forge)
+    public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $serverProvider)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
@@ -43,7 +42,7 @@ class Launch extends Command
         $this->info("🚀 Launch time! Let's do this.");
         $this->newLine();
 
-        $forge->setCredentials();
+        $serverProvider->setCredentials();
 
         $dir = rtrim(getcwd(), '/');
 
@@ -65,9 +64,7 @@ class Launch extends Command
             return;
         }
 
-        $server = $forge->getServer();
-
-        // Do we we spin up a factory object here to start handling this server vs servers situation?
+        $server = $serverProvider->getServer();
 
         if ($server === null) {
             $this->error('No servers found!');
@@ -77,23 +74,13 @@ class Launch extends Command
             return;
         }
 
-        if ($server->type === 'loadbalancer') {
-            $this->miniTask('Detected', 'Load Balancer', true);
+        $providerConfig = $serverProvider->getConfigFromServer($server);
 
-            $loadBalancedSite = $forge->getLoadBalancedSite($server->id);
-
-            /** @var Collection<ServerInterface> $servers */
-            $servers = $forge->getLoadBalancedServers($server->id, $loadBalancedSite->id);
-        } else {
-            /** @var Collection<ServerInterface> $servers */
-            $servers = collect([$server]);
-        }
-
-        $host = parse_url(Project::env()->get('APP_URL'), PHP_URL_HOST);
+        $servers = $providerConfig->servers();
 
         $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
 
-        $domain = $this->getDomain($loadBalancedSite ?? null, $host);
+        $domain = $providerConfig->getDomain();
 
         if ($this->siteAlreadyExists($servers, $domain)) {
             return;
@@ -113,7 +100,7 @@ class Launch extends Command
 
         App::instance(DnsProvider::class, $dnsProvider);
 
-        $phpVersion = $this->determinePhpVersion($servers, $dir);
+        $phpVersion = $providerConfig->determinePhpVersion();
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
@@ -160,56 +147,6 @@ class Launch extends Command
         }
     }
 
-    protected function determinePhpVersion(Collection $servers, string $dir): PhpVersion
-    {
-        if ($servers->count() === 1) {
-            // If it's just the one server, we can just ask the server what's up
-            return $this->withSpinner(
-                title: 'Determining PHP version',
-                task: fn () => $servers->first()->determinePhpVersionFromProject($dir),
-                message: fn (?PhpVersion $result) => $result?->display,
-                success: fn ($result) => $result !== null,
-            );
-        }
-
-        // Figure out the PHP version for the load balanced sites
-        $versions = $this->withSpinner(
-            title: 'Determining installed PHP versions',
-            task: fn () => $servers->map(fn (ServerInterface $server) => $server->validPhpVersionsFromProject($dir)),
-            message: fn ($result) => $result->flatten()->unique('version')->sortByDesc('version')->values()->map(fn (PhpVersion $version) => $version->display)->join(', '),
-            success: fn ($result) => true,
-        );
-
-        $flattened = $versions->flatten();
-
-        $byVersion = $flattened->groupBy('version');
-
-        $commonVersion = $byVersion->first(fn ($versions) => $versions->count() === $servers->count());
-
-        if ($commonVersion) {
-            $this->miniTask('Using PHP version', $commonVersion->first()->display, true);
-
-            return $commonVersion->first();
-        }
-
-        $phpVersions = $flattened->unique('version')->sortByDesc('version')->values();
-
-        $selectedVersion = $this->choice(
-            'Select PHP version',
-            $phpVersions->map(
-                fn (PhpVersion $version) => Str::replace('PHP ', '', $version->display)
-            )->toArray(),
-        );
-
-        $phpVersion = $phpVersions->first(
-            fn (PhpVersion $version) => Str::replace('PHP ', '', $version->display) === $selectedVersion
-        );
-
-        $servers->each(fn (ServerInterface $server) => $server->installPhpVersion($phpVersion->version));
-
-        return $phpVersion;
-    }
-
     protected function getDnsProvider(string $domain): ?DnsProvider
     {
         $dnsProvider = DnsFactory::fromDomain($domain);
@@ -228,17 +165,6 @@ class Launch extends Command
         }
 
         return $dnsProvider;
-    }
-
-    protected function getDomain(?SiteInterface $loadBalancedSite, string $host): string
-    {
-        if ($loadBalancedSite) {
-            $this->miniTask('Domain', $loadBalancedSite->name, true);
-
-            return $loadBalancedSite->name;
-        }
-
-        return $this->ask('Domain', Str::replace('.test', '.com', $host));
     }
 
     protected function siteAlreadyExists(Collection $servers, string $domain): bool

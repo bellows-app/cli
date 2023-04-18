@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
         Console::mixin(new MixinsConsole);
         Command::mixin(new MixinsConsole);
 
-        $this->app->bind('singleton', fn () => new Project);
+        $this->app->singleton('project', fn () => new Project);
         $this->app->bind('console', fn () => app(Console::class));
         $this->app->bind(PluginManagerInterface::class, fn () => app(PluginManager::class));
         $this->app->bind(ServerProviderInterface::class, fn () => app(Forge::class));

@@ -4,6 +4,7 @@ namespace Bellows\ServerProviders;
 
 use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
+use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
@@ -12,7 +13,7 @@ use Illuminate\Support\Collection;
 interface ServerInterface
 {
     /** @return Collection<PhpVersion> */
-    public function validPhpVersionsFromProject(string $projectDir): Collection;
+    public function validPhpVersionsFromProject(): Collection;
 
     /** @return Collection<ForgeSite> */
     public function getSites(): Collection;
@@ -29,5 +30,7 @@ interface ServerInterface
 
     public function installPhpVersion(string $version): ?PhpVersion;
 
-    public function determinePhpVersionFromProject(string $projectDir): PhpVersion;
+    public function determinePhpVersionFromProject(): PhpVersion;
+
+    public function serverData(): ForgeServer;
 }

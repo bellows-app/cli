@@ -9,7 +9,6 @@ use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Http;
 
 class Site implements SiteInterface
 {
@@ -82,8 +81,8 @@ class Site implements SiteInterface
 
     protected function setClient(): void
     {
-        $this->client = Http::forge()->baseUrl(
-            Forge::API_URL . "/servers/{$this->server->id}/sites/{$this->site->id}"
+        $this->client = Client::getInstance()->http()->baseUrl(
+            Client::API_URL . "/servers/{$this->server->id}/sites/{$this->site->id}"
         );
     }
 

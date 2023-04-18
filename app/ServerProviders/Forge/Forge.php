@@ -3,37 +3,32 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Config;
-use Bellows\Console;
 use Bellows\Data\ForgeServer;
-use Bellows\Data\ForgeSite;
+use Bellows\Facades\Console;
+use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\Forge\Config\LoadBalancer;
+use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Exception;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class Forge implements ServerProviderInterface
 {
-    const API_URL = 'https://forge.laravel.com/api/v1';
-
     public function __construct(
-        protected Console $console,
         protected Config $config,
     ) {
     }
 
     public function setCredentials(): void
     {
-        $this->setupBaseClient($this->getToken());
+        Client::getInstance()->setToken($this->getToken());
     }
 
     public function getServer(): ?ServerInterface
     {
         $servers = collect(
-            Http::forge()->get('servers')->json()['servers']
+            Client::getInstance()->http()->get('servers')->json()['servers']
         )->filter(fn ($s) => !$s['revoked'])->values();
 
         if ($servers->isEmpty()) {
@@ -43,54 +38,35 @@ class Forge implements ServerProviderInterface
         if ($servers->count() === 1) {
             $server = $servers->first();
 
-            $this->console->info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
+            Console::info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
 
-            return new Server(
-                ForgeServer::from($server),
-                $this->console,
-            );
+            return new Server(ForgeServer::from($server));
         }
 
-        $serverName = $this->console->choice(
+        $serverName = Console::choice(
             'Which server would you like to use?',
             $servers->pluck('name')->sort()->values()->toArray()
         );
 
         $server = ForgeServer::from($servers->first(fn ($s) => $s['name'] === $serverName));
 
-        return new Server($server, $this->console);
+        return new Server($server);
     }
 
-    public function getLoadBalancedSite(int $serverId): SiteInterface
+    public function getConfigFromServer(ServerInterface $server): ConfigInterface
     {
-        $sites = collect(Http::forge()->get("/servers/{$serverId}/sites")->json()['sites']);
-        $server = Http::forge()->get("servers/{$serverId}")->json()['server'];
+        if ($server->type === 'loadbalancer') {
+            Console::miniTask('Detected', 'Load Balancer', true);
 
-        $site = $this->console->choiceFromCollection(
-            'Which load balancer do you want to use?',
-            $sites,
-            'name',
-        );
+            return new LoadBalancer($server);
+        }
 
-        return new Site(ForgeSite::from($site), ForgeServer::from($server));
-    }
-
-    /** @return Collection<ServerInterface> */
-    public function getLoadBalancedServers(int $serverId, int $siteId): Collection
-    {
-        $nodes = Http::forge()->get("servers/{$serverId}/sites/{$siteId}/balancing")->json()['nodes'];
-
-        return collect($nodes)->map(
-            fn ($node) => Http::forge()->get("servers/{$node['server_id']}")['server']
-        )->map(fn ($server) => new Server(
-            ForgeServer::from($server),
-            $this->console,
-        ));
+        return new SingleServer($server);
     }
 
     protected function getToken(): string
     {
-        $apiHost = parse_url(self::API_URL, PHP_URL_HOST);
+        $apiHost = parse_url(Client::API_URL, PHP_URL_HOST);
 
         $apiConfigKey = 'apiCredentials.' . str_replace('.', '-', $apiHost) . '.default';
 
@@ -101,19 +77,19 @@ class Forge implements ServerProviderInterface
                 return $token;
             }
 
-            $this->console->warn('Your saved Forge token is invalid!');
-            $this->console->newLine();
+            Console::warn('Your saved Forge token is invalid!');
+            Console::newLine();
         }
 
-        $this->console->info('Looks like we need a Forge API token, you can get one here:');
-        $this->console->comment('https://forge.laravel.com/user-profile/api');
+        Console::info('Looks like we need a Forge API token, you can get one here:');
+        Console::comment('https://forge.laravel.com/user-profile/api');
 
         do {
             if (isset($isValid)) {
-                $this->console->warn('Invalid token, please try again.');
+                Console::warn('Invalid token, please try again.');
             }
 
-            $token = $this->console->secret('Forge API Token');
+            $token = Console::secret('Forge API Token');
 
             $isValid = $this->isValidToken($token);
         } while (!$isValid);
@@ -123,39 +99,10 @@ class Forge implements ServerProviderInterface
         return $token;
     }
 
-    protected function setupBaseClient(string $token)
-    {
-        $url = self::API_URL;
-
-        Http::macro(
-            'forge',
-            fn () => Http::baseUrl($url)
-                ->withToken($token)
-                ->acceptJson()
-                ->asJson()
-                ->retry(
-                    3,
-                    100,
-                    function (
-                        Exception $exception,
-                        PendingRequest $request
-                    ) {
-                        if ($exception instanceof RequestException && $exception->response->status() === 429) {
-                            sleep($exception->response->header('retry-after') + 1);
-
-                            return true;
-                        }
-
-                        return false;
-                    }
-                )
-        );
-    }
-
     protected function isValidToken($token): bool
     {
         try {
-            Http::baseUrl(self::API_URL)
+            Http::baseUrl(Client::API_URL)
                 ->withToken($token)
                 ->acceptJson()
                 ->asJson()
