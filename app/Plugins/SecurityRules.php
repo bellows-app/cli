@@ -4,8 +4,8 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\SecurityRule;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Plugin;
-use Bellows\Project;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -14,16 +14,11 @@ class SecurityRules extends Plugin
     /** @var \Illuminate\Support\Collection<\Bellows\Data\SecurityRule> */
     protected Collection $securityRules;
 
-    public function __construct(
-        protected Project $project,
-    ) {
-    }
-
     public function enabled(): bool
     {
         return Console::confirm(
             'Do you want to add any security rules? (basic auth)',
-            Str::contains($this->project->config->domain, ['dev.', 'staging.'])
+            Str::contains(Project::config()->domain, ['dev.', 'staging.'])
         );
     }
 

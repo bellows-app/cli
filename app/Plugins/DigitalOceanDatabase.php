@@ -4,9 +4,9 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
-use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -28,7 +28,6 @@ class DigitalOceanDatabase extends Plugin
 
     public function __construct(
         protected BellowsHttp $http,
-        protected Project $project,
     ) {
     }
 
@@ -45,7 +44,7 @@ class DigitalOceanDatabase extends Plugin
             fn (PendingRequest $request) => $request->get('databases', ['per_page' => 1]),
         );
 
-        $this->databaseName = Console::ask('Database', $this->project->config->isolatedUser);
+        $this->databaseName = Console::ask('Database', Project::config()->isolatedUser);
         $this->databaseUser = Console::ask('Database User', $this->databaseName);
 
         $response = $this->http->client()->get('databases');

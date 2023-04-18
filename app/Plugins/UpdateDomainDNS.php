@@ -5,8 +5,8 @@ namespace Bellows\Plugins;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Plugin;
-use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Support\Collection;
 
@@ -15,7 +15,6 @@ class UpdateDomainDNS extends Plugin
     public int $priority = 100;
 
     public function __construct(
-        protected Project $project,
         protected ?DnsProvider $dnsProvider = null,
     ) {
     }
@@ -28,7 +27,7 @@ class UpdateDomainDNS extends Plugin
 
         $needsUpdating = $this->getDomainsToCheck()->first(
             fn ($subdomain) => $subdomain === 'www'
-                ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [$this->project->config->domain, '@'])
+                ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [Project::config()->domain, '@'])
                 : $this->dnsProvider->getARecord($subdomain) !== $this->loadBalancingServer->ip_address,
         );
 
@@ -47,7 +46,7 @@ class UpdateDomainDNS extends Plugin
 
         // If we got this far, something needs updating, default to true
         $domains = $this->getDomainsToCheck()->map(
-            fn ($subdomain) => Domain::getFullDomain($subdomain, $this->project->config->domain)
+            fn ($subdomain) => Domain::getFullDomain($subdomain, Project::config()->domain)
         );
 
         $description = $domains->count() === 1 ? 'record' : 'records';
@@ -66,7 +65,7 @@ class UpdateDomainDNS extends Plugin
             ->map(
                 fn ($subdomain) => [
                     'subdomain'  => $subdomain,
-                    'domain'     => Domain::getFullDomain($subdomain, $this->project->config->domain),
+                    'domain'     => Domain::getFullDomain($subdomain, Project::config()->domain),
                     'ip_address' => $this->dnsProvider->getARecord($subdomain),
                 ],
             )
@@ -94,10 +93,10 @@ class UpdateDomainDNS extends Plugin
 
     protected function getDomainsToCheck(): Collection
     {
-        if (Domain::isBaseDomain($this->project->config->domain)) {
+        if (Domain::isBaseDomain(Project::config()->domain)) {
             return collect(['www', '']);
         }
 
-        return collect([Domain::getSubdomain($this->project->config->domain)]);
+        return collect([Domain::getSubdomain(Project::config()->domain)]);
     }
 }

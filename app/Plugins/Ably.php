@@ -4,9 +4,9 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
-use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 class Ably extends Plugin
@@ -18,7 +18,6 @@ class Ably extends Plugin
     ];
 
     public function __construct(
-        protected Project $project,
         protected Http $http,
     ) {
     }
@@ -42,7 +41,7 @@ class Ably extends Plugin
         $accountId = $me['account']['id'];
 
         if (Console::confirm('Create new app?', true)) {
-            $appName = Console::ask('App name', $this->project->config->appName);
+            $appName = Console::ask('App name', Project::config()->appName);
 
             $app = $this->http->client()->post("accounts/{$accountId}/apps", [
                 'name' => $appName,
@@ -54,7 +53,7 @@ class Ably extends Plugin
                 'Which app do you want to use?',
                 $apps,
                 'name',
-                $this->project->config->appName,
+                Project::config()->appName,
             );
         }
 
@@ -64,7 +63,7 @@ class Ably extends Plugin
             'Which key do you want to use?',
             $keys,
             'name',
-            $this->project->config->appName,
+            Project::config()->appName,
         )['key'];
     }
 

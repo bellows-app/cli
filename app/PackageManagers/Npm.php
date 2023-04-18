@@ -3,38 +3,41 @@
 namespace Bellows\PackageManagers;
 
 use Bellows\Facades\Console;
-use Bellows\Project;
+use Bellows\Facades\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 class Npm extends PackageManager
 {
-    public function __construct(protected Project $project)
+    public static function packageIsInstalled(string $package): bool
     {
-    }
-
-    public function packageIsInstalled(string $package): bool
-    {
-        $json = $this->getPackageJson();
+        $json = self::getPackageJson();
 
         return Arr::get($json, 'dependencies.' . $package) !== null
             || Arr::get($json, 'devDependencies.' . $package) !== null;
     }
 
-    public function installPackage(string $package): void
+    public static function installPackage(string $package): void
     {
         Console::info("Installing {$package}...");
-        exec("cd {$this->project->config->directory} && yarn add {$package}");
+
+        exec(
+            sprintf(
+                'cd %s && yarn add %s',
+                Project::config()->directory,
+                $package
+            )
+        );
     }
 
-    public function hasScriptCommand(string $command): bool
+    public static function hasScriptCommand(string $command): bool
     {
-        return Arr::get($this->getPackageJson(), 'scripts.' . $command) !== null;
+        return Arr::get(self::getPackageJson(), 'scripts.' . $command) !== null;
     }
 
     protected function getPackageJson(): array
     {
-        $path = $this->project->config->directory . '/package.json';
+        $path = Project::config()->directory . '/package.json';
 
         if (!file_exists($path)) {
             return [];

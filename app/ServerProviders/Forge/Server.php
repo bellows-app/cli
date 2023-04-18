@@ -3,6 +3,7 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Console;
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
@@ -116,8 +117,7 @@ class Server implements ServerInterface
         return $existingDomain;
     }
 
-    // TODO: DTO for params
-    public function createSite(array $params): Site
+    public function createSite(CreateSiteParams $params): Site
     {
         $siteResponse = $this->client->post('sites', $params)->json();
 

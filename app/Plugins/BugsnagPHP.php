@@ -3,6 +3,8 @@
 namespace Bellows\Plugins;
 
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
+use Bellows\PackageManagers\Composer;
 
 class BugsnagPHP extends Bugsnag
 {
@@ -17,7 +19,7 @@ class BugsnagPHP extends Bugsnag
 
     public function setup(): void
     {
-        $this->bugsnagKey = $this->project->env->get('BUGSNAG_API_KEY');
+        $this->bugsnagKey = Project::env()->get('BUGSNAG_API_KEY');
 
         if ($this->bugsnagKey) {
             Console::miniTask('Using existing Bugsnag PHP key from', '.env');
@@ -25,7 +27,7 @@ class BugsnagPHP extends Bugsnag
             return;
         }
 
-        $type = $this->composer->packageIsInstalled('laravel/framework') ? 'laravel' : 'php';
+        $type = Composer::packageIsInstalled('laravel/framework') ? 'laravel' : 'php';
 
         $this->setupClient();
 

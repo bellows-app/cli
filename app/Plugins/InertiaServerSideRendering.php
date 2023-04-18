@@ -18,11 +18,6 @@ class InertiaServerSideRendering extends Plugin
         '@vue/server-renderer',
     ];
 
-    public function __construct(
-        protected Artisan $artisan,
-    ) {
-    }
-
     public function setup(): void
     {
         $defaultSSRPort = 13716;
@@ -50,7 +45,7 @@ class InertiaServerSideRendering extends Plugin
     {
         return [
             new PluginDaemon(
-                $this->artisan->forDaemon('inertia:start-ssr'),
+                Artisan::forDaemon('inertia:start-ssr'),
             ),
         ];
     }
@@ -59,7 +54,7 @@ class InertiaServerSideRendering extends Plugin
     {
         return DeployScript::addBeforePHPReload(
             $deployScript,
-            $this->artisan->inDeployScript('inertia:stop-ssr'),
+            Artisan::inDeployScript('inertia:stop-ssr'),
         );
     }
 }

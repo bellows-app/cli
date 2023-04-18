@@ -5,9 +5,9 @@ namespace Bellows\Plugins;
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
-use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
@@ -27,7 +27,6 @@ class Mailgun extends Plugin
 
     public function __construct(
         protected Http $http,
-        protected Project $project,
         protected ?DnsProvider $dnsProvider,
     ) {
     }
@@ -78,7 +77,7 @@ class Mailgun extends Plugin
 
     protected function createDomain()
     {
-        $domain = Console::ask('What is the domain name?', 'mail.' . $this->project->config->domain);
+        $domain = Console::ask('What is the domain name?', 'mail.' . Project::config()->domain);
 
         $result = $this->http->client()->post('domains', [
             'name' => $domain,
@@ -124,7 +123,7 @@ class Mailgun extends Plugin
             'Which domain do you want to use?',
             $domainChoices,
             'custom_key',
-            fn ($domain) => Str::contains($domain['name'], $this->project->config->domain),
+            fn ($domain) => Str::contains($domain['name'], Project::config()->domain),
         );
 
         $this->domain = $domain['name'];

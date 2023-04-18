@@ -2,6 +2,7 @@
 
 namespace Bellows\Commands;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
@@ -13,12 +14,14 @@ use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Env;
+use Bellows\Exceptions\EnvMissing;
+use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
-use Bellows\Project;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
@@ -43,8 +46,18 @@ class Launch extends Command
 
         $dir = rtrim(getcwd(), '/');
 
-        if (!file_exists($dir . '/.env')) {
+        Project::setDir($dir);
+
+        try {
+            Project::env();
+        } catch (EnvMissing $e) {
             $this->error('No .env file found! Are you in the correct directory?');
+            $this->info('Bellows works best when it has access to an .env file.');
+            $this->newLine();
+
+            return;
+        } catch (Exception $e) {
+            $this->error('Something went wrong while trying to read the .env file.');
             $this->info('Bellows works best when it has access to an .env file.');
             $this->newLine();
 
@@ -75,11 +88,9 @@ class Launch extends Command
             $servers = collect([$server]);
         }
 
-        $localEnv = new Env(file_get_contents($dir . '/.env'));
+        $host = parse_url(Project::env()->get('APP_URL'), PHP_URL_HOST);
 
-        $host = parse_url($localEnv->get('APP_URL'), PHP_URL_HOST);
-
-        $appName = $this->ask('App Name', $localEnv->get('APP_NAME'));
+        $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
 
         $domain = $this->getDomain($loadBalancedSite ?? null, $host);
 
@@ -114,9 +125,7 @@ class Launch extends Command
             secureSite: $secureSite ?? false,
         );
 
-        $project = new Project($projectConfig);
-
-        App::instance(Project::class, $project);
+        Project::setConfig($projectConfig);
 
         $this->step('Plugins');
 
@@ -131,7 +140,7 @@ class Launch extends Command
         $this->info('💨 Off we go!');
 
         $siteUrls = $servers->map(
-            fn (ServerInterface $server) => $this->createSite($server, $pluginManager, $project)
+            fn (ServerInterface $server) => $this->createSite($server, $pluginManager)
         );
 
         if ($siteUrls->count() === 1) {
@@ -251,7 +260,6 @@ class Launch extends Command
     protected function createSite(
         ServerInterface $server,
         PluginManagerInterface $pluginManager,
-        Project $project,
     ): string {
         $pluginManager->setServer($server);
 
@@ -259,15 +267,14 @@ class Launch extends Command
 
         $this->step('Site');
 
-        // TODO: DTO?
-        $baseParams = [
-            'domain'       => $project->config->domain,
+        $baseParams = CreateSiteParams::from([
+            'domain'       => Project::config()->domain,
             'project_type' => 'php',
             'directory'    => '/public',
             'isolated'     => true,
-            'username'     => $project->config->isolatedUser,
-            'php_version'  => $project->config->phpVersion->version,
-        ];
+            'username'     => Project::config()->isolatedUser,
+            'php_version'  => Project::config()->phpVersion->version,
+        ]);
 
         $createSiteParams = array_merge(
             $baseParams,
@@ -284,8 +291,8 @@ class Launch extends Command
 
         $baseRepoParams = [
             'provider'   => 'github',
-            'repository' => $project->config->repositoryUrl,
-            'branch'     => $project->config->repositoryBranch,
+            'repository' => Project::config()->repositoryUrl,
+            'branch'     => Project::config()->repositoryBranch,
             'composer'   => true,
         ];
 
@@ -307,8 +314,8 @@ class Launch extends Command
 
         $updatedEnvValues = collect(array_merge(
             [
-                'APP_NAME'     => $project->config->appName,
-                'APP_URL'      => "http://{$project->config->domain}",
+                'APP_NAME'     => Project::config()->appName,
+                'APP_URL'      => 'http://' . Project::config()->domain,
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
             $pluginManager->environmentVariables(),
@@ -323,7 +330,7 @@ class Launch extends Command
         );
 
         $inLocalButNotInRemote = collect(
-            array_keys($project->env->all())
+            array_keys(Project::env()->all())
         )->diff(
             array_keys($siteEnv->all())
         )->values();
@@ -345,7 +352,7 @@ class Launch extends Command
                 );
 
                 collect($toAdd)->each(
-                    fn ($k) => $siteEnv->update($k, $project->env->get($k))
+                    fn ($k) => $siteEnv->update($k, Project::env()->get($k))
                 );
             }
         }
@@ -370,9 +377,13 @@ class Launch extends Command
         $daemons = $pluginManager->daemons()->map(
             fn (PluginDaemon $daemon) => Daemon::from([
                 'command'   => $daemon->command,
-                'user'      => $daemon->user ?: $project->config->isolatedUser,
+                'user'      => $daemon->user ?: Project::config()->isolatedUser,
                 'directory' => $daemon->directory
-                    ?: "/home/{$project->config->isolatedUser}/{$project->config->domain}",
+                    ?: '/' . collect([
+                        'home',
+                        Project::config()->isolatedUser,
+                        Project::config()->domain,
+                    ])->join('/'),
             ])
         );
 
@@ -389,7 +400,7 @@ class Launch extends Command
             fn (PluginWorker $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
-                    ['php_version' => $worker->phpVersion ?? $project->config->phpVersion->version],
+                    ['php_version' => $worker->phpVersion ?? Project::config()->phpVersion->version],
                 )
             )
         );
@@ -407,7 +418,7 @@ class Launch extends Command
             fn (PluginJob $job) => Job::from(
                 array_merge(
                     $job->toArray(),
-                    ['user' => $job->user ?? $project->config->isolatedUser],
+                    ['user' => $job->user ?? Project::config()->isolatedUser],
                 ),
             )
         );

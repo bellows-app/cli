@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
@@ -17,7 +18,6 @@ class Http
 
     public function __construct(
         protected Config $config,
-        protected Console $console,
     ) {
     }
 
@@ -40,22 +40,22 @@ class Http
         try {
             $test($factory(HttpFacade::baseUrl($baseUrl), $credentials)->throw());
         } catch (RequestException $e) {
-            $this->console->warn('Could not connect with the provided credentials:');
+            Console::warn('Could not connect with the provided credentials:');
 
             $data = json_decode((string) $e->response->body(), true);
             $message = Arr::get($data ?? [], 'message', (string) $e->response->body());
 
-            $this->console->warn($e->response->status() . ': ' . $message);
+            Console::warn($e->response->status() . ': ' . $message);
 
-            $this->console->warn('Please select a different account or add a new one.');
+            Console::warn('Please select a different account or add a new one.');
 
             $this->createClient($baseUrl, $factory, $addCredentialsPrompt, $test);
 
             return;
         } catch (Exception $e) {
             // Something else happened, just give a generic error message.
-            $this->console->warn('Could not connect with the provided credentials!');
-            $this->console->warn('Please select a different account or add a new one.');
+            Console::warn('Could not connect with the provided credentials!');
+            Console::warn('Please select a different account or add a new one.');
 
             $this->createClient($baseUrl, $factory, $addCredentialsPrompt, $test);
 
@@ -111,8 +111,8 @@ class Http
     protected function getApiCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
         if (!$this->getAllConfigsForApi($host)) {
-            $this->console->miniTask('No credentials found for', $addCredentialsPrompt->displayName, false);
-            $this->console->newLine();
+            Console::miniTask('No credentials found for', $addCredentialsPrompt->displayName, false);
+            Console::newLine();
 
             return $this->addNewCredentials($host, $addCredentialsPrompt);
         }
@@ -123,7 +123,7 @@ class Http
 
         $choices->push($addNewAccountText);
 
-        $result = $this->console->choice(
+        $result = Console::choice(
             'Select account',
             $choices->toArray(),
             count($choices) === 2 ? array_key_first($choices->toArray()) : null,
@@ -142,18 +142,18 @@ class Http
 
     protected function addNewCredentials(string $host, AddApiCredentialsPrompt $addCredentialsPrompt): array
     {
-        $this->console->info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
-        $this->console->comment($addCredentialsPrompt->url);
+        Console::info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
+        Console::comment($addCredentialsPrompt->url);
 
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
-            fn ($value) => [$value => $this->console->secret(ucwords($value))]
+            fn ($value) => [$value => Console::secret(ucwords($value))]
         )->toArray();
 
         do {
-            $accountName = $this->console->ask('Account Name (for your own reference)');
+            $accountName = Console::ask('Account Name (for your own reference)');
         } while (
             $this->getApiConfigValue($host, $accountName)
-            && !$this->console->confirm('Overwrite existing account?')
+            && !Console::confirm('Overwrite existing account?')
         );
 
         $this->setApiConfigValue($host, $accountName, $value);

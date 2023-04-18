@@ -2,6 +2,7 @@
 
 namespace Bellows;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
@@ -67,7 +68,7 @@ abstract class Plugin
         //
     }
 
-    public function createSiteParams(array $params): array
+    public function createSiteParams(CreateSiteParams $params): array
     {
         return [];
     }

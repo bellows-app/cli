@@ -7,6 +7,7 @@ use Bellows\Console;
 use Bellows\Mixins\Console as MixinsConsole;
 use Bellows\PluginManager;
 use Bellows\PluginManagerInterface;
+use Bellows\Project;
 use Bellows\ServerProviders\Forge\Forge;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Illuminate\Console\Command;
@@ -61,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
         Console::mixin(new MixinsConsole);
         Command::mixin(new MixinsConsole);
 
+        $this->app->bind('singleton', fn () => new Project);
         $this->app->bind('console', fn () => app(Console::class));
         $this->app->bind(PluginManagerInterface::class, fn () => app(PluginManager::class));
         $this->app->bind(ServerProviderInterface::class, fn () => app(Forge::class));

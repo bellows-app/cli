@@ -9,11 +9,6 @@ use Bellows\Plugin;
 
 class Optimize extends Plugin
 {
-    public function __construct(
-        protected Artisan $artisan,
-    ) {
-    }
-
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
         return $this->enabledByDefault('You probably want to optimize your application');
@@ -22,10 +17,10 @@ class Optimize extends Plugin
     public function updateDeployScript(string $deployScript): string
     {
         return DeployScript::addBeforePHPReload($deployScript, [
-            $this->artisan->inDeployScript('config:cache'),
-            $this->artisan->inDeployScript('route:cache'),
-            $this->artisan->inDeployScript('view:cache'),
-            $this->artisan->inDeployScript('event:cache'),
+            Artisan::inDeployScript('config:cache'),
+            Artisan::inDeployScript('route:cache'),
+            Artisan::inDeployScript('view:cache'),
+            Artisan::inDeployScript('event:cache'),
         ]);
     }
 }

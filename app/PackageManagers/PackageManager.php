@@ -4,19 +4,19 @@ namespace Bellows\PackageManagers;
 
 abstract class PackageManager
 {
-    abstract public function packageIsInstalled(string $package): bool;
-
-    public function allPackagesAreInstalled(array $packages): bool
+    public static function allPackagesAreInstalled(array $packages): bool
     {
         return collect($packages)->filter(
-            fn ($package) => $this->packageIsInstalled($package)
+            fn ($package) => self::packageIsInstalled($package)
         )->count() === count($packages);
     }
 
-    public function anyPackagesAreInstalled(array $packages): bool
+    public static function anyPackagesAreInstalled(array $packages): bool
     {
         return collect($packages)->first(
-            fn ($package) => $this->packageIsInstalled($package)
+            fn ($package) => self::packageIsInstalled($package)
         ) !== null;
     }
+
+    abstract public static function packageIsInstalled(string $package): bool;
 }

@@ -6,18 +6,12 @@ use Bellows\Artisan;
 use Bellows\Data\PluginWorker;
 use Bellows\DeployScript;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Plugin;
-use Bellows\Project;
 
 class QueueWorker extends Plugin
 {
     protected $queueWorkers = [];
-
-    public function __construct(
-        protected Artisan $artisan,
-        protected Project $project,
-    ) {
-    }
 
     public function enabled(): bool
     {
@@ -28,7 +22,7 @@ class QueueWorker extends Plugin
     {
         $addAnother = true;
 
-        $localConnection = $this->project->env->get('QUEUE_CONNECTION', 'database');
+        $localConnection = Project::env()->get('QUEUE_CONNECTION', 'database');
 
         if ($localConnection === 'sync') {
             $localConnection = null;
@@ -69,7 +63,7 @@ class QueueWorker extends Plugin
     public function updateDeployScript(string $deployScript): string
     {
         return DeployScript::addBeforePHPReload($deployScript, [
-            $this->artisan->inDeployScript('queue:restart'),
+            Artisan::inDeployScript('queue:restart'),
         ]);
     }
 

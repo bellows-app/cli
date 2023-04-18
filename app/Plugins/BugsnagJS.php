@@ -3,6 +3,8 @@
 namespace Bellows\Plugins;
 
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
+use Bellows\PackageManagers\Npm;
 
 class BugsnagJS extends Bugsnag
 {
@@ -16,7 +18,7 @@ class BugsnagJS extends Bugsnag
 
     public function setup(): void
     {
-        $this->bugsnagKey = $this->project->env->get('BUGSNAG_JS_API_KEY');
+        $this->bugsnagKey = Project::env()->get('BUGSNAG_JS_API_KEY');
 
         if ($this->bugsnagKey) {
             Console::miniTask('Using existing Bugsnag JS key from', '.env');
@@ -24,7 +26,7 @@ class BugsnagJS extends Bugsnag
             return;
         }
 
-        $type = collect(['vue', 'react'])->first(fn ($p) => $this->npm->packageIsInstalled($p)) ?: 'js';
+        $type = collect(['vue', 'react'])->first(fn ($p) => Npm::packageIsInstalled($p)) ?: 'js';
 
         $this->setupClient();
 

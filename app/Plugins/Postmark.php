@@ -5,9 +5,9 @@ namespace Bellows\Plugins;
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
-use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -33,7 +33,6 @@ class Postmark extends Plugin
 
     public function __construct(
         protected BellowsHttp $http,
-        protected Project $project,
         protected ?DnsProvider $dnsProvider,
     ) {
     }
@@ -138,7 +137,7 @@ class Postmark extends Plugin
     public function getServer()
     {
         if (Console::confirm('Create new Postmark server?', true)) {
-            $name = Console::ask('Server name', $this->project->config->appName);
+            $name = Console::ask('Server name', Project::config()->appName);
 
             $color = Console::choice(
                 'Server color',
@@ -172,14 +171,14 @@ class Postmark extends Plugin
             'Choose a Postmark server',
             $servers->sortBy('Name'),
             'Name',
-            $this->project->config->appName,
+            Project::config()->appName,
         );
     }
 
     public function getDomain()
     {
         if (Console::confirm('Create new Postmark domain?', true)) {
-            $name = Console::ask('Domain name', "mail.{$this->project->config->domain}");
+            $name = Console::ask('Domain name', 'mail.' . Project::config()->domain);
 
             return $this->http->client()->post('domains', [
                 'Name' => $name,
@@ -197,7 +196,7 @@ class Postmark extends Plugin
             'Choose a Postmark sender domain',
             $domains->sortBy('Name'),
             'Name',
-            fn ($domain) => Str::contains($domain['Name'], $this->project->config->domain),
+            fn ($domain) => Str::contains($domain['Name'], Project::config()->domain),
         )['ID'];
 
         return $this->http->client()->get("domains/{$domainId}")->json();

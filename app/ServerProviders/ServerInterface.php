@@ -2,6 +2,7 @@
 
 namespace Bellows\ServerProviders;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
@@ -18,7 +19,7 @@ interface ServerInterface
 
     public function getSiteByDomain(string $domain): ?ForgeSite;
 
-    public function createSite(array $params): SiteInterface;
+    public function createSite(CreateSiteParams $params): SiteInterface;
 
     public function createDaemon(Daemon $daemon): array;
 

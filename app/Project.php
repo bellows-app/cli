@@ -6,10 +6,23 @@ use Bellows\Data\ProjectConfig;
 
 class Project
 {
-    public Env $env;
+    protected Env $env;
 
-    public function __construct(public ProjectConfig $config)
+    protected ProjectConfig $config;
+
+    protected string $dir;
+
+    public function setDir(string $dir): void
     {
-        $this->env = Env::fromDir($config->directory);
+        $this->dir = $dir;
+    }
+
+    public function env(): Env
+    {
+        if (!isset($this->env)) {
+            $this->env = Env::fromDir($this->dir);
+        }
+
+        return $this->env;
     }
 }

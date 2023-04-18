@@ -3,19 +3,14 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Facades\Project;
 use Bellows\Plugin;
-use Bellows\Project;
 
 class LetsEncryptSSL extends Plugin
 {
-    public function __construct(
-        protected Project $project,
-    ) {
-    }
-
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
-        if ($this->project->config->secureSite) {
+        if (Project::config()->secureSite) {
             return $this->enabledByDefault('You chose to secure your site');
         }
 
@@ -24,13 +19,13 @@ class LetsEncryptSSL extends Plugin
 
     public function wrapUp(): void
     {
-        $this->loadBalancingSite->createSslCertificate($this->project->config->domain);
+        $this->loadBalancingSite->createSslCertificate(Project::config()->domain);
     }
 
     public function environmentVariables(): array
     {
         return [
-            'APP_URL' => "https://{$this->project->config->domain}",
+            'APP_URL' => 'https://' . Project::config()->domain,
         ];
     }
 }

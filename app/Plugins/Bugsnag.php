@@ -4,11 +4,9 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http;
-use Bellows\PackageManagers\Composer;
-use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
-use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 abstract class Bugsnag extends Plugin
@@ -16,8 +14,6 @@ abstract class Bugsnag extends Plugin
     public function __construct(
         protected Http $http,
         protected Project $project,
-        protected Npm $npm,
-        protected Composer $composer,
     ) {
     }
 
@@ -45,7 +41,7 @@ abstract class Bugsnag extends Plugin
     protected function createProject(string $type): array
     {
         return $this->http->client('bugsnagOrganization')->post('projects', [
-            'name' => Console::ask('Project name', $this->project->config->appName),
+            'name' => Console::ask('Project name', Project::config()->appName),
             'type' => $type,
         ])->json();
     }
@@ -62,7 +58,7 @@ abstract class Bugsnag extends Plugin
             'Select a Bugsnag project',
             $result->sortBy('name'),
             'name',
-            $this->project->config->appName,
+            Project::config()->appName,
         );
     }
 }

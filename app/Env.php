@@ -2,6 +2,7 @@
 
 namespace Bellows;
 
+use Bellows\Exceptions\EnvMissing;
 use Dotenv\Dotenv;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -18,6 +19,10 @@ class Env
 
     public static function fromDir(string $dir): static
     {
+        if (!file_exists($dir . '/.env')) {
+            throw new EnvMissing('No .env file found in ' . $dir);
+        }
+
         return new static(
             file_get_contents($dir . '/.env')
         );

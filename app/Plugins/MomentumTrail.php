@@ -12,16 +12,11 @@ class MomentumTrail extends Plugin
         'based/momentum-trail',
     ];
 
-    public function __construct(
-        protected Artisan $artisan,
-    ) {
-    }
-
     public function updateDeployScript(string $deployScript): string
     {
         return DeployScript::addAfterComposerInstall(
             $deployScript,
-            $this->artisan->inDeployScript('trail:generate'),
+            Artisan::inDeployScript('trail:generate'),
         );
     }
 }

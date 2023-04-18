@@ -4,9 +4,9 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
-use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 class FathomAnalytics extends Plugin
@@ -15,7 +15,6 @@ class FathomAnalytics extends Plugin
 
     public function __construct(
         protected Http $http,
-        protected Project $project,
     ) {
     }
 
@@ -40,7 +39,7 @@ class FathomAnalytics extends Plugin
         );
 
         if (Console::confirm('Create new Fathom Analytics site?', true)) {
-            $siteName = Console::ask('Enter your site name', $this->project->config->appName);
+            $siteName = Console::ask('Enter your site name', Project::config()->appName);
 
             $response = $this->http->client()->post('sites', [
                 'name' => $siteName,
@@ -59,7 +58,7 @@ class FathomAnalytics extends Plugin
             'Choose a site',
             $sites,
             'name',
-            $this->project->config->appName,
+            Project::config()->appName,
         )['id'];
     }
 

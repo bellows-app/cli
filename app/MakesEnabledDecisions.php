@@ -5,6 +5,8 @@ namespace Bellows;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Data\DisabledByDefault;
 use Bellows\Data\EnabledByDefault;
+use Bellows\PackageManagers\Composer;
+use Bellows\PackageManagers\Npm;
 
 trait MakesEnabledDecisions
 {
@@ -43,19 +45,31 @@ trait MakesEnabledDecisions
         }
 
         if (count($this->requiredComposerPackages)) {
-            return $this->ensureRequiredPackagesAreInstalled('composer');
+            return $this->ensureRequiredPackagesAreInstalled(
+                Composer::class,
+                $this->requiredComposerPackages,
+            );
         }
 
         if (count($this->requiredNpmPackages)) {
-            return $this->ensureRequiredPackagesAreInstalled('npm');
+            return $this->ensureRequiredPackagesAreInstalled(
+                Npm::class,
+                $this->requiredNpmPackages,
+            );
         }
 
         if (count($this->anyRequiredComposerPackages)) {
-            return $this->ensureAnyRequiredPackagesAreInstalled('composer');
+            return $this->ensureAnyRequiredPackagesAreInstalled(
+                Composer::class,
+                $this->anyRequiredComposerPackages,
+            );
         }
 
         if (count($this->anyRequiredNpmPackages)) {
-            return $this->ensureAnyRequiredPackagesAreInstalled('npm');
+            return $this->ensureAnyRequiredPackagesAreInstalled(
+                Npm::class,
+                $this->anyRequiredNpmPackages,
+            );
         }
 
         return null;
@@ -95,14 +109,14 @@ trait MakesEnabledDecisions
         )->max() > 0;
     }
 
-    protected function ensureRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
+    protected function ensureRequiredPackagesAreInstalled(string $packageManager, array $packages, $mode = 'all'): DefaultEnabledDecision
     {
-        $packagePropertyName = ucfirst(strtolower($packageManager));
-        $property = "required{$packagePropertyName}Packages";
+        $packagesInstalled = $mode === 'all'
+            ? $packageManager::allPackagesAreInstalled($packages)
+            : $packageManager::anyPackagesAreInstalled($packages);
 
-        $packagesInstalled = $this->$packageManager->allPackagesAreInstalled($this->$property);
-        $packageList = collect($this->$property)->implode(', ');
-        $descriptor = count($this->$property) > 1 ? 'are' : 'is';
+        $packageList = collect($packages)->implode(', ');
+        $descriptor = count($packages) > 1 ? 'are' : 'is';
 
         return $this->getDefaultEnabledDecision(
             $packagesInstalled,
@@ -111,20 +125,9 @@ trait MakesEnabledDecisions
         );
     }
 
-    protected function ensureAnyRequiredPackagesAreInstalled(string $packageManager): DefaultEnabledDecision
+    protected function ensureAnyRequiredPackagesAreInstalled(string $packageManager, array $packages): DefaultEnabledDecision
     {
-        $packagePropertyName = ucfirst(strtolower($packageManager));
-        $property = "anyRequired{$packagePropertyName}Packages";
-
-        $packagesInstalled = $this->$packageManager->anyPackagesAreInstalled($this->$property);
-        $packageList = collect($this->$property)->implode(', ');
-        $descriptor = count($this->$property) > 1 ? 'are' : 'is';
-
-        return $this->getDefaultEnabledDecision(
-            $packagesInstalled,
-            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
-            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
-        );
+        return $this->ensureRequiredPackagesAreInstalled($packageManager, $packages, 'any');
     }
 
     protected function enabledByDefault(string $reason): EnabledByDefault

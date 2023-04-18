@@ -4,9 +4,9 @@ namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\DeployScript;
+use Bellows\Facades\Project;
 use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
-use Bellows\Project;
 
 class CompileAssets extends Plugin
 {
@@ -14,12 +14,6 @@ class CompileAssets extends Plugin
         'yarn.lock',
         'package-lock.json',
     ];
-
-    public function __construct(
-        protected Npm $npm,
-        protected Project $project,
-    ) {
-    }
 
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
@@ -31,7 +25,7 @@ class CompileAssets extends Plugin
             );
         }
 
-        if (!$this->npm->hasScriptCommand('build')) {
+        if (!Npm::hasScriptCommand('build')) {
             return $this->disabledByDefault(
                 'Could not find a "build" script in your package.json. You probably don\'t need to compile your assets.'
             );
@@ -50,16 +44,13 @@ class CompileAssets extends Plugin
             'npm run build',
         ];
 
-        return DeployScript::addAfterComposerInstall(
-            $deployScript,
-            $toAdd,
-        );
+        return DeployScript::addAfterComposerInstall($deployScript, $toAdd);
     }
 
     protected function getLockFile()
     {
         return collect($this->lockFiles)->first(
-            fn ($file) => file_exists($this->project->config->directory . '/' . $file)
+            fn ($file) => file_exists(Project::config()->directory . '/' . $file)
         );
     }
 }
