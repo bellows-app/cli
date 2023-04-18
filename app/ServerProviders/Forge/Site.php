@@ -79,6 +79,11 @@ class Site implements SiteInterface
         return $this->client->post('security-rules', $rule->toArray())->json();
     }
 
+    public function getServer(): ForgeServer
+    {
+        return $this->server;
+    }
+
     protected function setClient(): void
     {
         $this->client = Client::getInstance()->http()->baseUrl(

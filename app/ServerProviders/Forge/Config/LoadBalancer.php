@@ -33,6 +33,19 @@ class LoadBalancer implements ConfigInterface
         $this->setLoadBalancedServers();
     }
 
+    public function getExistingSite(): ?SiteInterface
+    {
+        return $this->servers->first(function (ServerInterface $server) {
+            $site = $server->getSiteByDomain($this->getDomain());
+
+            if ($site) {
+                return new Site($site, $server->serverData());
+            }
+
+            return false;
+        });
+    }
+
     public function getDomain(): string
     {
         return $this->primarySite->name;

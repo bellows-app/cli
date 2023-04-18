@@ -2,6 +2,7 @@
 
 namespace Bellows\ServerProviders;
 
+use Bellows\Data\ForgeServer;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
@@ -25,4 +26,6 @@ interface SiteInterface
     public function enableQuickDeploy(): void;
 
     public function addSecurityRule(SecurityRule $rule): array;
+
+    public function getServer(): ForgeServer;
 }

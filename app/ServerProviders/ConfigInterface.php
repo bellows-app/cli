@@ -13,4 +13,6 @@ interface ConfigInterface
     public function getDomain(): string;
 
     public function determinePhpVersion(): PhpVersion;
+
+    public function getExistingSite(): ?SiteInterface;
 }

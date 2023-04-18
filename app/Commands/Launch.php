@@ -22,7 +22,6 @@ use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Exception;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -82,7 +81,13 @@ class Launch extends Command
 
         $domain = $providerConfig->getDomain();
 
-        if ($this->siteAlreadyExists($servers, $domain)) {
+        if ($existingSite = $providerConfig->getExistingSite()) {
+            if ($this->confirm('View existing site in Forge?', true)) {
+                Process::run(
+                    "open https://forge.laravel.com/servers/{$existingSite->getServer()->id}/sites/{$existingSite->id}"
+                );
+            }
+
             return;
         }
 
@@ -116,12 +121,6 @@ class Launch extends Command
         Project::setConfig($projectConfig);
 
         $this->step('Plugins');
-
-        $pluginManager->setLoadBalancingServer($server);
-
-        if (isset($loadBalancedSite)) {
-            $pluginManager->setLoadBalancingSite($loadBalancedSite);
-        }
 
         $pluginManager->setActive();
 
@@ -165,23 +164,6 @@ class Launch extends Command
         }
 
         return $dnsProvider;
-    }
-
-    protected function siteAlreadyExists(Collection $servers, string $domain): bool
-    {
-        return $servers->first(function (ServerInterface $server) use ($domain) {
-            $existing = $server->getSiteByDomain($domain);
-
-            if (!$existing) {
-                return false;
-            }
-
-            if ($this->confirm('View existing site in Forge?', true)) {
-                Process::run("open https://forge.laravel.com/servers/{$server->id}/sites/{$existing->id}");
-            }
-
-            return true;
-        }) !== null;
     }
 
     protected function createSite(
