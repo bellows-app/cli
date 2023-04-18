@@ -8,8 +8,7 @@ class ProjectConfig extends Data
 {
     public function __construct(
         public string $isolatedUser,
-        public string $repositoryUrl,
-        public string $repositoryBranch,
+        public Repository $repository,
         public PhpVersion $phpVersion,
         public string $directory,
         public string $domain,

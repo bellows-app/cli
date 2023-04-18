@@ -10,6 +10,7 @@ use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
 use Bellows\Data\ProjectConfig;
+use Bellows\Data\Repository;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
@@ -95,7 +96,7 @@ class Launch extends Command
 
         $isolatedUser = $this->ask('Isolated User', Str::snake($appName));
 
-        [$repo, $repoBranch] = $this->getGitInfo($dir, $domain);
+        $repo = $this->getGitInfo($dir, $domain);
 
         $dnsProvider = $this->getDnsProvider($domain);
 
@@ -109,8 +110,7 @@ class Launch extends Command
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
-            repositoryUrl: $repo,
-            repositoryBranch: $repoBranch,
+            repository: $repo,
             phpVersion: $phpVersion,
             directory: $dir,
             domain: $domain,
@@ -200,8 +200,8 @@ class Launch extends Command
 
         $baseRepoParams = new InstallRepoParams(
             provider: 'github',
-            repository: Project::config()->repositoryUrl,
-            branch: Project::config()->repositoryBranch,
+            repository: Project::config()->repository->url,
+            branch: Project::config()->repository->branch,
             composer: true,
         );
 
@@ -386,18 +386,19 @@ class Launch extends Command
         return $siteUrl;
     }
 
-    protected function getGitInfo(string $dir, string $domain): array
+    protected function getGitInfo(string $dir, string $domain): Repository
     {
         if (!is_dir($dir . '/.git')) {
             $this->warn('Git repository not detected! Are you sure you are in the right directory?');
 
-            return [
-                $this->ask('Repository'),
-                $this->ask('Repository Branch'),
-            ];
+            return new Repostory(
+                url: $this->ask('Repository'),
+                branch: $this->ask('Repository Branch'),
+            );
         }
 
         // TODO: Why the current directory? Shouldn't it be the project directory like everything else?
+        // This is really just naming convention, but still.
         $info = Repo::getInfoFromCurrentDirectory();
 
         $repo = $this->ask('Repository', $info->name);
@@ -413,6 +414,9 @@ class Launch extends Command
             $repoBranch = $this->ask('Repository Branch');
         }
 
-        return [$repo, $repoBranch];
+        return new Repository(
+            url: $repo,
+            branch: $repoBranch,
+        );
     }
 }
