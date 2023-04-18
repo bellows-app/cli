@@ -85,7 +85,6 @@ class LoadBalancer implements ConfigInterface
 
     protected function setLoadBalancedSite(): void
     {
-        // TODO: Maybe we don't do macros? Will they for sure be set up? Dicey.
         $sites = collect($this->client->get("/servers/{$this->server->id}/sites")->json()['sites']);
 
         $site = Console::choiceFromCollection(
