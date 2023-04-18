@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Data\CreateSiteParams;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
@@ -18,7 +19,7 @@ interface PluginManagerInterface
 
     public function createSiteParams(CreateSiteParams $params): array;
 
-    public function installRepoParams(array $baseParams): array;
+    public function installRepoParams(InstallRepoParams $baseParams): array;
 
     public function environmentVariables(): array;
 

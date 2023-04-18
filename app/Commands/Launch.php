@@ -4,6 +4,7 @@ namespace Bellows\Commands;
 
 use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\PluginDaemon;
@@ -267,37 +268,37 @@ class Launch extends Command
 
         $this->step('Site');
 
-        $baseParams = CreateSiteParams::from([
-            'domain'       => Project::config()->domain,
-            'project_type' => 'php',
-            'directory'    => '/public',
-            'isolated'     => true,
-            'username'     => Project::config()->isolatedUser,
-            'php_version'  => Project::config()->phpVersion->version,
-        ]);
+        $baseParams = new CreateSiteParams(
+            domain: Project::config()->domain,
+            projectType: 'php',
+            directory: '/public',
+            isolated: true,
+            username: Project::config()->isolatedUser,
+            phpVersion: Project::config()->phpVersion->version,
+        );
 
         $createSiteParams = array_merge(
-            $baseParams,
+            $baseParams->toArray(),
             ...$pluginManager->createSiteParams($baseParams),
         );
 
         /** @var SiteInterface $site */
         $site = $this->withSpinner(
             title: 'Creating',
-            task: fn () => $server->createSite($createSiteParams),
+            task: fn () => $server->createSite(CreateSiteParams::from($createSiteParams)),
         );
 
         $pluginManager->setSite($site);
 
-        $baseRepoParams = [
-            'provider'   => 'github',
-            'repository' => Project::config()->repositoryUrl,
-            'branch'     => Project::config()->repositoryBranch,
-            'composer'   => true,
-        ];
+        $baseRepoParams = new InstallRepoParams(
+            provider: 'github',
+            repository: Project::config()->repositoryUrl,
+            branch: Project::config()->repositoryBranch,
+            composer: true,
+        );
 
         $installRepoParams = array_merge(
-            $baseRepoParams,
+            $baseRepoParams->toArray(),
             ...$pluginManager->installRepoParams($baseRepoParams),
         );
 
@@ -305,7 +306,7 @@ class Launch extends Command
 
         $this->withSpinner(
             title: 'Installing',
-            task: fn () => $site->installRepo($installRepoParams),
+            task: fn () => $site->installRepo(InstallRepoParams::from($installRepoParams)),
         );
 
         $this->step('Environment Variables');

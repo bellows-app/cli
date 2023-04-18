@@ -119,7 +119,7 @@ class Server implements ServerInterface
 
     public function createSite(CreateSiteParams $params): Site
     {
-        $siteResponse = $this->client->post('sites', $params)->json();
+        $siteResponse = $this->client->post('sites', $params->toArray())->json();
 
         $site = $siteResponse['site'];
 

@@ -4,6 +4,7 @@ namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\SiteInterface;
@@ -21,10 +22,9 @@ class Site implements SiteInterface
         $this->setClient();
     }
 
-    // TODO: DTO as params
-    public function installRepo(array $params): void
+    public function installRepo(InstallRepoParams $params): void
     {
-        $this->client->post('git', $params);
+        $this->client->post('git', $params->toArray());
 
         do {
             $site = $this->client->get('')->json()['site'];

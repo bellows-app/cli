@@ -2,12 +2,13 @@
 
 namespace Bellows\ServerProviders;
 
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 
 interface SiteInterface
 {
-    public function installRepo(array $params): void;
+    public function installRepo(InstallRepoParams $params): void;
 
     public function getEnv(): string;
 
