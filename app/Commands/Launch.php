@@ -404,27 +404,6 @@ class Launch extends Command
         return $siteUrl;
     }
 
-    // TODO: Move this to Console mixin
-    protected function step($title)
-    {
-        $padding = 2;
-        $length = max(40, strlen($title) + ($padding * 2));
-
-        $this->newLine();
-        $this->info('+' . str_repeat('-', $length) . '+');
-        $this->info('|' . str_repeat(' ', $length) . '|');
-        $this->info(
-            '|'
-                . str_repeat(' ', $padding)
-                . '<comment>' . $title . '</comment>'
-                . str_repeat(' ', $length - strlen($title) - $padding)
-                . '|'
-        );
-        $this->info('|' . str_repeat(' ', $length) . '|');
-        $this->info('+' . str_repeat('-', $length) . '+');
-        $this->newLine();
-    }
-
     protected function getGitInfo(string $dir, string $domain): array
     {
         if (!is_dir($dir . '/.git')) {

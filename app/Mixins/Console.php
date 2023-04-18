@@ -183,6 +183,28 @@ class Console
         };
     }
 
+    public function step()
+    {
+        return function (string $title) {
+            $padding = 2;
+            $length = max(40, strlen($title) + ($padding * 2));
+
+            $this->output->newLine();
+            $this->output->writeln('<info>+' . str_repeat('-', $length) . '+</info>');
+            $this->output->writeln('<info>|' . str_repeat(' ', $length) . '|</info>');
+            $this->output->writeln(
+                '<info>|'
+                    . str_repeat(' ', $padding)
+                    . '<comment>' . $title . '</comment>'
+                    . str_repeat(' ', $length - strlen($title) - $padding)
+                    . '|</info>'
+            );
+            $this->output->writeln('<info>|' . str_repeat(' ', $length) . '|</info>');
+            $this->output->writeln('<info>+' . str_repeat('-', $length) . '+</info>');
+            $this->output->newLine();
+        };
+    }
+
     public function overwriteLine()
     {
         return function (string $message, bool $newLine = false) {
