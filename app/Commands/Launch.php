@@ -397,6 +397,7 @@ class Launch extends Command
             ];
         }
 
+        // TODO: Why the current directory? Shouldn't it be the project directory like everything else?
         $info = Repo::getInfoFromCurrentDirectory();
 
         $repo = $this->ask('Repository', $info->name);
