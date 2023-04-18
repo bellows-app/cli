@@ -15,6 +15,7 @@ use Bellows\Dns\DnsProvider;
 use Bellows\Env;
 use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
+use Bellows\Project;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -51,6 +52,8 @@ class Launch extends Command
         }
 
         $server = $forge->getServer();
+
+        // Do we we spin up a factory object here to start handling this server vs servers situation?
 
         if ($server === null) {
             $this->error('No servers found!');
@@ -105,13 +108,15 @@ class Launch extends Command
             repositoryUrl: $repo,
             repositoryBranch: $repoBranch,
             phpVersion: $phpVersion,
-            projectDirectory: $dir,
+            directory: $dir,
             domain: $domain,
             appName: $appName,
             secureSite: $secureSite ?? false,
         );
 
-        App::instance(ProjectConfig::class, $projectConfig);
+        $project = new Project($projectConfig);
+
+        App::instance(Project::class, $project);
 
         $this->step('Plugins');
 
@@ -126,7 +131,7 @@ class Launch extends Command
         $this->info('💨 Off we go!');
 
         $siteUrls = $servers->map(
-            fn (ServerInterface $server) => $this->createSite($server, $pluginManager, $projectConfig, $localEnv)
+            fn (ServerInterface $server) => $this->createSite($server, $pluginManager, $project)
         );
 
         if ($siteUrls->count() === 1) {
@@ -246,8 +251,7 @@ class Launch extends Command
     protected function createSite(
         ServerInterface $server,
         PluginManagerInterface $pluginManager,
-        ProjectConfig $projectConfig,
-        Env $localEnv
+        Project $project,
     ): string {
         $pluginManager->setServer($server);
 
@@ -257,12 +261,12 @@ class Launch extends Command
 
         // TODO: DTO?
         $baseParams = [
-            'domain'       => $projectConfig->domain,
+            'domain'       => $project->config->domain,
             'project_type' => 'php',
             'directory'    => '/public',
             'isolated'     => true,
-            'username'     => $projectConfig->isolatedUser,
-            'php_version'  => $projectConfig->phpVersion->version,
+            'username'     => $project->config->isolatedUser,
+            'php_version'  => $project->config->phpVersion->version,
         ];
 
         $createSiteParams = array_merge(
@@ -280,8 +284,8 @@ class Launch extends Command
 
         $baseRepoParams = [
             'provider'   => 'github',
-            'repository' => $projectConfig->repositoryUrl,
-            'branch'     => $projectConfig->repositoryBranch,
+            'repository' => $project->config->repositoryUrl,
+            'branch'     => $project->config->repositoryBranch,
             'composer'   => true,
         ];
 
@@ -303,8 +307,8 @@ class Launch extends Command
 
         $updatedEnvValues = collect(array_merge(
             [
-                'APP_NAME'     => $projectConfig->appName,
-                'APP_URL'      => "http://{$projectConfig->domain}",
+                'APP_NAME'     => $project->config->appName,
+                'APP_URL'      => "http://{$project->config->domain}",
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
             $pluginManager->environmentVariables(),
@@ -319,7 +323,7 @@ class Launch extends Command
         );
 
         $inLocalButNotInRemote = collect(
-            array_keys($localEnv->all())
+            array_keys($project->env->all())
         )->diff(
             array_keys($siteEnv->all())
         )->values();
@@ -341,7 +345,7 @@ class Launch extends Command
                 );
 
                 collect($toAdd)->each(
-                    fn ($k) => $siteEnv->update($k, $localEnv->get($k))
+                    fn ($k) => $siteEnv->update($k, $project->env->get($k))
                 );
             }
         }
@@ -366,9 +370,9 @@ class Launch extends Command
         $daemons = $pluginManager->daemons()->map(
             fn (PluginDaemon $daemon) => Daemon::from([
                 'command'   => $daemon->command,
-                'user'      => $daemon->user ?: $projectConfig->isolatedUser,
+                'user'      => $daemon->user ?: $project->config->isolatedUser,
                 'directory' => $daemon->directory
-                    ?: "/home/{$projectConfig->isolatedUser}/{$projectConfig->domain}",
+                    ?: "/home/{$project->config->isolatedUser}/{$project->config->domain}",
             ])
         );
 
@@ -385,7 +389,7 @@ class Launch extends Command
             fn (PluginWorker $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
-                    ['php_version' => $worker->phpVersion ?? $projectConfig->phpVersion->version],
+                    ['php_version' => $worker->phpVersion ?? $project->config->phpVersion->version],
                 )
             )
         );
@@ -403,7 +407,7 @@ class Launch extends Command
             fn (PluginJob $job) => Job::from(
                 array_merge(
                     $job->toArray(),
-                    ['user' => $job->user ?? $projectConfig->isolatedUser],
+                    ['user' => $job->user ?? $project->config->isolatedUser],
                 ),
             )
         );

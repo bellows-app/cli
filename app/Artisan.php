@@ -2,12 +2,10 @@
 
 namespace Bellows;
 
-use Bellows\Data\ProjectConfig;
-
 class Artisan
 {
     public function __construct(
-        protected ProjectConfig $config,
+        protected Project $project,
     ) {
     }
 
@@ -18,11 +16,15 @@ class Artisan
 
     public function forDaemon(string $command): string
     {
-        return "{$this->config->phpVersion->binary} artisan " . trim($command);
+        return "{$this->project->config->phpVersion->binary} artisan " . trim($command);
     }
 
     public function forJob(string $command): string
     {
-        return "{$this->config->phpVersion->binary} /home/{$this->config->isolatedUser}/{$this->config->domain}/artisan " . trim($command);
+        return collect([
+            $this->project->config->phpVersion->binary,
+            "/home/{$this->project->config->isolatedUser}/{$this->project->config->domain}/artisan",
+            trim($command),
+        ])->join(' ');
     }
 }

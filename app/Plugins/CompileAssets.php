@@ -3,7 +3,10 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
+use Bellows\DeployScript;
+use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
+use Bellows\Project;
 
 class CompileAssets extends Plugin
 {
@@ -11,6 +14,12 @@ class CompileAssets extends Plugin
         'yarn.lock',
         'package-lock.json',
     ];
+
+    public function __construct(
+        protected Npm $npm,
+        protected Project $project,
+    ) {
+    }
 
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
@@ -41,7 +50,7 @@ class CompileAssets extends Plugin
             'npm run build',
         ];
 
-        return $this->deployScript->addAfterComposerInstall(
+        return DeployScript::addAfterComposerInstall(
             $deployScript,
             $toAdd,
         );
@@ -50,7 +59,7 @@ class CompileAssets extends Plugin
     protected function getLockFile()
     {
         return collect($this->lockFiles)->first(
-            fn ($file) => file_exists($this->projectConfig->projectDirectory . '/' . $file)
+            fn ($file) => file_exists($this->project->config->directory . '/' . $file)
         );
     }
 }

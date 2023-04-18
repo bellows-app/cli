@@ -2,35 +2,45 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Artisan;
 use Bellows\Data\PluginWorker;
+use Bellows\DeployScript;
+use Bellows\Facades\Console;
 use Bellows\Plugin;
+use Bellows\Project;
 
 class QueueWorker extends Plugin
 {
     protected $queueWorkers = [];
 
+    public function __construct(
+        protected Artisan $artisan,
+        protected Project $project,
+    ) {
+    }
+
     public function enabled(): bool
     {
-        return $this->console->confirm('Do you want to set up any queue workers?');
+        return Console::confirm('Do you want to set up any queue workers?');
     }
 
     public function setup(): void
     {
         $addAnother = true;
 
-        $localConnection = $this->localEnv->get('QUEUE_CONNECTION', 'database');
+        $localConnection = $this->project->env->get('QUEUE_CONNECTION', 'database');
 
         if ($localConnection === 'sync') {
             $localConnection = null;
         }
 
         do {
-            $connection = $this->console->anticipateRequired(
+            $connection = Console::anticipateRequired(
                 'Connection',
                 ['database', 'sqs', 'redis', 'beanstalkd'],
                 $localConnection
             );
-            $queue = $this->console->ask('Queue', 'default');
+            $queue = Console::ask('Queue', 'default');
 
             $params = $this->getParams();
 
@@ -43,7 +53,7 @@ class QueueWorker extends Plugin
 
             $this->queueWorkers[] = PluginWorker::from($worker);
 
-            $addAnother = $this->console->confirm('Do you want to add another queue worker?');
+            $addAnother = Console::confirm('Do you want to add another queue worker?');
 
             // If we're adding another, we don't want to use default,
             // just offer that the first time
@@ -58,7 +68,7 @@ class QueueWorker extends Plugin
 
     public function updateDeployScript(string $deployScript): string
     {
-        return $this->deployScript->addBeforePHPReload($deployScript, [
+        return DeployScript::addBeforePHPReload($deployScript, [
             $this->artisan->inDeployScript('queue:restart'),
         ]);
     }
@@ -97,7 +107,7 @@ class QueueWorker extends Plugin
             ],
         ];
 
-        $this->console->table(
+        Console::table(
             ['Option', 'Value'],
             collect($params)->map(function ($item) {
                 $value = $item['value'];
@@ -112,15 +122,15 @@ class QueueWorker extends Plugin
             })->toArray(),
         );
 
-        if ($this->console->confirm('Defaults look ok?', true)) {
+        if (Console::confirm('Defaults look ok?', true)) {
             return $params;
         }
 
         foreach ($params as $key => $item) {
             if (is_bool($item['value'])) {
-                $value = $this->console->confirm($item['label'], $item['value']);
+                $value = Console::confirm($item['label'], $item['value']);
             } else {
-                $value = $this->console->askForNumber($item['label'], $item['value'], $item['required'] ?? false);
+                $value = Console::askForNumber($item['label'], $item['value'], $item['required'] ?? false);
             }
 
             $params[$key]['value'] = $value;

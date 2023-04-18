@@ -5,10 +5,6 @@ namespace Bellows;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
-use Bellows\Data\ProjectConfig;
-use Bellows\Dns\DnsProvider;
-use Bellows\PackageManagers\Composer;
-use Bellows\PackageManagers\Npm;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 
@@ -19,8 +15,7 @@ abstract class Plugin
 
     public int $priority = 0;
 
-    protected Env $localEnv;
-
+    // protected Env $localEnv;
     // The site we're currently deploying to
     protected SiteInterface $site;
 
@@ -32,20 +27,6 @@ abstract class Plugin
 
     // If load balancing, the primary server, if not, the same as the $server property
     protected ServerInterface $loadBalancingServer;
-
-    public function __construct(
-        protected ProjectConfig $projectConfig,
-        protected Config $config,
-        protected Http $http,
-        protected Console $console,
-        protected Composer $composer,
-        protected Npm $npm,
-        protected DeployScript $deployScript,
-        protected Artisan $artisan,
-        protected ?DnsProvider $dnsProvider = null,
-    ) {
-        $this->localEnv = new Env(file_get_contents($projectConfig->projectDirectory . '/.env'));
-    }
 
     public function setSite(SiteInterface $site): self
     {

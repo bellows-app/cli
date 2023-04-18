@@ -2,14 +2,14 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Console;
-use Bellows\Data\ProjectConfig;
+use Bellows\Facades\Console;
+use Bellows\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 class Npm extends PackageManager
 {
-    public function __construct(protected ProjectConfig $config, protected Console $console)
+    public function __construct(protected Project $project)
     {
     }
 
@@ -23,8 +23,8 @@ class Npm extends PackageManager
 
     public function installPackage(string $package): void
     {
-        $this->console->info("Installing {$package}...");
-        exec("cd {$this->config->projectDirectory} && yarn add {$package}");
+        Console::info("Installing {$package}...");
+        exec("cd {$this->project->config->directory} && yarn add {$package}");
     }
 
     public function hasScriptCommand(string $command): bool
@@ -34,7 +34,7 @@ class Npm extends PackageManager
 
     protected function getPackageJson(): array
     {
-        $path = $this->config->projectDirectory . '/package.json';
+        $path = $this->project->config->directory . '/package.json';
 
         if (!file_exists($path)) {
             return [];

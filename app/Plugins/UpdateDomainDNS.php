@@ -3,13 +3,22 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Dns\DnsProvider;
+use Bellows\Facades\Console;
 use Bellows\Plugin;
+use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Support\Collection;
 
 class UpdateDomainDNS extends Plugin
 {
     public int $priority = 100;
+
+    public function __construct(
+        protected Project $project,
+        protected ?DnsProvider $dnsProvider = null,
+    ) {
+    }
 
     public function isEnabledByDefault(): ?DefaultEnabledDecision
     {
@@ -19,7 +28,7 @@ class UpdateDomainDNS extends Plugin
 
         $needsUpdating = $this->getDomainsToCheck()->first(
             fn ($subdomain) => $subdomain === 'www'
-                ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [$this->projectConfig->domain, '@'])
+                ? !in_array($this->dnsProvider->getCNAMERecord($subdomain), [$this->project->config->domain, '@'])
                 : $this->dnsProvider->getARecord($subdomain) !== $this->loadBalancingServer->ip_address,
         );
 
@@ -38,12 +47,12 @@ class UpdateDomainDNS extends Plugin
 
         // If we got this far, something needs updating, default to true
         $domains = $this->getDomainsToCheck()->map(
-            fn ($subdomain) => Domain::getFullDomain($subdomain, $this->projectConfig->domain)
+            fn ($subdomain) => Domain::getFullDomain($subdomain, $this->project->config->domain)
         );
 
         $description = $domains->count() === 1 ? 'record' : 'records';
 
-        return $this->console->confirm(
+        return Console::confirm(
             "Update DNS {$description} for [{$domains->join(', ')}] to point to server?",
             true
         );
@@ -51,19 +60,19 @@ class UpdateDomainDNS extends Plugin
 
     public function setup(): void
     {
-        $this->console->info('Updating DNS records...');
+        Console::info('Updating DNS records...');
 
         $this->getDomainsToCheck()
             ->map(
                 fn ($subdomain) => [
                     'subdomain'  => $subdomain,
-                    'domain'     => Domain::getFullDomain($subdomain, $this->projectConfig->domain),
+                    'domain'     => Domain::getFullDomain($subdomain, $this->project->config->domain),
                     'ip_address' => $this->dnsProvider->getARecord($subdomain),
                 ],
             )
             ->filter(
                 fn ($config) => $config['ip_address'] && $config['ip_address'] !== $this->loadBalancingServer->ip_address
-                    ? $this->console->confirm(
+                    ? Console::confirm(
                         "DNS record for [{$config['domain']}] currently points to [{$config['ip_address']}]. Update to [{$this->loadBalancingServer->ip_address}]?",
                         true
                     )
@@ -85,10 +94,10 @@ class UpdateDomainDNS extends Plugin
 
     protected function getDomainsToCheck(): Collection
     {
-        if (Domain::isBaseDomain($this->projectConfig->domain)) {
+        if (Domain::isBaseDomain($this->project->config->domain)) {
             return collect(['www', '']);
         }
 
-        return collect([Domain::getSubdomain($this->projectConfig->domain)]);
+        return collect([Domain::getSubdomain($this->project->config->domain)]);
     }
 }

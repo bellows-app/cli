@@ -2,6 +2,8 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Artisan;
+use Bellows\DeployScript;
 use Bellows\Plugin;
 
 class MomentumTrail extends Plugin
@@ -10,9 +12,14 @@ class MomentumTrail extends Plugin
         'based/momentum-trail',
     ];
 
+    public function __construct(
+        protected Artisan $artisan,
+    ) {
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
-        return $this->deployScript->addAfterComposerInstall(
+        return DeployScript::addAfterComposerInstall(
             $deployScript,
             $this->artisan->inDeployScript('trail:generate'),
         );

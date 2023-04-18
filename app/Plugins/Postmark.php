@@ -3,7 +3,11 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Dns\DnsProvider;
+use Bellows\Facades\Console;
+use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
+use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -26,6 +30,13 @@ class Postmark extends Plugin
     protected $verifyReturnPath = false;
 
     protected $verifyDKIM = false;
+
+    public function __construct(
+        protected BellowsHttp $http,
+        protected Project $project,
+        protected ?DnsProvider $dnsProvider,
+    ) {
+    }
 
     public function setup(): void
     {
@@ -50,7 +61,7 @@ class Postmark extends Plugin
 
         $this->messageStreamId = $this->getMessageStreamId();
 
-        $this->fromEmail = $this->console->ask(
+        $this->fromEmail = Console::ask(
             'From email',
             "hello@{$this->sendingDomain['Name']}"
         );
@@ -76,7 +87,7 @@ class Postmark extends Plugin
             return array_key_first($choices);
         }
 
-        return $this->console->choice(
+        return Console::choice(
             'Which Postmark message stream',
             $choices,
             'outbound',
@@ -94,13 +105,13 @@ class Postmark extends Plugin
         }
 
         if (!$this->dnsProvider) {
-            $this->console->warn('Skipping DNS verification as no DNS provider is configured.');
+            Console::warn('Skipping DNS verification as no DNS provider is configured.');
 
             return;
         }
 
         if (!$this->sendingDomain['ReturnPathDomainVerified']) {
-            $this->console->miniTask('Adding ReturnPath record to', $this->dnsProvider->getName());
+            Console::miniTask('Adding ReturnPath record to', $this->dnsProvider->getName());
 
             $this->dnsProvider->addCNAMERecord(
                 name: 'pm-bounces.' . Domain::getSubdomain($this->sendingDomain['Name']),
@@ -112,7 +123,7 @@ class Postmark extends Plugin
         }
 
         if (!$this->sendingDomain['DKIMVerified']) {
-            $this->console->miniTask('Adding DKIM record to ', $this->dnsProvider->getName());
+            Console::miniTask('Adding DKIM record to ', $this->dnsProvider->getName());
 
             $this->dnsProvider->addTXTRecord(
                 name: Domain::getSubdomain($this->sendingDomain['DKIMPendingHost']),
@@ -126,10 +137,10 @@ class Postmark extends Plugin
 
     public function getServer()
     {
-        if ($this->console->confirm('Create new Postmark server?', true)) {
-            $name = $this->console->ask('Server name', $this->projectConfig->appName);
+        if (Console::confirm('Create new Postmark server?', true)) {
+            $name = Console::ask('Server name', $this->project->config->appName);
 
-            $color = $this->console->choice(
+            $color = Console::choice(
                 'Server color',
                 [
                     'Blue',
@@ -157,18 +168,18 @@ class Postmark extends Plugin
             ])->json()['Servers']
         );
 
-        return $this->console->choiceFromCollection(
+        return Console::choiceFromCollection(
             'Choose a Postmark server',
             $servers->sortBy('Name'),
             'Name',
-            $this->projectConfig->appName,
+            $this->project->config->appName,
         );
     }
 
     public function getDomain()
     {
-        if ($this->console->confirm('Create new Postmark domain?', true)) {
-            $name = $this->console->ask('Domain name', "mail.{$this->projectConfig->domain}");
+        if (Console::confirm('Create new Postmark domain?', true)) {
+            $name = Console::ask('Domain name', "mail.{$this->project->config->domain}");
 
             return $this->http->client()->post('domains', [
                 'Name' => $name,
@@ -182,11 +193,11 @@ class Postmark extends Plugin
             ])->json()['Domains']
         );
 
-        $domainId = $this->console->choiceFromCollection(
+        $domainId = Console::choiceFromCollection(
             'Choose a Postmark sender domain',
             $domains->sortBy('Name'),
             'Name',
-            fn ($domain) => Str::contains($domain['Name'], $this->projectConfig->domain),
+            fn ($domain) => Str::contains($domain['Name'], $this->project->config->domain),
         )['ID'];
 
         return $this->http->client()->get("domains/{$domainId}")->json();

@@ -3,11 +3,24 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
+use Bellows\Http;
+use Bellows\PackageManagers\Composer;
+use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
+use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 abstract class Bugsnag extends Plugin
 {
+    public function __construct(
+        protected Http $http,
+        protected Project $project,
+        protected Npm $npm,
+        protected Composer $composer,
+    ) {
+    }
+
     public function setupClient(): void
     {
         $this->http->createJsonClient(
@@ -32,7 +45,7 @@ abstract class Bugsnag extends Plugin
     protected function createProject(string $type): array
     {
         return $this->http->client('bugsnagOrganization')->post('projects', [
-            'name' => $this->console->ask('Project name', $this->projectConfig->appName),
+            'name' => Console::ask('Project name', $this->project->config->appName),
             'type' => $type,
         ])->json();
     }
@@ -45,11 +58,11 @@ abstract class Bugsnag extends Plugin
 
         $result = collect($result)->filter(fn ($project) => $project['type'] === $type)->values();
 
-        return $this->console->choiceFromCollection(
+        return Console::choiceFromCollection(
             'Select a Bugsnag project',
             $result->sortBy('name'),
             'name',
-            $this->projectConfig->appName,
+            $this->project->config->appName,
         );
     }
 }

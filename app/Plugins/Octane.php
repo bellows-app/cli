@@ -2,9 +2,12 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Artisan;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PluginDaemon;
+use Bellows\Facades\Console;
 use Bellows\Plugin;
+use Bellows\Project;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
 
@@ -17,6 +20,12 @@ class Octane extends Plugin
     protected array $requiredComposerPackages = [
         'laravel/octane',
     ];
+
+    public function __construct(
+        protected Artisan $artisan,
+        protected Project $project,
+    ) {
+    }
 
     public function setup(): void
     {
@@ -33,10 +42,10 @@ class Octane extends Plugin
 
         $this->octanePort = $highestOctanePortInUse + 1;
 
-        $this->octaneServer = $this->console->choice('Which server would you like to use for Octane?', [
+        $this->octaneServer = Console::choice('Which server would you like to use for Octane?', [
             'roadrunner',
             'swoole',
-        ], $this->localEnv->get('OCTANE_SERVER') ?? 'swoole');
+        ], $this->project->env->get('OCTANE_SERVER') ?? 'swoole');
     }
 
     public function createSiteParams(array $params): array
@@ -52,7 +61,7 @@ class Octane extends Plugin
         return  array_merge([
             'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
-        ], $this->projectConfig->secureSite ? [
+        ], $this->project->config->secureSite ? [
             'OCTANE_HTTPS' => 'true',
         ] : []);
     }

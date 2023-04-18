@@ -2,8 +2,10 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Artisan;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PluginDaemon;
+use Bellows\DeployScript;
 use Bellows\Plugin;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
@@ -15,6 +17,11 @@ class InertiaServerSideRendering extends Plugin
     protected array $anyRequiredNpmPackages = [
         '@vue/server-renderer',
     ];
+
+    public function __construct(
+        protected Artisan $artisan,
+    ) {
+    }
 
     public function setup(): void
     {
@@ -50,7 +57,7 @@ class InertiaServerSideRendering extends Plugin
 
     public function updateDeployScript(string $deployScript): string
     {
-        return $this->deployScript->addBeforePHPReload(
+        return DeployScript::addBeforePHPReload(
             $deployScript,
             $this->artisan->inDeployScript('inertia:stop-ssr'),
         );

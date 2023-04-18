@@ -16,6 +16,13 @@ class Env
         $this->parsed = Dotenv::parse($this->raw);
     }
 
+    public static function fromDir(string $dir): static
+    {
+        return new static(
+            file_get_contents($dir . '/.env')
+        );
+    }
+
     public function get(string $key): ?string
     {
         return $this->parsed[$key] ?? null;

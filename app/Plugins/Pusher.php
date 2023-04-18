@@ -3,6 +3,8 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
+use Bellows\Http;
 use Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -13,6 +15,11 @@ class Pusher extends Plugin
     protected array $requiredComposerPackages = [
         'pusher/pusher-php-server',
     ];
+
+    public function __construct(
+        protected Http $http,
+    ) {
+    }
 
     public function setup(): void
     {
@@ -29,8 +36,8 @@ class Pusher extends Plugin
 
         $appName = config('app.name');
 
-        $this->console->info("Pusher API limitations don't allow {$appName} to create an app for you.");
-        $this->console->info("If you'd like to create one head to <comment>https://dashboard.pusher.com/channels</comment> then refresh the list below.");
+        Console::info("Pusher API limitations don't allow {$appName} to create an app for you.");
+        Console::info("If you'd like to create one head to <comment>https://dashboard.pusher.com/channels</comment> then refresh the list below.");
 
         $this->presentChoices();
     }
@@ -52,7 +59,7 @@ class Pusher extends Plugin
 
         $refreshLabel = 'Refresh App List';
 
-        $appName = $this->console->choice('Which app do you want to use?', $apps->pluck('name')->concat([$refreshLabel])->toArray());
+        $appName = Console::choice('Which app do you want to use?', $apps->pluck('name')->concat([$refreshLabel])->toArray());
 
         if ($appName === $refreshLabel) {
             $this->presentChoices();

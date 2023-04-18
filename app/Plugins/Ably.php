@@ -3,7 +3,10 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
+use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 class Ably extends Plugin
@@ -13,6 +16,12 @@ class Ably extends Plugin
     protected array $requiredComposerPackages = [
         'ably/ably-php',
     ];
+
+    public function __construct(
+        protected Project $project,
+        protected Http $http,
+    ) {
+    }
 
     public function setup(): void
     {
@@ -32,8 +41,8 @@ class Ably extends Plugin
 
         $accountId = $me['account']['id'];
 
-        if ($this->console->confirm('Create new app?', true)) {
-            $appName = $this->console->ask('App name', $this->projectConfig->appName);
+        if (Console::confirm('Create new app?', true)) {
+            $appName = Console::ask('App name', $this->project->config->appName);
 
             $app = $this->http->client()->post("accounts/{$accountId}/apps", [
                 'name' => $appName,
@@ -41,21 +50,21 @@ class Ably extends Plugin
         } else {
             $apps = collect($this->http->client()->get("accounts/{$accountId}/apps")->json());
 
-            $app = $this->console->choiceFromCollection(
+            $app = Console::choiceFromCollection(
                 'Which app do you want to use?',
                 $apps,
                 'name',
-                $this->projectConfig->appName,
+                $this->project->config->appName,
             );
         }
 
         $keys = collect($this->http->client()->get("apps/{$app['id']}/keys")->json());
 
-        $this->key = $this->console->choiceFromCollection(
+        $this->key = Console::choiceFromCollection(
             'Which key do you want to use?',
             $keys,
             'name',
-            $this->projectConfig->appName,
+            $this->project->config->appName,
         )['key'];
     }
 

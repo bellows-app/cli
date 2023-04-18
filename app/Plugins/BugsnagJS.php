@@ -2,6 +2,8 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Facades\Console;
+
 class BugsnagJS extends Bugsnag
 {
     protected bool $createProject = false;
@@ -14,10 +16,10 @@ class BugsnagJS extends Bugsnag
 
     public function setup(): void
     {
-        $this->bugsnagKey = $this->localEnv->get('BUGSNAG_JS_API_KEY');
+        $this->bugsnagKey = $this->project->env->get('BUGSNAG_JS_API_KEY');
 
         if ($this->bugsnagKey) {
-            $this->console->miniTask('Using existing Bugsnag JS key from', '.env');
+            Console::miniTask('Using existing Bugsnag JS key from', '.env');
 
             return;
         }
@@ -26,7 +28,7 @@ class BugsnagJS extends Bugsnag
 
         $this->setupClient();
 
-        if ($this->console->confirm('Create Bugsnag JS Project?', true)) {
+        if (Console::confirm('Create Bugsnag JS Project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
 

@@ -3,7 +3,11 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Dns\DnsProvider;
+use Bellows\Facades\Console;
+use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Project;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
@@ -21,9 +25,16 @@ class Mailgun extends Plugin
         'symfony/mailgun-mailer',
     ];
 
+    public function __construct(
+        protected Http $http,
+        protected Project $project,
+        protected ?DnsProvider $dnsProvider,
+    ) {
+    }
+
     public function setup(): void
     {
-        $region = $this->console->choice('Which region is your Mailgun account in?', [
+        $region = Console::choice('Which region is your Mailgun account in?', [
             'US',
             'EU',
         ]);
@@ -42,7 +53,7 @@ class Mailgun extends Plugin
             fn (PendingRequest $request) => $request->get('domains', ['limit' => 1]),
         );
 
-        if ($this->console->confirm('Create a new domain?', true)) {
+        if (Console::confirm('Create a new domain?', true)) {
             $this->createDomain();
         } else {
             $this->selectDomain();
@@ -67,7 +78,7 @@ class Mailgun extends Plugin
 
     protected function createDomain()
     {
-        $domain = $this->console->ask('What is the domain name?', 'mail.' . $this->projectConfig->domain);
+        $domain = Console::ask('What is the domain name?', 'mail.' . $this->project->config->domain);
 
         $result = $this->http->client()->post('domains', [
             'name' => $domain,
@@ -82,7 +93,7 @@ class Mailgun extends Plugin
 
     protected function updateDnsRecords($result)
     {
-        $this->console->info('Updating DNS records...');
+        Console::info('Updating DNS records...');
 
         collect($result['sending_dns_records'])->each(function ($record) {
             $args = [
@@ -109,11 +120,11 @@ class Mailgun extends Plugin
             ['custom_key' => "{$domain['name']} ({$domain['type']})"]
         ));
 
-        $domain = $this->console->choiceFromCollection(
+        $domain = Console::choiceFromCollection(
             'Which domain do you want to use?',
             $domainChoices,
             'custom_key',
-            fn ($domain) => Str::contains($domain['name'], $this->projectConfig->domain),
+            fn ($domain) => Str::contains($domain['name'], $this->project->config->domain),
         );
 
         $this->domain = $domain['name'];

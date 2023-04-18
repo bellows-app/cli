@@ -2,6 +2,7 @@
 
 namespace Bellows;
 
+use Bellows\Facades\Console;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -15,52 +16,48 @@ class DeployScript
 
     const MIGRATE = '$FORGE_PHP artisan migrate';
 
-    public function __construct(protected Console $console)
+    public static function addAfterComposerInstall(string $currentScript, string|array $toAdd): string
     {
+        return self::addAfterLine($currentScript, self::COMPOSER_INSTALL, $toAdd);
     }
 
-    public function addAfterComposerInstall(string $currentScript, string|array $toAdd): string
+    public static function addBeforePHPReload(string $currentScript, string|array $toAdd): string
     {
-        return $this->addAfterLine($currentScript, self::COMPOSER_INSTALL, $toAdd);
-    }
-
-    public function addBeforePHPReload(string $currentScript, string|array $toAdd): string
-    {
-        return $this->addBeforeLine(
+        return self::addBeforeLine(
             $currentScript,
             [self::PHP_RELOAD, self::OCTANE_RELOAD],
             $toAdd
         );
     }
 
-    public function addAfterLine(string $currentScript, string $toFind, string|array $toAdd): string
+    public static function addAfterLine(string $currentScript, string $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = $this->findLine($currentScript, $toFind);
+        [$parts, $index] = self::findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
         }
 
-        $toAdd = $this->formatLines($toAdd, $parts, $index);
+        $toAdd = self::formatLines($toAdd, $parts, $index);
 
         $parts->splice($index + 1, 0, $toAdd);
 
-        return $this->cleanUp($parts->implode(PHP_EOL));
+        return self::cleanUp($parts->implode(PHP_EOL));
     }
 
-    public function addBeforeLine(string $currentScript, string|array $toFind, string|array $toAdd): string
+    public static function addBeforeLine(string $currentScript, string|array $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = $this->findLine($currentScript, $toFind);
+        [$parts, $index] = self::findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
         }
 
-        $toAdd = $this->formatLines($toAdd, $parts, $index);
+        $toAdd = self::formatLines($toAdd, $parts, $index);
 
         $parts->splice($index, 0, $toAdd);
 
-        return $this->cleanUp($parts->implode(PHP_EOL));
+        return self::cleanUp($parts->implode(PHP_EOL));
     }
 
     protected function formatLines(string|array $toAdd, Collection $parts, int $index)
@@ -107,7 +104,7 @@ class DeployScript
         );
 
         if ($index === false) {
-            $this->console->warn("Could not find {$toFind->join(' or ')} in deploy script!");
+            Console::warn("Could not find {$toFind->join(' or ')} in deploy script!");
 
             return [$parts, $index];
         }

@@ -3,7 +3,9 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\SecurityRule;
+use Bellows\Facades\Console;
 use Bellows\Plugin;
+use Bellows\Project;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -12,11 +14,16 @@ class SecurityRules extends Plugin
     /** @var \Illuminate\Support\Collection<\Bellows\Data\SecurityRule> */
     protected Collection $securityRules;
 
+    public function __construct(
+        protected Project $project,
+    ) {
+    }
+
     public function enabled(): bool
     {
-        return $this->console->confirm(
+        return Console::confirm(
             'Do you want to add any security rules? (basic auth)',
-            Str::contains($this->projectConfig->domain, ['dev.', 'staging.'])
+            Str::contains($this->project->config->domain, ['dev.', 'staging.'])
         );
     }
 
@@ -25,26 +32,26 @@ class SecurityRules extends Plugin
         $this->securityRules = collect();
 
         do {
-            $groupName = $this->console->ask(
+            $groupName = Console::ask(
                 'Security rule group name',
                 'Restricted Access'
             );
 
-            $path = $this->console->ask(
+            $path = Console::ask(
                 'Path (leave blank to password protect all routes within your site, any valid Nginx location path)'
             );
 
             $credentials = collect();
 
             do {
-                $username = $this->console->ask('Username');
-                $password = $this->console->secret('Password');
+                $username = Console::ask('Username');
+                $password = Console::secret('Password');
 
                 $credentials->push([
                     'username' => $username,
                     'password' => $password,
                 ]);
-            } while ($this->console->confirm('Add another user?'));
+            } while (Console::confirm('Add another user?'));
 
             $this->securityRules->push(
                 SecurityRule::from([
@@ -53,7 +60,7 @@ class SecurityRules extends Plugin
                     'credentials' => $credentials,
                 ])
             );
-        } while ($this->console->confirm('Add another security rule group?'));
+        } while (Console::confirm('Add another security rule group?'));
     }
 
     public function wrapUp(): void

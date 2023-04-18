@@ -2,13 +2,13 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Console;
-use Bellows\Data\ProjectConfig;
+use Bellows\Facades\Console;
+use Bellows\Project;
 use Illuminate\Support\Facades\File;
 
 class Composer extends PackageManager
 {
-    public function __construct(protected ProjectConfig $config, protected Console $console)
+    public function __construct(protected Project $project)
     {
     }
 
@@ -21,13 +21,13 @@ class Composer extends PackageManager
 
     public function require(string $package, bool $dev): void
     {
-        $this->console->info("Installing {$package}...");
-        exec("cd {$this->config->projectDirectory} && composer require {$package}");
+        Console::info("Installing {$package}...");
+        exec("cd {$this->project->config->directory} && composer require {$package}");
     }
 
     protected function getComposerJson(): array
     {
-        $path = $this->config->projectDirectory . '/composer.json';
+        $path = $this->project->config->directory . '/composer.json';
 
         if (!file_exists($path)) {
             return [];

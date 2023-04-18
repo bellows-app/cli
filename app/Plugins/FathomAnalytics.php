@@ -3,16 +3,25 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
+use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 
 class FathomAnalytics extends Plugin
 {
     protected $siteId;
 
+    public function __construct(
+        protected Http $http,
+        protected Project $project,
+    ) {
+    }
+
     public function enabled(): bool
     {
-        return $this->console->confirm(
+        return Console::confirm(
             'Do you want to enable Fathom Analytics?',
         );
     }
@@ -30,8 +39,8 @@ class FathomAnalytics extends Plugin
             fn (PendingRequest $request) => $request->get('sites', ['limit' => 1]),
         );
 
-        if ($this->console->confirm('Create new Fathom Analytics site?', true)) {
-            $siteName = $this->console->ask('Enter your site name', $this->projectConfig->appName);
+        if (Console::confirm('Create new Fathom Analytics site?', true)) {
+            $siteName = Console::ask('Enter your site name', $this->project->config->appName);
 
             $response = $this->http->client()->post('sites', [
                 'name' => $siteName,
@@ -46,11 +55,11 @@ class FathomAnalytics extends Plugin
             $this->http->client()->get('sites', ['limit' => 100])->json()['data']
         );
 
-        $this->siteId = $this->console->choiceFromCollection(
+        $this->siteId = Console::choiceFromCollection(
             'Choose a site',
             $sites,
             'name',
-            $this->projectConfig->appName,
+            $this->project->config->appName,
         )['id'];
     }
 

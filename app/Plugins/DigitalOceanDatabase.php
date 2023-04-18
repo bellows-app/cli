@@ -3,7 +3,10 @@
 namespace Bellows\Plugins;
 
 use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Facades\Console;
+use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
+use Bellows\Project;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +26,12 @@ class DigitalOceanDatabase extends Plugin
 
     protected string $dbType;
 
+    public function __construct(
+        protected BellowsHttp $http,
+        protected Project $project,
+    ) {
+    }
+
     public function setup(): void
     {
         $this->http->createJsonClient(
@@ -36,8 +45,8 @@ class DigitalOceanDatabase extends Plugin
             fn (PendingRequest $request) => $request->get('databases', ['per_page' => 1]),
         );
 
-        $this->databaseName = $this->console->ask('Database', $this->projectConfig->isolatedUser);
-        $this->databaseUser = $this->console->ask('Database User', $this->databaseName);
+        $this->databaseName = Console::ask('Database', $this->project->config->isolatedUser);
+        $this->databaseUser = Console::ask('Database User', $this->databaseName);
 
         $response = $this->http->client()->get('databases');
 
@@ -48,7 +57,7 @@ class DigitalOceanDatabase extends Plugin
         if ($dbs->count() === 1) {
             $db = $dbs->first();
         } else {
-            $db = $this->console->choiceFromCollection(
+            $db = Console::choiceFromCollection(
                 'Choose a database',
                 $dbs,
                 'name'
@@ -99,7 +108,7 @@ class DigitalOceanDatabase extends Plugin
         $existingUser = collect($db['users'])->firstWhere('name', $this->databaseUser);
 
         if ($existingUser) {
-            if (!$this->console->confirm('User already exists, do you want to continue?', true)) {
+            if (!Console::confirm('User already exists, do you want to continue?', true)) {
                 return false;
             }
 
@@ -108,7 +117,7 @@ class DigitalOceanDatabase extends Plugin
             return true;
         }
 
-        $this->console->miniTask('Creating user', $this->databaseUser);
+        Console::miniTask('Creating user', $this->databaseUser);
 
         $newDbUser = $this->http->client()->post(
             "databases/{$db['id']}/users",
@@ -127,10 +136,10 @@ class DigitalOceanDatabase extends Plugin
         $existingDatabase = collect($db['db_names'])->contains($this->databaseName);
 
         if ($existingDatabase) {
-            return $this->console->confirm('Database already exists, do you want to continue?', true);
+            return Console::confirm('Database already exists, do you want to continue?', true);
         }
 
-        $this->console->miniTask('Creating database', $this->databaseName);
+        Console::miniTask('Creating database', $this->databaseName);
 
         $this->http->client()->post(
             "databases/{$db['id']}/dbs",
