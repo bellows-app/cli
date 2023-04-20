@@ -15,4 +15,6 @@ interface ConfigInterface
     public function determinePhpVersion(): PhpVersion;
 
     public function getExistingSite(): ?SiteInterface;
+
+    public function getPrimarySite(): ?SiteInterface;
 }

@@ -18,49 +18,49 @@ class DeployScript
 
     public static function addAfterComposerInstall(string $currentScript, string|array $toAdd): string
     {
-        return self::addAfterLine($currentScript, self::COMPOSER_INSTALL, $toAdd);
+        return static::addAfterLine($currentScript, static::COMPOSER_INSTALL, $toAdd);
     }
 
     public static function addBeforePHPReload(string $currentScript, string|array $toAdd): string
     {
-        return self::addBeforeLine(
+        return static::addBeforeLine(
             $currentScript,
-            [self::PHP_RELOAD, self::OCTANE_RELOAD],
+            [static::PHP_RELOAD, static::OCTANE_RELOAD],
             $toAdd
         );
     }
 
     public static function addAfterLine(string $currentScript, string $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = self::findLine($currentScript, $toFind);
+        [$parts, $index] = static::findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
         }
 
-        $toAdd = self::formatLines($toAdd, $parts, $index);
+        $toAdd = static::formatLines($toAdd, $parts, $index);
 
         $parts->splice($index + 1, 0, $toAdd);
 
-        return self::cleanUp($parts->implode(PHP_EOL));
+        return static::cleanUp($parts->implode(PHP_EOL));
     }
 
     public static function addBeforeLine(string $currentScript, string|array $toFind, string|array $toAdd): string
     {
-        [$parts, $index] = self::findLine($currentScript, $toFind);
+        [$parts, $index] = static::findLine($currentScript, $toFind);
 
         if ($index === false) {
             return $currentScript;
         }
 
-        $toAdd = self::formatLines($toAdd, $parts, $index);
+        $toAdd = static::formatLines($toAdd, $parts, $index);
 
         $parts->splice($index, 0, $toAdd);
 
-        return self::cleanUp($parts->implode(PHP_EOL));
+        return static::cleanUp($parts->implode(PHP_EOL));
     }
 
-    protected function formatLines(string|array $toAdd, Collection $parts, int $index)
+    protected static function formatLines(string|array $toAdd, Collection $parts, int $index)
     {
         $toAdd = collect($toAdd)->map('trim');
 
@@ -88,12 +88,12 @@ class DeployScript
         return Str::wrap($toAdd->implode(PHP_EOL), PHP_EOL);
     }
 
-    protected function cleanUp(string $currentScript): string
+    protected static function cleanUp(string $currentScript): string
     {
         return preg_replace('/\n{3,}/', PHP_EOL . PHP_EOL, $currentScript);
     }
 
-    protected function findLine(string $currentScript, string|array $toFind): array
+    protected static function findLine(string $currentScript, string|array $toFind): array
     {
         $parts = collect(explode(PHP_EOL, $currentScript));
 

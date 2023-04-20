@@ -3,8 +3,8 @@
 namespace Bellows\Dns;
 
 use Bellows\Config;
-use Bellows\Console;
 use Bellows\Enums\DnsRecordType;
+use Bellows\Facades\Console;
 use Bellows\InteractsWithConfig;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -23,7 +23,6 @@ abstract class DnsProvider
     public function __construct(
         protected Config $config,
         protected string $domain,
-        protected Console $console,
     ) {
         $this->baseDomain = Str::of($domain)->explode('.')->slice(-2)->implode('.');
         $this->apiHost = parse_url($this->apiBaseUrl, PHP_URL_HOST);
@@ -46,7 +45,7 @@ abstract class DnsProvider
         $config = $this->getAllConfigsForApi($this->apiHost);
 
         if (!$config) {
-            if ($this->console->confirm('Do you want to allow Bellows to manage your DNS records?', true)) {
+            if (Console::confirm('Do you want to allow Bellows to manage your DNS records?', true)) {
                 return $this->setUpNewCredentials();
             }
 
@@ -56,16 +55,16 @@ abstract class DnsProvider
         $credentials = collect($config)->first(fn ($creds) => $this->accountHasDomain($creds));
 
         if (!$credentials) {
-            $this->console->warn('No account found for this domain.');
+            Console::warn('No account found for this domain.');
 
-            if ($this->console->confirm('Do you want to add a new account?', true)) {
+            if (Console::confirm('Do you want to add a new account?', true)) {
                 return $this->setUpNewCredentials();
             }
 
             return false;
         }
 
-        $this->console->miniTask('Found account for this domain', collect($config)->search($credentials));
+        Console::miniTask('Found account for this domain', collect($config)->search($credentials));
 
         $this->setClient($this->getClient($credentials));
 
@@ -117,14 +116,14 @@ abstract class DnsProvider
         $credentials = $this->addNewCredentials();
 
         if ($this->testApiCall($credentials)) {
-            $name = $this->console->ask(
+            $name = Console::ask(
                 'Account Name',
                 $this->getDefaultNewAccountName($credentials)
             );
 
             $this->setConfig($name, $credentials);
         } else {
-            $this->console->warn('It seems that your credentials are invalid, try again.');
+            Console::warn('It seems that your credentials are invalid, try again.');
         }
 
         return $this->setCredentials();

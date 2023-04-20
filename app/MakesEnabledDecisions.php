@@ -5,6 +5,7 @@ namespace Bellows;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Data\DisabledByDefault;
 use Bellows\Data\EnabledByDefault;
+use Bellows\Facades\Console;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 
@@ -27,7 +28,7 @@ trait MakesEnabledDecisions
             return false;
         }
 
-        return $this->console->confirm(
+        return Console::confirm(
             'Enable ' . $this->getName() . '?',
             $this->getDefaultEnabled()->enabled ?? false
         );
@@ -111,6 +112,7 @@ trait MakesEnabledDecisions
 
     protected function ensureRequiredPackagesAreInstalled(string $packageManager, array $packages, $mode = 'all'): DefaultEnabledDecision
     {
+        ray($packageManager);
         $packagesInstalled = $mode === 'all'
             ? $packageManager::allPackagesAreInstalled($packages)
             : $packageManager::anyPackagesAreInstalled($packages);

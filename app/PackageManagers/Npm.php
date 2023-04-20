@@ -11,7 +11,7 @@ class Npm extends PackageManager
 {
     public static function packageIsInstalled(string $package): bool
     {
-        $json = self::getPackageJson();
+        $json = static::getPackageJson();
 
         return Arr::get($json, 'dependencies.' . $package) !== null
             || Arr::get($json, 'devDependencies.' . $package) !== null;
@@ -32,10 +32,10 @@ class Npm extends PackageManager
 
     public static function hasScriptCommand(string $command): bool
     {
-        return Arr::get(self::getPackageJson(), 'scripts.' . $command) !== null;
+        return Arr::get(static::getPackageJson(), 'scripts.' . $command) !== null;
     }
 
-    protected function getPackageJson(): array
+    protected static function getPackageJson(): array
     {
         $path = Project::config()->directory . '/package.json';
 

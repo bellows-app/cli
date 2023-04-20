@@ -3,6 +3,7 @@
 namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
+use Bellows\Facades\Console;
 use Bellows\Util\Domain;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
@@ -42,10 +43,10 @@ class DigitalOcean extends DnsProvider
 
     protected function addNewCredentials(): array
     {
-        $this->console->info('Looks like you need a DigitalOcean API token. You can create one here:');
-        $this->console->comment('https://cloud.digitalocean.com/account/api/tokens');
+        Console::info('Looks like you need a DigitalOcean API token. You can create one here:');
+        Console::comment('https://cloud.digitalocean.com/account/api/tokens');
 
-        $token = $this->console->secret('Your DigitalOcean API token');
+        $token = Console::secret('Your DigitalOcean API token');
 
         return ['token' => $token];
     }
@@ -82,7 +83,7 @@ class DigitalOcean extends DnsProvider
     {
         try {
             if ($currentRecord = $this->getFullRecord($type, $name)) {
-                $this->console->miniTask("Updating {$type->value} record for {$name} to", $value);
+                Console::miniTask("Updating {$type->value} record for {$name} to", $value);
 
                 Http::dnsProvider()->put("domains/{$this->baseDomain}/records/{$currentRecord['id']}", [
                     'type' => $type->value,
@@ -94,7 +95,7 @@ class DigitalOcean extends DnsProvider
                 return true;
             }
 
-            $this->console->miniTask("Adding {$type->value} record for {$name} to", $value);
+            Console::miniTask("Adding {$type->value} record for {$name} to", $value);
 
             Http::dnsProvider()->post("domains/{$this->baseDomain}/records", [
                 'type' => $type->value,
@@ -105,7 +106,7 @@ class DigitalOcean extends DnsProvider
 
             return true;
         } catch (Exception $e) {
-            $this->console->error($e->getMessage());
+            Console::error($e->getMessage());
 
             return false;
         }

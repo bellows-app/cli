@@ -3,6 +3,7 @@
 namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
+use Bellows\Facades\Console;
 use Bellows\Util\Domain;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
@@ -39,10 +40,10 @@ class Cloudflare extends DnsProvider
 
     protected function addNewCredentials(): array
     {
-        $this->console->info('Looks like you need a Cloudflare API token. You can create one here:');
-        $this->console->comment('https://dash.cloudflare.com/profile/api-tokens');
+        Console::info('Looks like you need a Cloudflare API token. You can create one here:');
+        Console::comment('https://dash.cloudflare.com/profile/api-tokens');
 
-        $token = $this->console->secret('Your Cloudflare API token');
+        $token = Console::secret('Your Cloudflare API token');
 
         return ['token' => $token];
     }
@@ -71,7 +72,7 @@ class Cloudflare extends DnsProvider
     {
         try {
             if ($currentRecord = $this->getFullRecord($type, $name)) {
-                $this->console->miniTask("Updating {$type->value} record for {$name} to", $value);
+                Console::miniTask("Updating {$type->value} record for {$name} to", $value);
 
                 Http::dnsProvider()->put("zones/{$this->getZoneId()}/dns_records/{$currentRecord['id']}", [
                     'type'    => $type->value,
@@ -83,7 +84,7 @@ class Cloudflare extends DnsProvider
                 return true;
             }
 
-            $this->console->miniTask("Adding {$type->value} record for {$name} to", $value);
+            Console::miniTask("Adding {$type->value} record for {$name} to", $value);
 
             Http::dnsProvider()->post("zones/{$this->getZoneId()}/dns_records", [
                 'type'    => $type->value,
@@ -94,7 +95,7 @@ class Cloudflare extends DnsProvider
 
             return true;
         } catch (Exception $e) {
-            $this->console->error($e->getMessage());
+            Console::error($e->getMessage());
 
             return false;
         }

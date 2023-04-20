@@ -35,15 +35,15 @@ class LoadBalancer implements ConfigInterface
 
     public function getExistingSite(): ?SiteInterface
     {
-        return $this->servers->first(function (ServerInterface $server) {
+        foreach ($this->servers as $server) {
             $site = $server->getSiteByDomain($this->getDomain());
 
             if ($site) {
                 return new Site($site, $server->serverData());
             }
+        }
 
-            return false;
-        });
+        return null;
     }
 
     public function getDomain(): string
@@ -94,6 +94,11 @@ class LoadBalancer implements ConfigInterface
         $this->servers->each(fn (ServerInterface $server) => $server->installPhpVersion($phpVersion->version));
 
         return $phpVersion;
+    }
+
+    public function getPrimarySite(): ?SiteInterface
+    {
+        return $this->primarySite;
     }
 
     protected function setLoadBalancedSite(): void

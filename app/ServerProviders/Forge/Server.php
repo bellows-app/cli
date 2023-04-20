@@ -227,7 +227,6 @@ class Server implements ServerInterface
     {
         return [
             'server'  => $this->server,
-            'console' => $this->console,
         ];
     }
 

@@ -22,30 +22,30 @@ abstract class Plugin
     protected SiteInterface $site;
 
     // If load balancing, the primary site, if not, the same as the $site property
-    protected SiteInterface $loadBalancingSite;
+    protected SiteInterface $primarySite;
 
     // The server we're currently deploying to
     protected ServerInterface $server;
 
     // If load balancing, the primary server, if not, the same as the $server property
-    protected ServerInterface $loadBalancingServer;
+    protected ServerInterface $primaryServer;
 
     public function setSite(SiteInterface $site): self
     {
         $this->site = $site;
 
-        if (!isset($this->loadBalancingSite)) {
+        if (!isset($this->primarySite)) {
             // If we don't have a primary site at this point, also set this as the primary site
             // TODO: Is this an ugly/unexpected side effect? Oof.
-            $this->loadBalancingSite = $site;
+            $this->primarySite = $site;
         }
 
         return $this;
     }
 
-    public function setLoadBalancingSite(SiteInterface $site): self
+    public function setPrimarySite(SiteInterface $site): self
     {
-        $this->loadBalancingSite = $site;
+        $this->primarySite = $site;
 
         return $this;
     }
@@ -57,9 +57,9 @@ abstract class Plugin
         return $this;
     }
 
-    public function setLoadBalancingServer(ServerInterface $primaryServer): self
+    public function setPrimaryServer(ServerInterface $primaryServer): self
     {
-        $this->loadBalancingServer = $primaryServer;
+        $this->primaryServer = $primaryServer;
 
         return $this;
     }

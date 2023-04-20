@@ -5,6 +5,7 @@ namespace Tests;
 use Bellows\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
+use Bellows\Data\Repository;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
 use Spatie\Fork\Fork;
 
@@ -37,8 +38,10 @@ abstract class TestCase extends BaseTestCase
             ProjectConfig::class,
             fn () => new ProjectConfig(
                 isolatedUser: 'tester',
-                repositoryUrl: 'bellows/tester',
-                repositoryBranch: 'main',
+                repository: new Repository(
+                    url: 'bellows/tester',
+                    branch: 'main',
+                ),
                 phpVersion: new PhpVersion('8.1', 'php81', 'PHP 8.1'),
                 directory: $projectDir,
                 domain: 'bellowstester.com',

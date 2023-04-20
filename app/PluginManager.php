@@ -7,6 +7,7 @@ use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
+use Bellows\Facades\Console;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
@@ -17,8 +18,13 @@ class PluginManager implements PluginManagerInterface
 {
     protected Collection $activePlugins;
 
+    // If load balancing, the primary site, if not, the same as the $site property
+    protected SiteInterface $primarySite;
+
+    // If load balancing, the primary server, if not, the same as the $server property
+    protected ServerInterface $primaryServer;
+
     public function __construct(
-        protected Console $console,
         protected Config $config,
         protected array $pluginPaths = [],
     ) {
@@ -36,7 +42,7 @@ class PluginManager implements PluginManagerInterface
             fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled
         );
 
-        $this->console->table(
+        Console::table(
             ['', 'Plugin', 'Reason'],
             $autoDecision->map(fn (Plugin $p) => [
                 $p->getDefaultEnabled()->enabled ? '<info>✓</info>' : '<warning>✗</warning>',
@@ -45,7 +51,7 @@ class PluginManager implements PluginManagerInterface
             ])->toArray(),
         );
 
-        $defaultsAreGood = $autoDecision->count() > 0 ? $this->console->confirm('Continue with defaults?', true) : false;
+        $defaultsAreGood = $autoDecision->count() > 0 ? Console::confirm('Continue with defaults?', true) : false;
 
         $this->activePlugins = $plugins->filter(function (Plugin $p) use ($defaultsAreGood) {
             // Usually I would filter()->filter() but I want to keep the context of what is being asked of the user here
@@ -130,50 +136,47 @@ class PluginManager implements PluginManagerInterface
         $this->call('wrapUp')->run();
     }
 
-    public function setLoadBalancingSite(SiteInterface $site): void
+    public function setPrimarySite(SiteInterface $site): void
     {
-        $this->call('setLoadBalancingSite')
-            ->withArgs($site)
-            ->run();
+        $this->primarySite = $site;
+    }
+
+    public function setPrimaryServer(ServerInterface $server): void
+    {
+        $this->primaryServer = $server;
     }
 
     public function setSite(SiteInterface $site): void
     {
-        $this->call('setSite')
-            ->withArgs($site)
-            ->run();
-    }
-
-    public function setLoadBalancingServer(ServerInterface $server): void
-    {
-        $this->call('setLoadBalancingServer')
-            ->withArgs($server)
-            ->run();
+        $this->call('setSite')->withArgs($site)->run();
     }
 
     public function setServer(ServerInterface $server): void
     {
-        $this->call('setServer')
-            ->withArgs($server)
-            ->run();
+        $this->call('setServer')->withArgs($server)->run();
     }
 
     protected function getAllPlugins(): Collection
     {
+        $blacklist = $this->config->get('plugins.launch.blacklist', []);
+        $whitelist = $this->config->get('plugins.launch.whitelist', []);
+
         return $this->getAllAvailablePluginNames()
-            ->filter(function (string $plugin) {
-                if (count($this->config->get('plugins.launch.blacklist', [])) > 0) {
-                    return !in_array($plugin, $this->config->get('plugins.launch.blacklist', []));
+            ->filter(function (string $plugin) use ($blacklist, $whitelist) {
+                if (count($blacklist) > 0) {
+                    return !in_array($plugin, $blacklist);
                 }
 
-                if (count($this->config->get('plugins.launch.whitelist', [])) > 0) {
-                    return in_array($plugin, $this->config->get('plugins.launch.whitelist', []));
+                if (count($whitelist) > 0) {
+                    return in_array($plugin, $whitelist);
                 }
 
                 return true;
             })
             ->values()
             ->map(fn (string $plugin) => app($plugin))
+            ->each(fn (Plugin $p) => isset($this->primarySite) ? $p->setPrimarySite($this->primarySite) : null)
+            ->each(fn (Plugin $p) => $p->setPrimaryServer($this->primaryServer))
             ->sortBy([
                 fn (Plugin $a, Plugin $b) => $b->priority <=> $a->priority,
                 fn (Plugin $a, Plugin $b) => get_class($a) <=> get_class($b),
@@ -182,8 +185,8 @@ class PluginManager implements PluginManagerInterface
 
     protected function configure(Plugin $p, ?bool $isEnabled = null): bool
     {
-        $this->console->info("Configuring <comment>{$p->getName()}</comment> plugin...");
-        $this->console->newLine();
+        Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
+        Console::newLine();
 
         $enabled = $isEnabled ?? $p->enabled();
 

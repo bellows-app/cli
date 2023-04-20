@@ -42,11 +42,11 @@ interface PluginManagerInterface
 
     public function wrapUp();
 
-    public function setLoadBalancingSite(SiteInterface $site): void;
+    public function setPrimarySite(SiteInterface $site): void;
 
     public function setSite(SiteInterface $site): void;
 
-    public function setLoadBalancingServer(ServerInterface $primaryServer): void;
+    public function setPrimaryServer(ServerInterface $primaryServer): void;
 
     public function setServer(ServerInterface $server): void;
 }

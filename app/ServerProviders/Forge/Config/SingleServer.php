@@ -59,4 +59,9 @@ class SingleServer implements ConfigInterface
             success: fn ($result) => $result !== null,
         );
     }
+
+    public function getPrimarySite(): ?SiteInterface
+    {
+        return null;
+    }
 }

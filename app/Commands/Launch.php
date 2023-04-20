@@ -122,6 +122,9 @@ class Launch extends Command
 
         $this->step('Plugins');
 
+        $pluginManager->setPrimaryServer($server);
+        $pluginManager->setPrimarySite($providerConfig->getPrimarySite());
+
         $pluginManager->setActive();
 
         $this->info('💨 Off we go!');

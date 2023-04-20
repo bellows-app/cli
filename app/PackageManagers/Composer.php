@@ -10,7 +10,7 @@ class Composer extends PackageManager
 {
     public static function packageIsInstalled(string $package): bool
     {
-        $composerJson = self::getComposerJson();
+        $composerJson = static::getComposerJson();
 
         return isset($composerJson['require'][$package]);
     }
@@ -28,7 +28,7 @@ class Composer extends PackageManager
         );
     }
 
-    protected function getComposerJson(): array
+    protected static function getComposerJson(): array
     {
         $path = Project::config()->directory . '/composer.json';
 
