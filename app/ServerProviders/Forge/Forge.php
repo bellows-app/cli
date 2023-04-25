@@ -11,6 +11,7 @@ use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class Forge implements ServerProviderInterface
@@ -25,11 +26,16 @@ class Forge implements ServerProviderInterface
         Client::getInstance()->setToken($this->getToken());
     }
 
+    public function getServers(): Collection
+    {
+        return collect(
+            Client::getInstance()->http()->get('servers')->json()['servers']
+        )->filter(fn ($s) => !$s['revoked'])->sortBy('name')->values();
+    }
+
     public function getServer(): ?ServerInterface
     {
-        $servers = collect(
-            Client::getInstance()->http()->get('servers')->json()['servers']
-        )->filter(fn ($s) => !$s['revoked'])->values();
+        $servers = $this->getServers();
 
         if ($servers->isEmpty()) {
             return null;
@@ -57,6 +63,7 @@ class Forge implements ServerProviderInterface
     {
         if ($server->type === 'loadbalancer') {
             Console::miniTask('Detected', 'Load Balancer', true);
+            Console::newLine();
 
             return new LoadBalancer($server);
         }

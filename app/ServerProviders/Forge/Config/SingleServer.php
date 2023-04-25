@@ -4,21 +4,26 @@ namespace Bellows\ServerProviders\Forge\Config;
 
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
-use Bellows\Facades\Project;
+use Bellows\ServerProviders\AsksForDomain;
 use Bellows\ServerProviders\ConfigInterface;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class SingleServer implements ConfigInterface
 {
+    use AsksForDomain;
+
     protected string $domain;
 
     public function __construct(
         protected ServerInterface $server,
     ) {
+    }
+
+    public function setup(): void
+    {
     }
 
     public function servers(): Collection
@@ -32,9 +37,7 @@ class SingleServer implements ConfigInterface
             return $this->domain;
         }
 
-        $host = parse_url(Project::env()->get('APP_URL'), PHP_URL_HOST);
-
-        $this->domain = Console::ask('Domain', Str::replace('.test', '.com', $host));
+        $this->domain = $this->askForDomain();
 
         return $this->domain;
     }

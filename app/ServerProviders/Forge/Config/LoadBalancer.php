@@ -2,10 +2,12 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
+use Bellows\ServerProviders\AsksForDomain;
 use Bellows\ServerProviders\ConfigInterface;
 use Bellows\ServerProviders\Forge\Client;
 use Bellows\ServerProviders\Forge\Server;
@@ -18,6 +20,10 @@ use Illuminate\Support\Str;
 
 class LoadBalancer implements ConfigInterface
 {
+    use AsksForDomain;
+
+    protected string $domain;
+
     protected Collection $servers;
 
     protected SiteInterface $primarySite;
@@ -29,8 +35,8 @@ class LoadBalancer implements ConfigInterface
     ) {
         $this->client = Client::getInstance()->http();
 
-        $this->setLoadBalancedSite();
-        $this->setLoadBalancedServers();
+        // $this->setLoadBalancedSite();
+        // $this->setLoadBalancedServers();
     }
 
     public function getExistingSite(): ?SiteInterface
@@ -48,7 +54,105 @@ class LoadBalancer implements ConfigInterface
 
     public function getDomain(): string
     {
-        return $this->primarySite->name;
+        if (isset($this->domain)) {
+            return $this->domain;
+        }
+
+        $this->domain = $this->askForDomain();
+
+        return $this->domain;
+    }
+
+    public function setup(): void
+    {
+        if ($site = $this->server->getSiteByDomain($this->getDomain())) {
+            if (!Console::confirm('Load balancer already exists, use it?', true)) {
+                unset($this->domain);
+
+                $this->getDomain();
+                $this->setup();
+
+                return;
+            }
+
+            $this->primarySite = new Site($site, $this->server->serverData());
+
+            $this->setLoadBalancedServers();
+
+            return;
+        }
+
+        $lbMethods = [
+            'round_robin' => 'Round Robin',
+            'least_conn'  => 'Least Connections',
+            'ip_hash'     => 'IP Hash',
+        ];
+
+        $methodChoice = Console::choice(
+            'Load balancing method',
+            array_values($lbMethods),
+            'Round Robin',
+        );
+
+        $lbMethod = array_search($methodChoice, $lbMethods);
+
+        // Select servers to add to the load balancer
+        $lbServers = Console::choiceFromCollection(
+            'Select servers to add to the load balancer',
+            collect($this->client->get('servers')->json()['servers'])
+                ->filter(fn (array $server) => $server['type'] !== 'loadbalancer')
+                ->sortBy('name')
+                ->values(),
+            'name',
+            null,
+            null,
+            true
+        );
+
+        $serverParams = $lbServers->map(function (array $server) {
+            Console::info('Config for: ' . $server['name']);
+
+            return [
+                'server' => $server,
+                'weight' => Console::askForNumber('Weight', 1),
+                'port'   => Console::askForNumber('Port', 80),
+                'backup' => Console::confirm(
+                    'Backup (Indicates if this server should serve as a fallback when all
+other servers are down.)',
+                    false
+                ),
+            ];
+        });
+
+        $lbParams = [
+            'method'  => $lbMethod,
+            'servers' => $serverParams->map(fn ($params) => [
+                'id'     => $params['server']['id'],
+                'weight' => $params['weight'],
+                'port'   => $params['port'],
+                'backup' => $params['backup'],
+            ])->toArray(),
+        ];
+
+        // Create the load balanced site
+        $lbSite = $this->server->createSite(new CreateSiteParams(
+            domain: $this->getDomain(),
+            projectType: 'php',
+            directory: '/public',
+            isolated: false,
+            username: 'forge', // Always forge? Probably.
+            // TODO: this should not be hardcoded, just pick the highest version available
+            phpVersion: 'php82',
+        ));
+
+        $this->primarySite = $lbSite;
+
+        Client::getInstance()->http()->put(
+            "servers/{$this->server->id}/sites/{$lbSite->id}/balancing",
+            $lbParams,
+        )->throw();
+
+        $this->setLoadBalancedServers();
     }
 
     public function servers(): Collection

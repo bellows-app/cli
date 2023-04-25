@@ -17,4 +17,6 @@ interface ConfigInterface
     public function getExistingSite(): ?SiteInterface;
 
     public function getPrimarySite(): ?SiteInterface;
+
+    public function setup(): void;
 }

@@ -76,11 +76,13 @@ class Launch extends Command
 
         $providerConfig = $serverProvider->getConfigFromServer($server);
 
-        $servers = $providerConfig->servers();
-
         $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
 
         $domain = $providerConfig->getDomain();
+
+        $providerConfig->setup();
+
+        $servers = $providerConfig->servers();
 
         if ($existingSite = $providerConfig->getExistingSite()) {
             if ($this->confirm('View existing site in Forge?', true)) {
@@ -144,6 +146,7 @@ class Launch extends Command
             }
         } else {
             $this->info('Sites created:');
+            // TODO: Also list primary load balancing site
             $siteUrls->each(fn (string $siteUrl) => $this->info($siteUrl));
             $this->newLine();
         }
@@ -394,7 +397,7 @@ class Launch extends Command
         if (!is_dir($dir . '/.git')) {
             $this->warn('Git repository not detected! Are you sure you are in the right directory?');
 
-            return new Repostory(
+            return new Repository(
                 url: $this->ask('Repository'),
                 branch: $this->ask('Repository Branch'),
             );
