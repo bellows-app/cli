@@ -59,6 +59,11 @@ class UpdateDomainDNS extends Plugin
 
     public function setup(): void
     {
+        once(fn () => $this->updateDomainRecords());
+    }
+
+    protected function updateDomainRecords(): void
+    {
         Console::info('Updating DNS records...');
 
         $this->getDomainsToCheck()

@@ -6,9 +6,6 @@ use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
 
-// TODO: Things that run on the primary site and server are running twice when they should only run once
-// How do indicate this? Implements an interface so we can identify them?
-// BUT the APP ENV needs to be correct. Hm.
 class LetsEncryptSSL extends Plugin
 {
     public function isEnabledByDefault(): DefaultEnabledDecision
@@ -22,7 +19,7 @@ class LetsEncryptSSL extends Plugin
 
     public function wrapUp(): void
     {
-        $this->primarySite->createSslCertificate(Project::config()->domain);
+        once(fn () => $this->primarySite->createSslCertificate(Project::config()->domain));
     }
 
     public function environmentVariables(): array

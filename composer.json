@@ -19,7 +19,8 @@
         }
     ],
     "require": {
-        "php": "^8.0"
+        "php": "^8.0",
+        "spatie/once": "^3.1"
     },
     "require-dev": {
         "composer/semver": "^3.3",
