@@ -13,6 +13,7 @@ abstract class PluginTestCase extends TestCase
             fn () => app(\Tests\Fakes\FakeServer::class),
 
         );
+
         $this->app->bind(
             \Bellows\ServerProviders\SiteInterface::class,
             fn () => app(\Tests\Fakes\FakeSite::class),

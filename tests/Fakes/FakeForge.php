@@ -3,6 +3,8 @@
 namespace Tests\Fakes;
 
 use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\Forge\Config\LoadBalancer;
+use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerInterface;
 use Illuminate\Support\Collection;
 
@@ -16,7 +18,11 @@ class FakeForge implements \Bellows\ServerProviders\ServerProviderInterface
 
     public function getConfigFromServer(ServerInterface $server): ConfigInterface
     {
-        return app(ConfigInterface::class);
+        if ($server->type === 'loadbalancer') {
+            return new LoadBalancer($server);
+        }
+
+        return new SingleServer($server);
     }
 
     public function setCredentials(): void

@@ -22,7 +22,7 @@ beforeEach(function () {
 
 it('can get the php version from the project', function () {
     overrideProjectConfig([
-        'projectDirectory' => base_path('tests/stubs/plugins/default'),
+        'directory' => base_path('tests/stubs/plugins/default'),
     ]);
 
     setPhpVersionForProject('^8.1');
@@ -78,7 +78,7 @@ it('can get the php version from the project', function () {
 
 it('it will throw an exception when a matching php version cannot be found and installation is rejected', function () {
     overrideProjectConfig([
-        'projectDirectory' => base_path('tests/stubs/plugins/default'),
+        'directory' => base_path('tests/stubs/plugins/default'),
     ]);
 
     setPhpVersionForProject('^8.1');
@@ -125,7 +125,7 @@ it('it will throw an exception when a matching php version cannot be found and i
 
 it('it will offer to install correct php version if it cannot be found', function () {
     overrideProjectConfig([
-        'projectDirectory' => base_path('tests/stubs/plugins/default'),
+        'directory' => base_path('tests/stubs/plugins/default'),
     ]);
 
     setPhpVersionForProject('^8.1');

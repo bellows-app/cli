@@ -80,7 +80,7 @@ function cdTo(string $dir): void
 
 function overrideProjectConfig(array $params): void
 {
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     app()->bind(ProjectConfig::class, function () use ($projectDir, $params) {
         return ProjectConfig::from(array_merge([
@@ -88,7 +88,7 @@ function overrideProjectConfig(array $params): void
             'repositoryUrl'    => 'bellows/tester',
             'repositoryBranch' => 'main',
             'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
-            'projectDirectory' => $projectDir,
+            'directory' => $projectDir,
             'domain'           => 'bellowstester.com',
             'appName'          => 'Bellows Tester',
             'secureSite'       => true,
@@ -102,7 +102,7 @@ function installNpmPackage(?string $package): void
         return;
     }
 
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
     $packages['dependencies'][$package] = '*';
@@ -112,7 +112,7 @@ function installNpmPackage(?string $package): void
 
 function addNpmScript(string $script): void
 {
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
     $packages['scripts'][$script] = '*';
@@ -126,7 +126,7 @@ function installComposerPackage(?string $package): void
         return;
     }
 
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
     $composer['require'][$package] = '*';
@@ -136,7 +136,7 @@ function installComposerPackage(?string $package): void
 
 function setPhpVersionForProject(string $phpVersion): void
 {
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
     $composer['require']['php'] = $phpVersion;
@@ -146,7 +146,7 @@ function setPhpVersionForProject(string $phpVersion): void
 
 function setInEnv(string $key, string $value): void
 {
-    $projectDir = app(ProjectConfig::class)->projectDirectory;
+    $projectDir = app(ProjectConfig::class)->directory;
 
     $env = file_get_contents($projectDir . '/.env');
     $env .= "\n{$key}={$value}";

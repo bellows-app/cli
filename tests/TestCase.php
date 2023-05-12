@@ -6,6 +6,7 @@ use Bellows\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
+use Illuminate\Support\Sleep;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
 use Spatie\Fork\Fork;
 
@@ -16,6 +17,8 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Sleep::fake();
 
         $projectDir = __DIR__ . '/stubs/plugins/default';
 
@@ -55,7 +58,7 @@ abstract class TestCase extends BaseTestCase
 
     protected function tearDown(): void
     {
-        $this->resetStubFiles(app(ProjectConfig::class)->projectDirectory);
+        $this->resetStubFiles(app(ProjectConfig::class)->directory);
 
         parent::tearDown();
     }

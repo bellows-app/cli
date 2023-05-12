@@ -6,7 +6,7 @@ uses(Tests\TestCase::class);
 
 beforeEach(function () {
     overrideProjectConfig([
-        'projectDirectory' => base_path('tests/stubs/plugins/default'),
+        'directory' => base_path('tests/stubs/plugins/default'),
     ]);
 });
 

@@ -2,6 +2,7 @@
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\ProjectConfig;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
@@ -68,7 +69,7 @@ it('launches a simple site', function () {
 
     $this->pluginManager->assertMethodWasCalled('setActive');
     $this->pluginManager->assertMethodWasCalled('setSite', fn ($args) => $args[0]->id === 123);
-    $this->pluginManager->assertMethodWasCalled('installRepoParams', [
+    $this->pluginManager->assertMethodWasCalled('installRepoParams', fn ($args) => $args[0]->toArray() === [
         'provider'   => 'github',
         'repository' => 'joetannenbaum/test-project',
         'branch'     => 'main',

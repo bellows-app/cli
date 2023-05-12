@@ -11,12 +11,12 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    if (file_exists(app(ProjectConfig::class)->projectDirectory . '/yarn.lock')) {
-        unlink(app(ProjectConfig::class)->projectDirectory . '/yarn.lock');
+    if (file_exists(app(ProjectConfig::class)->directory . '/yarn.lock')) {
+        unlink(app(ProjectConfig::class)->directory . '/yarn.lock');
     }
 
-    if (file_exists(app(ProjectConfig::class)->projectDirectory . '/package-lock.json')) {
-        unlink(app(ProjectConfig::class)->projectDirectory . '/package-lock.json');
+    if (file_exists(app(ProjectConfig::class)->directory . '/package-lock.json')) {
+        unlink(app(ProjectConfig::class)->directory . '/package-lock.json');
     }
 });
 
@@ -26,7 +26,7 @@ it('is disabled when there are no lock files', function () {
 });
 
 it('is disabled when is no build script', function () {
-    touch(app(ProjectConfig::class)->projectDirectory . '/yarn.lock');
+    touch(app(ProjectConfig::class)->directory . '/yarn.lock');
 
     $plugin = app(CompileAssets::class);
 
@@ -34,14 +34,14 @@ it('is disabled when is no build script', function () {
 });
 
 it('is enabled with a build script and a lock file', function ($lockFile) {
-    touch(app(ProjectConfig::class)->projectDirectory . '/' . $lockFile);
+    touch(app(ProjectConfig::class)->directory . '/' . $lockFile);
     addNpmScript('build');
     $plugin = app(CompileAssets::class);
     expect($plugin->isEnabledByDefault()->enabled)->toBeTrue();
 })->with(['yarn.lock', 'package-lock.json']);
 
 it('adds the correct commands to the deploy script', function ($lockFile, $expected) {
-    touch(app(ProjectConfig::class)->projectDirectory . '/' . $lockFile);
+    touch(app(ProjectConfig::class)->directory . '/' . $lockFile);
     addNpmScript('build');
 
     $plugin = app(CompileAssets::class);

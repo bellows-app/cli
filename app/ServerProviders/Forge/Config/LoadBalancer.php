@@ -34,9 +34,6 @@ class LoadBalancer implements ConfigInterface
         protected ServerInterface $server,
     ) {
         $this->client = Client::getInstance()->http();
-
-        // $this->setLoadBalancedSite();
-        // $this->setLoadBalancedServers();
     }
 
     public function getExistingSite(): ?SiteInterface
