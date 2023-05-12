@@ -8,7 +8,7 @@ it('can launch a site', function () {
         ->question('Which server would you like to use', 'bellows-testing')
         ->question('App Name', 'Bellows Test')
         ->question('Domain', Str::random() . '.linkleapapp.com')
-        ->question('Isolated User', null, 30)
+        ->question('Isolated User', 'bellows_' . strtolower(Str::random(6)), 30)
         ->question('Repository')
         ->question('Repository Branch')
         ->question('Secure site')
