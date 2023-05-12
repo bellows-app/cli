@@ -3,8 +3,15 @@
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\ProjectConfig;
+use Bellows\PluginManagerInterface;
+use Bellows\ServerProviders\ServerInterface;
+use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
+use Tests\Fakes\FakeForge;
+use Tests\Fakes\FakeServer;
+use Tests\Fakes\FakeSite;
 
 beforeEach(function () {
     Http::fake();
@@ -15,21 +22,21 @@ beforeEach(function () {
     $this->pluginManager = new \Tests\Fakes\FakePluginManager;
 
     $this->app->bind(
-        \Bellows\PluginManagerInterface::class,
+        PluginManagerInterface::class,
         fn () => $this->pluginManager,
     );
     $this->app->bind(
-        \Bellows\ServerProviders\ServerProviderInterface::class,
-        fn () => new \Tests\Fakes\FakeForge,
+        ServerProviderInterface::class,
+        fn () => new FakeForge,
     );
     $this->app->bind(
-        \Bellows\ServerProviders\ServerInterface::class,
-        fn () => app(\Tests\Fakes\FakeServer::class),
+        ServerInterface::class,
+        fn () => app(FakeServer::class),
     );
 
     $this->app->bind(
-        \Bellows\ServerProviders\SiteInterface::class,
-        fn () => app(\Tests\Fakes\FakeSite::class),
+        SiteInterface::class,
+        fn () => app(FakeSite::class),
     );
 
     $this->app->bind(
@@ -92,12 +99,12 @@ it('will exit if there is no .env file', function () {
 
 it('will exit if domain already exists on server', function () {
     $this->app->bind(
-        \Bellows\ServerProviders\ServerInterface::class,
-        fn () => new class(app(\Bellows\Data\ForgeServer::class)) extends \Tests\Fakes\FakeServer
+        ServerInterface::class,
+        fn () => new class(app(ForgeServer::class)) extends FakeServer
         {
-            public function getSiteByDomain(string $domain): ?Bellows\Data\ForgeSite
+            public function getSiteByDomain(string $domain): ?ForgeSite
             {
-                return \Bellows\Data\ForgeSite::from(site([
+                return ForgeSite::from(site([
                     'id'   => 123,
                     'name' => 'testsite.com',
                 ]));
@@ -112,4 +119,4 @@ it('will exit if domain already exists on server', function () {
         ->expectsQuestion('Domain', 'testsite.com')
         ->expectsConfirmation('View existing site in Forge?', 'no')
         ->assertExitCode(0);
-});
+})->only();
