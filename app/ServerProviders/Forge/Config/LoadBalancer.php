@@ -134,6 +134,8 @@ other servers are down.)',
             ])->toArray(),
         ];
 
+        $phpVersion = $this->server->validPhpVersionsFromProject()->sortByDesc('version')->first();
+
         // Create the load balanced site
         $lbSite = $this->server->createSite(new CreateSiteParams(
             domain: $this->getDomain(),
@@ -141,8 +143,7 @@ other servers are down.)',
             directory: '/public',
             isolated: false,
             username: 'forge', // Always forge? Probably.
-            // TODO: this should not be hardcoded, just pick the highest version available
-            phpVersion: 'php82',
+            phpVersion: $phpVersion->version,
         ));
 
         $this->primarySite = $lbSite;

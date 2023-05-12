@@ -4,7 +4,6 @@ namespace Bellows\Commands;
 
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
 
 class DeleteSite extends Command
