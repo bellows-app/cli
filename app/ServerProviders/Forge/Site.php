@@ -79,6 +79,11 @@ class Site implements SiteInterface
         return $this->client->post('security-rules', $rule->toArray())->json();
     }
 
+    public function delete()
+    {
+        return $this->client->delete('');
+    }
+
     public function getServer(): ForgeServer
     {
         return $this->server;
