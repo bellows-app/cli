@@ -107,7 +107,7 @@ class QueueWorker extends Plugin
                 $value = $item['value'];
 
                 if (is_bool($value)) {
-                    $value = $value ? 'true' : 'false';
+                    $value = $value ? 'Yes' : 'No';
                 } elseif (is_null($value)) {
                     $value = '-';
                 }
