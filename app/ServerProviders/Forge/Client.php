@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 
 class Client
 {
@@ -47,7 +48,7 @@ class Client
                     PendingRequest $request
                 ) {
                     if ($exception instanceof RequestException && $exception->response->status() === 429) {
-                        sleep($exception->response->header('retry-after') + 1);
+                        Sleep::for($exception->response->header('retry-after') + 1)->second();
 
                         return true;
                     }

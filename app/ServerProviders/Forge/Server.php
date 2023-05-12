@@ -17,6 +17,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 
 class Server implements ServerInterface
@@ -123,7 +124,7 @@ class Server implements ServerInterface
         $site = $siteResponse['site'];
 
         while ($site['status'] !== 'installed') {
-            sleep(2);
+            Sleep::for(2)->second();
 
             $site = $this->client->get("sites/{$site['id']}")->json()['site'];
         }
@@ -179,7 +180,7 @@ class Server implements ServerInterface
                         fn ($p) => $p['version'] === $version
                     );
 
-                    sleep(2);
+                    Sleep::for(2)->second();
                 } while ($phpVersion['status'] !== 'installed');
 
                 return new PhpVersion(
