@@ -42,6 +42,7 @@ class Launch extends Command
         $this->info("🚀 Launch time! Let's do this.");
         $this->newLine();
 
+        // Set the base credentials for the server provider (currently only Forge)
         $serverProvider->setCredentials();
 
         $dir = rtrim(getcwd(), '/');
