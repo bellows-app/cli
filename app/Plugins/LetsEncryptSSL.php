@@ -5,6 +5,7 @@ namespace Bellows\Plugins;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
+use Bellows\Util\Domain;
 
 class LetsEncryptSSL extends Plugin
 {
@@ -19,7 +20,13 @@ class LetsEncryptSSL extends Plugin
 
     public function wrapUp(): void
     {
-        once(fn () => $this->primarySite->createSslCertificate(Project::config()->domain));
+        $domains = [Project::config()->domain];
+
+        if (Domain::isBaseDomain(Project::config()->domain)) {
+            $domains[] = 'www.' . Project::config()->domain;
+        }
+
+        $this->primarySite->createSslCertificate($domains);
     }
 
     public function environmentVariables(): array

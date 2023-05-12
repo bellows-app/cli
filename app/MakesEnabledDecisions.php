@@ -112,7 +112,6 @@ trait MakesEnabledDecisions
 
     protected function ensureRequiredPackagesAreInstalled(string $packageManager, array $packages, $mode = 'all'): DefaultEnabledDecision
     {
-        ray($packageManager);
         $packagesInstalled = $mode === 'all'
             ? $packageManager::allPackagesAreInstalled($packages)
             : $packageManager::anyPackagesAreInstalled($packages);

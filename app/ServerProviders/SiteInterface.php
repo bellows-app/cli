@@ -21,7 +21,7 @@ interface SiteInterface
 
     public function createWorker(Worker $worker): array;
 
-    public function createSslCertificate(string $domain): void;
+    public function createSslCertificate(array $domain): void;
 
     public function enableQuickDeploy(): void;
 

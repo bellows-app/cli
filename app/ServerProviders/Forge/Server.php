@@ -124,7 +124,7 @@ class Server implements ServerInterface
         $site = $siteResponse['site'];
 
         while ($site['status'] !== 'installed') {
-            Sleep::for(2)->second();
+            Sleep::for(2)->seconds();
 
             try {
                 $site = $this->client->get("sites/{$site['id']}")->json()['site'];
@@ -191,7 +191,7 @@ class Server implements ServerInterface
                         fn ($p) => $p['version'] === $version
                     );
 
-                    Sleep::for(2)->second();
+                    Sleep::for(2)->seconds();
                 } while ($phpVersion['status'] !== 'installed');
 
                 return new PhpVersion(

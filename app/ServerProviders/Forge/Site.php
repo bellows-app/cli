@@ -9,6 +9,7 @@ use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Sleep;
 
 class Site implements SiteInterface
 {
@@ -28,7 +29,7 @@ class Site implements SiteInterface
         do {
             $site = $this->client->get('')->json()['site'];
 
-            sleep(2);
+            Sleep::for(2)->seconds();
         } while ($site['repository_status'] !== 'installed');
 
         $this->site = ForgeSite::from($site);
@@ -59,13 +60,24 @@ class Site implements SiteInterface
         return $this->client->post('workers', $worker->toArray())->json();
     }
 
-    public function createSslCertificate(string $domain): void
+    public function createSslCertificate(array $domains): void
     {
+        $existing = collect($this->client->get('certificates')->json()['certificates'])->filter(
+            fn ($cert) => $cert['active']
+        );
+
+        foreach ($existing as $certificate) {
+            $certDomains = collect(explode(',', $certificate['domain']))->map(fn ($domain) => trim($domain));
+
+            if ($certDomains->intersect($domains)->count() === count($domains)) {
+                // This certificate already exists, no need to create a new one
+                return;
+            }
+        }
+
         $this->client->post(
             'certificates/letsencrypt',
-            [
-                'domains' => [$domain],
-            ]
+            ['domains' => $domains],
         );
     }
 
