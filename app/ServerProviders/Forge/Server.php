@@ -126,7 +126,18 @@ class Server implements ServerInterface
         while ($site['status'] !== 'installed') {
             Sleep::for(2)->second();
 
-            $site = $this->client->get("sites/{$site['id']}")->json()['site'];
+            try {
+                $site = $this->client->get("sites/{$site['id']}")->json()['site'];
+            } catch (RequestException $e) {
+                if ($e->getCode() === 404) {
+                    Console::error('There was an error creating the site on your server.');
+                    Console::info('View your server in Forge for full details:');
+                    Console::info("https://forge.laravel.com/servers/{$this->server->id}/sites");
+                    exit;
+                }
+
+                throw $e;
+            }
         }
 
         $site = ForgeSite::from($site);
