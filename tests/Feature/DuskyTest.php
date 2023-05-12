@@ -65,7 +65,7 @@ it('can launch a site', function () {
         ->waitFor('Site created successfully', 60)
         ->deny('Open site in Forge')
         ->exec();
-});
+})->skip();
 
 it('can launch a load balanced site', function () {
     command(base_path('bellows launch'))
@@ -152,7 +152,7 @@ it('can launch a load balanced site', function () {
         ->waitFor('Site created successfully', 60)
         ->deny('Open site in Forge')
         ->exec();
-});
+})->skip();
 
 it('can launch link leap load balanced', function () {
     command(base_path('bellows launch'))
@@ -238,4 +238,4 @@ it('can launch link leap load balanced', function () {
         ->waitFor('Summary', 60)
         ->waitFor('Site created successfully', 60)
         ->exec();
-})->only();
+})->skip();

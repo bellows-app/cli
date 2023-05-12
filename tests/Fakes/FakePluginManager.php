@@ -2,7 +2,10 @@
 
 namespace Tests\Fakes;
 
+use Bellows\Data\CreateSiteParams;
+use Bellows\Data\InstallRepoParams;
 use Bellows\PluginManagerInterface;
+use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 
@@ -13,6 +16,21 @@ class FakePluginManager implements PluginManagerInterface
     public function __construct()
     {
         $this->recorded = collect();
+    }
+
+    public function setPrimarySite(?SiteInterface $site): void
+    {
+        $this->record(__FUNCTION__);
+    }
+
+    public function setPrimaryServer(ServerInterface $primaryServer): void
+    {
+        $this->record(__FUNCTION__);
+    }
+
+    public function setServer(ServerInterface $server): void
+    {
+        $this->record(__FUNCTION__);
     }
 
     public function setActive()
@@ -27,14 +45,14 @@ class FakePluginManager implements PluginManagerInterface
         return collect();
     }
 
-    public function createSiteParams(array $params): array
+    public function createSiteParams(CreateSiteParams $params): array
     {
         $this->record(__FUNCTION__, $params);
 
         return [];
     }
 
-    public function installRepoParams(array $baseParams): array
+    public function installRepoParams(InstallRepoParams $baseParams): array
     {
         $this->record(__FUNCTION__, $baseParams);
 

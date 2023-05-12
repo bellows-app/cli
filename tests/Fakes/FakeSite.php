@@ -2,7 +2,9 @@
 
 namespace Tests\Fakes;
 
+use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 
@@ -12,11 +14,17 @@ class FakeSite implements \Bellows\ServerProviders\SiteInterface
 
     public function __construct(
         protected ForgeSite $site,
+        protected ForgeServer $server,
     ) {
         $this->recorded = collect();
     }
 
-    public function installRepo(array $params): void
+    public function getServer(): ForgeServer
+    {
+        return $this->server;
+    }
+
+    public function installRepo(InstallRepoParams $params): void
     {
         $this->record(__FUNCTION__, $params);
     }
@@ -52,9 +60,9 @@ class FakeSite implements \Bellows\ServerProviders\SiteInterface
         return [];
     }
 
-    public function createSslCertificate(string $domain): void
+    public function createSslCertificate(array $domains): void
     {
-        $this->record(__FUNCTION__, $domain);
+        $this->record(__FUNCTION__, $domains);
     }
 
     public function enableQuickDeploy(): void

@@ -2,6 +2,7 @@
 
 namespace Tests\Fakes;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
@@ -18,6 +19,38 @@ class FakeServer implements \Bellows\ServerProviders\ServerInterface
         protected ForgeServer $server,
     ) {
         $this->recorded = collect();
+    }
+
+    public function validPhpVersionsFromProject(): Collection
+    {
+        $this->record(__FUNCTION__);
+
+        return collect();
+    }
+
+    public function installPhpVersion(string $version): ?PhpVersion
+    {
+        $this->record(__FUNCTION__, $version);
+
+        return null;
+    }
+
+    public function determinePhpVersionFromProject(): PhpVersion
+    {
+        $this->record(__FUNCTION__);
+
+        return new PhpVersion(
+            version: 'php81',
+            binary: 'php8.1',
+            display: 'PHP 8.1',
+        );
+    }
+
+    public function serverData(): ForgeServer
+    {
+        $this->record(__FUNCTION__);
+
+        return $this->server;
     }
 
     public function phpVersionFromProject(string $projectDir): PhpVersion
@@ -48,7 +81,7 @@ class FakeServer implements \Bellows\ServerProviders\ServerInterface
         return null;
     }
 
-    public function createSite(array $params): SiteInterface
+    public function createSite(CreateSiteParams $params): SiteInterface
     {
         $this->record(__FUNCTION__, $params);
 
