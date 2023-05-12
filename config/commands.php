@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\Commands\DeleteSite;
 use Bellows\Commands\Playground;
 use Bellows\Commands\PluginTester;
 
@@ -70,6 +71,7 @@ return [
         Spatie\LaravelData\Commands\DataMakeCommand::class,
         PluginTester::class,
         Playground::class,
+        DeleteSite::class,
     ],
 
     /*
