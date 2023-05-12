@@ -136,9 +136,11 @@ class PluginManager implements PluginManagerInterface
         $this->call('wrapUp')->run();
     }
 
-    public function setPrimarySite(SiteInterface $site): void
+    public function setPrimarySite(?SiteInterface $site): void
     {
-        $this->primarySite = $site;
+        if ($site) {
+            $this->primarySite = $site;
+        }
     }
 
     public function setPrimaryServer(ServerInterface $server): void

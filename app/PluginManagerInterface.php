@@ -42,7 +42,7 @@ interface PluginManagerInterface
 
     public function wrapUp();
 
-    public function setPrimarySite(SiteInterface $site): void;
+    public function setPrimarySite(?SiteInterface $site): void;
 
     public function setSite(SiteInterface $site): void;
 
