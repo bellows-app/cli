@@ -88,7 +88,7 @@ function overrideProjectConfig(array $params): void
             'repositoryUrl'    => 'bellows/tester',
             'repositoryBranch' => 'main',
             'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
-            'directory' => $projectDir,
+            'directory'        => $projectDir,
             'domain'           => 'bellowstester.com',
             'appName'          => 'Bellows Tester',
             'secureSite'       => true,

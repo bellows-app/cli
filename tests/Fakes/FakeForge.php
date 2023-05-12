@@ -10,7 +10,6 @@ use Illuminate\Support\Collection;
 
 class FakeForge implements \Bellows\ServerProviders\ServerProviderInterface
 {
-
     public function getServers(): Collection
     {
         return collect();

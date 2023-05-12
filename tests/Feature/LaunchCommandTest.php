@@ -2,7 +2,6 @@
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
-use Bellows\Data\InstallRepoParams;
 use Bellows\Data\ProjectConfig;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
