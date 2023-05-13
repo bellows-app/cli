@@ -2,8 +2,10 @@
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
+use Bellows\ServerProviders\Forge\Forge;
 use Bellows\ServerProviders\Forge\Site;
 use Illuminate\Support\Facades\Http;
 
@@ -11,9 +13,11 @@ uses(Tests\PluginTestCase::class);
 
 beforeEach(function () {
     Http::preventStrayRequests();
-    // TODO: This feels... wrong.
-    // Feels like there's some strange logic bleeding into the test
-    Http::macro('forge', fn () => Http::baseUrl('servers/456/sites/123'));
+    // Token validation request
+    Http::fake([
+        'user' => Http::response(),
+    ]);
+    app(Forge::class)->setCredentials();
 });
 
 it('can install a repo', function () {
@@ -44,12 +48,12 @@ it('can install a repo', function () {
         ],
     );
 
-    $server->installRepo([
+    $server->installRepo(InstallRepoParams::from([
         'provider'   => 'github',
         'repository' => 'test/repo',
         'branch'     => 'main',
         'composer'   => true,
-    ]);
+    ]));
 
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/git'
@@ -235,6 +239,7 @@ it('can create a worker', function () {
 
 it('can create a lets encrypt certificate', function () {
     Http::fake([
+        'servers/456/sites/123/certificates' => Http::response(['certificates' => []]),
         'servers/456/sites/123/certificates/letsencrypt' => Http::response(),
     ]);
 
@@ -254,13 +259,85 @@ it('can create a lets encrypt certificate', function () {
         ],
     );
 
-    $server->createSslCertificate('sslsite.com');
+    $server->createSslCertificate(['sslsite.com']);
 
     Http::assertSent(function ($request) {
         return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/certificates/letsencrypt'
             && $request->method() === 'POST'
             && $request->data() === [
                 'domains' => ['sslsite.com'],
+            ];
+    });
+});
+
+it('will skip certificate creation if a certificate already exists', function () {
+    Http::fake([
+        'servers/456/sites/123/certificates' => Http::response([
+            'certificates' => [
+                ['domain' => 'sslsite.com', 'active' => true]
+            ],
+        ]),
+    ]);
+
+    $server = app(
+        Site::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+            'site' => ForgeSite::from(site([
+                'id'   => 123,
+                'name' => 'testsite.com',
+            ])),
+        ],
+    );
+
+    $server->createSslCertificate(['sslsite.com']);
+
+    Http::assertNotSent(function ($request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/certificates/letsencrypt'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'domains' => ['sslsite.com'],
+            ];
+    });
+});
+
+it('will skip certificate creation if a certificate already exists with multiple domains', function () {
+    Http::fake([
+        'servers/456/sites/123/certificates' => Http::response([
+            'certificates' => [
+                ['domain' => 'sslsite.com,www.sslsite.com', 'active' => true]
+            ],
+        ]),
+    ]);
+
+    $server = app(
+        Site::class,
+        [
+            'server' => ForgeServer::from(server([
+                'id'         => 456,
+                'name'       => 'test-server',
+                'type'       => 'php',
+                'ip_address' => '123.123.123.123',
+            ])),
+            'site' => ForgeSite::from(site([
+                'id'   => 123,
+                'name' => 'testsite.com',
+            ])),
+        ],
+    );
+
+    $server->createSslCertificate(['sslsite.com', 'www.sslsite.com']);
+
+    Http::assertNotSent(function ($request) {
+        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/sites/123/certificates/letsencrypt'
+            && $request->method() === 'POST'
+            && $request->data() === [
+                'domains' => ['sslsite.com', 'www.sslsite.com'],
             ];
     });
 });

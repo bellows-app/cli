@@ -1,10 +1,12 @@
 <?php
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
 use Bellows\Data\PhpVersion;
+use Bellows\ServerProviders\Forge\Forge;
 use Bellows\ServerProviders\Forge\Server;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\Request;
@@ -15,9 +17,11 @@ uses(Tests\PluginTestCase::class);
 
 beforeEach(function () {
     Http::preventStrayRequests();
-    // TODO: This feels... wrong.
-    // Feels like there's some strange logic bleeding into the test
-    Http::macro('forge', fn () => Http::baseUrl('servers/456'));
+    // Token validation request
+    Http::fake([
+        'user' => Http::response(),
+    ]);
+    app(Forge::class)->setCredentials();
 });
 
 it('can get the php version from the project', function () {
@@ -64,9 +68,7 @@ it('can get the php version from the project', function () {
         ]
     );
 
-    $phpVersion = $server->phpVersionFromProject(
-        base_path('tests/stubs/plugins/default')
-    );
+    $phpVersion = $server->determinePhpVersionFromProject();
 
     $mock->validate();
 
@@ -116,9 +118,7 @@ it('it will throw an exception when a matching php version cannot be found and i
         ]
     );
 
-    $server->phpVersionFromProject(
-        base_path('tests/stubs/plugins/default')
-    );
+    $server->determinePhpVersionFromProject();
 
     $mock->validate();
 })->throws('No PHP version on server found that matches the required version in composer.json');
@@ -206,9 +206,7 @@ it('it will offer to install correct php version if it cannot be found', functio
         ]
     );
 
-    $server->phpVersionFromProject(
-        base_path('tests/stubs/plugins/default')
-    );
+    $server->determinePhpVersionFromProject();
 
     $mock->validate();
 
@@ -368,14 +366,14 @@ it('can create a site', function () {
         ]
     );
 
-    $result = $server->createSite([
+    $result = $server->createSite(CreateSiteParams::from([
         'domain'       => 'datnewsite.com',
         'project_type' => 'php',
         'directory'    => '/public',
         'isolated'     => true,
         'username'     => 'date_new_site',
         'php_version'  => 'php80',
-    ]);
+    ]));
 
     expect($result)->toBeInstanceOf(SiteInterface::class);
     expect($result->id)->toBe(123);
