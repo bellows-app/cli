@@ -2,6 +2,7 @@
 
 namespace Tests\FakePlugins;
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Plugin;
 use Illuminate\Support\Facades\Http;
@@ -18,7 +19,7 @@ class FakePlugin1 extends Plugin
         //
     }
 
-    public function createSiteParams(array $params): array
+    public function createSiteParams(CreateSiteParams $params): array
     {
         return [
             'php_version' => '7.4',

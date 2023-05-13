@@ -3,6 +3,7 @@
 namespace Tests\FakePlugins;
 
 use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Data\InstallRepoParams;
 use Bellows\Plugin;
 use Illuminate\Support\Facades\Http;
 
@@ -18,7 +19,7 @@ class FakePlugin2 extends Plugin
         //
     }
 
-    public function installRepoParams(array $baseParams): array
+    public function installRepoParams(InstallRepoParams $baseParams): array
     {
         return ['branch' => 'devvo'];
     }

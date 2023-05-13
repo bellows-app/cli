@@ -1,15 +1,16 @@
 <?php
 
 use Bellows\Config;
-use Bellows\Console;
+use Bellows\Data\CreateSiteParams;
+use Bellows\Data\InstallRepoParams;
 use Bellows\PluginManager;
+use Bellows\ServerProviders\ServerInterface;
 use Illuminate\Support\Facades\Http;
 
 uses(Tests\PluginTestCase::class);
 
 it('can identify all available plugins', function () {
     $manager = new PluginManager(
-        app(Console::class),
         app(Config::class),
         [
             base_path('tests/FakePlugins'),
@@ -33,12 +34,13 @@ it('can set the active plugins', function () {
     $mock = $this->plugin()->expectsConfirmation('Continue with defaults?', 'yes')->setup();
 
     $manager = new PluginManager(
-        app(Console::class),
         app(Config::class),
         [
             base_path('tests/FakePlugins'),
         ]
     );
+
+    $manager->setPrimaryServer(app(ServerInterface::class));
 
     $manager->setActive();
 
@@ -46,13 +48,28 @@ it('can set the active plugins', function () {
 
     $mock->validate();
 
-    expect($manager->createSiteParams(['name' => 'testsite.com']))->toBe([
+    expect(
+        $manager->createSiteParams(
+            CreateSiteParams::from([
+                'domain'       => 'datnewsite.com',
+                'project_type' => 'php',
+                'directory'    => '/public',
+                'isolated'     => true,
+                'username'     => 'date_new_site',
+                'php_version'  => 'php80',
+            ])
+        )
+    )->toBe([
         [
             'php_version' => '7.4',
         ],
     ]);
 
-    expect($manager->installRepoParams(['repository' => 'test/repo']))->toBe([
+    expect(
+        $manager->installRepoParams(
+            new InstallRepoParams('github', 'bellows/tester', 'main', true)
+        )
+    )->toBe([
         [
             'branch' => 'devvo',
         ],
