@@ -8,6 +8,8 @@ mv .env .env.bak
 ./bellows app:build --build-version=$version
 mv .env.bak .env
 
+# TODO: COMMIT AND PUSH HERE BEFORE PUSHING TAGS
+
 git push
 git tag -a $version -m "$version"
 git push --tags
