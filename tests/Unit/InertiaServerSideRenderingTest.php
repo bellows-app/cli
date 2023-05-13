@@ -43,6 +43,7 @@ it('can set the env variable if there are other ports in use', function () {
     $this->plugin()->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     expect($plugin->environmentVariables())->toBe([
@@ -73,6 +74,7 @@ it('can set the env variable if there are no other ports in use', function () {
     $this->plugin()->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     expect($plugin->environmentVariables())->toBe([
@@ -103,6 +105,7 @@ it('can create a daemon', function () {
     $this->plugin()->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     $daemons = $plugin->daemons();
@@ -140,6 +143,7 @@ it('can update the deploy script', function () {
     $this->plugin()->setup();
 
     $plugin = app(InertiaServerSideRendering::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     $deployScript = $plugin->updateDeployScript(DeployScript::PHP_RELOAD);

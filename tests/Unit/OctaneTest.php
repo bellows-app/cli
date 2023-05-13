@@ -1,5 +1,6 @@
 <?php
 
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Plugins\Octane;
@@ -46,11 +47,23 @@ it('can set the env variable if there are other ports in use', function () {
         ->setup();
 
     $plugin = app(Octane::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     $mock->validate();
 
-    expect($plugin->createSiteParams([]))->toBe([
+    expect(
+        $plugin->createSiteParams(
+            CreateSiteParams::from([
+                'domain'       => 'datnewsite.com',
+                'project_type' => 'php',
+                'directory'    => '/public',
+                'isolated'     => true,
+                'username'     => 'date_new_site',
+                'php_version'  => 'php80',
+            ])
+        )
+    )->toBe([
         'octane_port'  => 8002,
         'project_type' => 'octane',
     ]);
@@ -99,6 +112,7 @@ it('can set the env variable if there are no other ports in use', function () {
         ->setup();
 
     $plugin = app(Octane::class);
+    $plugin->setServer(app(ServerInterface::class));
     $plugin->setup();
 
     $mock->validate();

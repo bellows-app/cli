@@ -27,7 +27,7 @@ class Mailgun extends Plugin
 
     public function __construct(
         protected Http $http,
-        protected ?DnsProvider $dnsProvider,
+        protected ?DnsProvider $dnsProvider = null,
     ) {
     }
 

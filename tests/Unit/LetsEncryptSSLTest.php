@@ -64,5 +64,5 @@ it('can wrap up', function () {
     $plugin->setSite($site);
     $plugin->wrapUp();
 
-    $site->assertMethodWasCalled('createSslCertificate', 'bellowstester.com');
+    $site->assertMethodWasCalled('createSslCertificate', ['bellowstester.com', 'www.bellowstester.com']);
 });

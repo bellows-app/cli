@@ -33,7 +33,7 @@ class Postmark extends Plugin
 
     public function __construct(
         protected BellowsHttp $http,
-        protected ?DnsProvider $dnsProvider,
+        protected ?DnsProvider $dnsProvider = null,
     ) {
     }
 
