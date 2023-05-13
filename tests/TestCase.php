@@ -6,6 +6,7 @@ use Bellows\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
+use Bellows\Facades\Project;
 use Illuminate\Support\Sleep;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
 use Spatie\Fork\Fork;
@@ -37,21 +38,26 @@ abstract class TestCase extends BaseTestCase
             }
         });
 
+        $projectConfig = new ProjectConfig(
+            isolatedUser: 'tester',
+            repository: new Repository(
+                url: 'bellows/tester',
+                branch: 'main',
+            ),
+            phpVersion: new PhpVersion('8.1', 'php81', 'PHP 8.1'),
+            directory: $projectDir,
+            domain: 'bellowstester.com',
+            appName: 'Bellows Tester',
+            secureSite: true,
+        );
+
         $this->app->bind(
             ProjectConfig::class,
-            fn () => new ProjectConfig(
-                isolatedUser: 'tester',
-                repository: new Repository(
-                    url: 'bellows/tester',
-                    branch: 'main',
-                ),
-                phpVersion: new PhpVersion('8.1', 'php81', 'PHP 8.1'),
-                directory: $projectDir,
-                domain: 'bellowstester.com',
-                appName: 'Bellows Tester',
-                secureSite: true,
-            )
+            fn () => $projectConfig,
         );
+
+        Project::setDir($projectDir);
+        Project::setConfig($projectConfig);
 
         $this->resetStubFiles($projectDir);
     }

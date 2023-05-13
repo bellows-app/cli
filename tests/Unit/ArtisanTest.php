@@ -12,7 +12,7 @@ it('can format an artisan command for a deploy script', function () {
 
 it('can format an artisan command for a daemon', function () {
     overrideProjectConfig([
-        'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
+        'phpVersion' => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
     ]);
 
     $artisan = app(Artisan::class);

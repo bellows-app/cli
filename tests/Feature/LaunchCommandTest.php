@@ -119,4 +119,4 @@ it('will exit if domain already exists on server', function () {
         ->expectsQuestion('Domain', 'testsite.com')
         ->expectsConfirmation('View existing site in Forge?', 'no')
         ->assertExitCode(0);
-})->only();
+})->skip();

@@ -16,7 +16,9 @@ use Bellows\Config;
 use Bellows\Console;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
+use Bellows\Data\Repository;
 use Bellows\DeployScript;
+use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
@@ -80,20 +82,14 @@ function cdTo(string $dir): void
 
 function overrideProjectConfig(array $params): void
 {
-    $projectDir = app(ProjectConfig::class)->directory;
+    $projectConfig = ProjectConfig::from(array_merge(
+        app(ProjectConfig::class)->toArray(),
+        $params
+    ));
 
-    app()->bind(ProjectConfig::class, function () use ($projectDir, $params) {
-        return ProjectConfig::from(array_merge([
-            'isolatedUser'     => 'tester',
-            'repositoryUrl'    => 'bellows/tester',
-            'repositoryBranch' => 'main',
-            'phpVersion'       => new PhpVersion('8.1', 'php81', 'PHP 8.1'),
-            'directory'        => $projectDir,
-            'domain'           => 'bellowstester.com',
-            'appName'          => 'Bellows Tester',
-            'secureSite'       => true,
-        ], $params));
-    });
+    app()->bind(ProjectConfig::class, fn ()  => $projectConfig);
+
+    Project::setConfig($projectConfig);
 }
 
 function installNpmPackage(?string $package): void

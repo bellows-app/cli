@@ -2,6 +2,7 @@
 
 namespace Bellows\Mixins;
 
+use Illuminate\Support\Sleep;
 use Spatie\Fork\Connection;
 use Spatie\Fork\Fork;
 use Symfony\Component\Console\Question\Question;
@@ -97,7 +98,7 @@ class Console
                         $socketToSpinner->write(1);
 
                         // Wait for the next cycle of the spinner so that it stops
-                        usleep(200_000);
+                        Sleep::for(200_000)->microseconds();
 
                         $display = '';
 
@@ -169,7 +170,7 @@ class Console
                                 "<comment>{$animation->get($index)}</comment> <info>{$title}{$longProcessMessage}</info>"
                             );
 
-                            usleep(200_000);
+                            Sleep::for(200_000)->microseconds();
                         }
                     }
                 );
