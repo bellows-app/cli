@@ -8,6 +8,7 @@ use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Collection;
 
 abstract class Sentry extends Plugin
 {
@@ -16,6 +17,8 @@ abstract class Sentry extends Plugin
     protected ?string $sentryClientKey;
 
     protected ?float $tracesSampleRate = null;
+
+    protected Collection $projects;
 
     public function __construct(
         protected Http $http,
@@ -42,7 +45,7 @@ abstract class Sentry extends Plugin
 
     abstract protected function getProjectType(): string;
 
-    protected function createProject(string $type): array
+    protected function createProject(): array
     {
         $teams = collect($this->http->client()->get("0/organizations/{$this->organization['slug']}/teams/")->json());
 
@@ -57,21 +60,42 @@ abstract class Sentry extends Plugin
 
         $project = $this->http->client()->post("0/teams/{$this->organization['slug']}/{$team['slug']}/projects/", [
             'name'     => $name,
-            'platform' => $type,
+            'platform' => $this->getProjectType(),
         ])->json();
 
         return $project;
     }
 
-    protected function getProject()
+    protected function getProject(): ?array
     {
-        // TODO: Instead of asking if they want to create a project,
-        // fetch their projects up front and see if there's a project with
-        // a matching name
         $projectType = $this->getProjectType();
 
+        $result = $this->http->client()->get('0/projects/', [
+            'per_page' => 100,
+        ])->json();
+
+        $this->projects = collect($result)->filter(fn ($project) => $project['platform'] === $projectType)->values();
+
+        if ($this->projects->count() > 0 && $this->projects->first(fn ($p) => $p['name'] === Project::config()->appName)) {
+            // If we have projects and one of them matches the name of the app, suggest that one
+            return $this->selectFromExistingProjects($projectType);
+        }
+
         if (Console::confirm('Create Sentry project?', true)) {
-            return $this->createProject($projectType);
+            return $this->createProject();
+        }
+
+        if ($this->projects->count() === 0) {
+            Console::error("No existing {$projectType} projects found!");
+
+            if (Console::confirm('Create Sentry project?', true)) {
+                // Give them one more chance to create a project
+                return $this->createProject();
+            }
+
+            Console::error('No project selected! Disabling Sentry plugin.');
+
+            return null;
         }
 
         return $this->selectFromExistingProjects($projectType);
@@ -86,6 +110,10 @@ abstract class Sentry extends Plugin
 
     protected function setTracesSampleRate(): void
     {
+        if (!isset($this->sentryClientKey)) {
+            return;
+        }
+
         $projectType = $this->getProjectType();
         $language = collect(explode('-', $projectType))->first();
 
@@ -118,6 +146,10 @@ abstract class Sentry extends Plugin
     {
         $project = $this->getProject();
 
+        if ($project === null) {
+            return;
+        }
+
         $keys = collect($this->http->client()->get("0/projects/{$this->organization['slug']}/{$project['slug']}/keys/")->json());
 
         $key = Console::choiceFromCollection(
@@ -131,30 +163,19 @@ abstract class Sentry extends Plugin
 
     protected function selectFromExistingProjects(string $type): array
     {
-        $result = $this->http->client()->get('0/projects/', [
-            'per_page' => 100,
-        ])->json();
+        $choices = $this->projects->sortBy('name')->concat([['name' => 'Create new project']]);
 
-        $result = collect($result)->filter(fn ($project) => $project['platform'] === $type)->values();
-
-        if ($result->count() === 0) {
-            Console::error('No existing projects found!');
-
-            if (Console::confirm('Create new project?', true)) {
-                $project = $this->createProject($type);
-
-                return $project;
-            }
-
-            Console::error('No project selected!');
-            exit;
-        }
-
-        return Console::choiceFromCollection(
+        $selection = Console::choiceFromCollection(
             'Select a Sentry project',
-            $result->sortBy('name'),
+            $choices,
             'name',
             Project::config()->appName,
         );
+
+        if ($selection['name'] === 'Create new project') {
+            return $this->createProject($type);
+        }
+
+        return $selection;
     }
 }
