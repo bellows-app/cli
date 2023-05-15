@@ -28,13 +28,13 @@ abstract class Sentry extends Plugin
 
     public function setupClient(): void
     {
-        // TODO: List Scopes necessary for this plugin
         $this->http->createJsonClient(
             'https://sentry.io/api/',
             fn (PendingRequest $request, array $credentials) => $request->withToken($credentials['token']),
             new AddApiCredentialsPrompt(
                 url: 'https://sentry.io/settings/account/api/auth-tokens/',
                 credentials: ['token'],
+                helpText: 'When creating a token, make sure to select the following permissions: project:read, team:read, project:write, org:read, member:read',
                 displayName: 'Sentry',
             ),
             fn (PendingRequest $request) => $request->get('0/projects/', ['per_page' => 1]),
