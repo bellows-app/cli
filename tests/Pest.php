@@ -14,9 +14,7 @@
 use Bellows\Artisan;
 use Bellows\Config;
 use Bellows\Console;
-use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
-use Bellows\Data\Repository;
 use Bellows\DeployScript;
 use Bellows\Facades\Project;
 use Bellows\Http;
@@ -87,7 +85,7 @@ function overrideProjectConfig(array $params): void
         $params
     ));
 
-    app()->bind(ProjectConfig::class, fn ()  => $projectConfig);
+    app()->bind(ProjectConfig::class, fn () => $projectConfig);
 
     Project::setConfig($projectConfig);
 }
