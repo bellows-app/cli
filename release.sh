@@ -8,7 +8,10 @@ mv .env .env.bak
 ./bellows app:build --build-version=$version
 mv .env.bak .env
 
-# TODO: COMMIT AND PUSH HERE BEFORE PUSHING TAGS
+if [[ $(git status --porcelain) ]]; then
+    git add bellows
+    git commit -m "Release $version"
+fi
 
 git push
 git tag -a $version -m "$version"
