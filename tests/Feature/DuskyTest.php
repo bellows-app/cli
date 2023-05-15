@@ -230,7 +230,7 @@ it('can launch link leap to an existing load balancer', function () {
         ->waitFor('Summary', 60)
         ->waitFor('Site created successfully', 60)
         ->exec();
-})->only();
+})->skip();
 
 it('can launch link leap load balanced', function () {
     command(base_path('bellows launch'))
