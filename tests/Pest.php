@@ -90,6 +90,11 @@ function overrideProjectConfig(array $params): void
     Project::setConfig($projectConfig);
 }
 
+function writeJson($path, $obj)
+{
+    file_put_contents($path, str_replace('\\', '', json_encode($obj, JSON_PRETTY_PRINT)));
+}
+
 function installNpmPackage(?string $package): void
 {
     if (is_null($package)) {
@@ -101,7 +106,7 @@ function installNpmPackage(?string $package): void
     $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
     $packages['dependencies'][$package] = '*';
 
-    file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
+    writeJson($projectDir . '/package.json', $packages);
 }
 
 function addNpmScript(string $script): void
@@ -111,7 +116,7 @@ function addNpmScript(string $script): void
     $packages = json_decode(file_get_contents($projectDir . '/package.json'), true);
     $packages['scripts'][$script] = '*';
 
-    file_put_contents($projectDir . '/package.json', json_encode($packages, JSON_PRETTY_PRINT));
+    writeJson($projectDir . '/package.json', $packages);
 }
 
 function installComposerPackage(?string $package): void
@@ -125,7 +130,7 @@ function installComposerPackage(?string $package): void
     $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
     $composer['require'][$package] = '*';
 
-    file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+    writeJson($projectDir . '/composer.json', $composer);
 }
 
 function setPhpVersionForProject(string $phpVersion): void
@@ -135,7 +140,7 @@ function setPhpVersionForProject(string $phpVersion): void
     $composer = json_decode(file_get_contents($projectDir . '/composer.json'), true);
     $composer['require']['php'] = $phpVersion;
 
-    file_put_contents($projectDir . '/composer.json', json_encode($composer, JSON_PRETTY_PRINT));
+    writeJson($projectDir . '/composer.json', $composer);
 }
 
 function setInEnv(string $key, string $value): void
