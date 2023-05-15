@@ -11,6 +11,8 @@ use Illuminate\Http\Client\PendingRequest;
 
 abstract class Bugsnag extends Plugin
 {
+    protected ?string $bugsnagKey;
+
     public function __construct(
         protected Http $http,
         protected Project $project,

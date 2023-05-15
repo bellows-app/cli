@@ -8,10 +8,6 @@ use Bellows\PackageManagers\Composer;
 
 class BugsnagPHP extends Bugsnag
 {
-    protected bool $createProject = false;
-
-    protected ?string $bugsnagKey;
-
     protected array $anyRequiredComposerPackages = [
         'bugsnag/bugsnag-laravel',
         'bugsnag/bugsnag',
@@ -31,7 +27,7 @@ class BugsnagPHP extends Bugsnag
 
         $this->setupClient();
 
-        if (Console::confirm('Create Bugsnag PHP Project?', true)) {
+        if (Console::confirm('Create Bugsnag PHP project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
 

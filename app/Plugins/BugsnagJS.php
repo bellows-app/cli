@@ -8,10 +8,6 @@ use Bellows\PackageManagers\Npm;
 
 class BugsnagJS extends Bugsnag
 {
-    protected bool $createProject = false;
-
-    protected ?string $bugsnagKey;
-
     protected array $requiredNpmPackages = [
         '@bugsnag/js',
     ];
