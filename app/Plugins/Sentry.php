@@ -85,20 +85,20 @@ abstract class Sentry extends Plugin
             return $this->createProject();
         }
 
-        if ($this->projects->count() === 0) {
-            Console::error("No existing {$projectType} projects found!");
-
-            if (Console::confirm('Create Sentry project?', true)) {
-                // Give them one more chance to create a project
-                return $this->createProject();
-            }
-
-            Console::error('No project selected! Disabling Sentry plugin.');
-
-            return null;
+        if ($this->projects->count() > 0) {
+            return $this->selectFromExistingProjects($projectType);
         }
 
-        return $this->selectFromExistingProjects($projectType);
+        Console::error("No existing {$projectType} projects found!");
+
+        if (Console::confirm('Create Sentry project?', true)) {
+            // Give them one more chance to create a project
+            return $this->createProject();
+        }
+
+        Console::error('No project selected! Disabling Sentry plugin.');
+
+        return null;
     }
 
     protected function setupSentry()
