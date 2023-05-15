@@ -30,6 +30,7 @@ abstract class Bugsnag extends Plugin
                 displayName: 'Bugsnag',
             ),
             fn (PendingRequest $request) => $request->get('user/organizations', ['per_page' => 1]),
+            true,
         );
 
         $organization = $this->http->client()->get('user/organizations')->json()[0];

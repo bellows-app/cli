@@ -38,6 +38,7 @@ abstract class Sentry extends Plugin
                 displayName: 'Sentry',
             ),
             fn (PendingRequest $request) => $request->get('0/projects/', ['per_page' => 1]),
+            true,
         );
 
         $this->organization = $this->http->client()->get('0/organizations/')->json()[0];

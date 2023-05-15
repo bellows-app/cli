@@ -4,6 +4,7 @@ namespace Bellows;
 
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
+use Bellows\Util\SharedAccount;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
@@ -26,6 +27,7 @@ class Http
         callable $factory,
         AddApiCredentialsPrompt $addCredentialsPrompt,
         callable $test,
+        bool $shared = false,
     ): void {
         $name = 'default';
 
@@ -34,6 +36,14 @@ class Http
         }
 
         $host = parse_url($baseUrl, PHP_URL_HOST);
+
+        $accounts = SharedAccount::getInstance();
+
+        if ($shared && $accounts->has($host)) {
+            $this->clients[$name] = $accounts->get($host);
+
+            return;
+        }
 
         $credentials = $this->getApiCredentials($host, $addCredentialsPrompt);
 
@@ -62,10 +72,16 @@ class Http
             return;
         }
 
-        $this->clients[$name] = fn () => $factory(
+        $client = fn () => $factory(
             HttpFacade::baseUrl($baseUrl),
             $credentials,
         );
+
+        if ($shared) {
+            $accounts->set($host, $client);
+        }
+
+        $this->clients[$name] = $client;
     }
 
     // TODO: This is starting to feel more like a builder object than params.
@@ -74,12 +90,14 @@ class Http
         callable $factory,
         AddApiCredentialsPrompt $addCredentialsPrompt,
         callable $test,
+        bool $shared = false,
     ): void {
         $this->createClient(
             $baseUrl,
             fn ($request, $credentials) => $factory($request, $credentials)->acceptJson()->asJson(),
             $addCredentialsPrompt,
             $test,
+            $shared,
         );
     }
 
