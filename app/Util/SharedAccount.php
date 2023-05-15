@@ -23,8 +23,6 @@ class SharedAccount
 
     public function get(string $name): ?callable
     {
-        ray($this->accounts);
-
         if ($this->has($name)) {
             return $this->accounts[$name];
         }
