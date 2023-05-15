@@ -47,4 +47,9 @@ class BugsnagPHP extends Bugsnag
 
         return ['BUGSNAG_API_KEY' => $this->bugsnagKey];
     }
+
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('BUGSNAG_API_KEY');
+    }
 }

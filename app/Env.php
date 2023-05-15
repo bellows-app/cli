@@ -33,6 +33,11 @@ class Env
         return $this->parsed[$key] ?? null;
     }
 
+    public function has(string $key): bool
+    {
+        return $this->get($key) !== null;
+    }
+
     public function all(): array
     {
         return $this->parsed;
@@ -109,5 +114,10 @@ class Env
         }
 
         return Str::contains($value, ['${', ' ']) || Str::contains($key, ['PASSWORD']);
+    }
+
+    public function __toString()
+    {
+        return $this->toString();
     }
 }

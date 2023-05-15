@@ -15,6 +15,9 @@ interface ServerInterface
     /** @return Collection<PhpVersion> */
     public function validPhpVersionsFromProject(): Collection;
 
+    /** @return Collection<PhpVersion> */
+    public function getPhpVersions(): Collection;
+
     /** @return Collection<ForgeSite> */
     public function getSites(): Collection;
 

@@ -49,4 +49,9 @@ class BugsnagJS extends Bugsnag
             'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
         ];
     }
+
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('BUGSNAG_JS_API_KEY') || !$this->site->getEnv()->has('VITE_BUGSNAG_JS_API_KEY');
+    }
 }

@@ -117,4 +117,14 @@ abstract class Plugin
     {
         //
     }
+
+    public function canDeploy(): bool
+    {
+        return false;
+    }
+
+    public function canLaunch(): bool
+    {
+        return true;
+    }
 }

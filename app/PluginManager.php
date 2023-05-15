@@ -7,6 +7,7 @@ use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
+use Bellows\Enums\PluginMode;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -24,6 +25,8 @@ class PluginManager implements PluginManagerInterface
     // If load balancing, the primary server, if not, the same as the $server property
     protected ServerInterface $primaryServer;
 
+    protected PluginMode $mode;
+
     public function __construct(
         protected Config $config,
         protected array $pluginPaths = [],
@@ -40,7 +43,10 @@ class PluginManager implements PluginManagerInterface
 
         $autoDecision = $plugins->filter(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision())->sortByDesc(
             fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled
-        );
+        )->filter(fn (Plugin $plugin) => match ($this->mode) {
+            PluginMode::LAUNCH => $plugin->canLaunch(),
+            PluginMode::DEPLOY => $plugin->canDeploy(),
+        });
 
         Console::table(
             ['', 'Plugin', 'Reason'],
@@ -156,6 +162,11 @@ class PluginManager implements PluginManagerInterface
     public function setServer(ServerInterface $server): void
     {
         $this->call('setServer')->withArgs($server)->run();
+    }
+
+    public function setMode(PluginMode $mode): void
+    {
+        $this->mode = $mode;
     }
 
     protected function getAllPlugins(): Collection

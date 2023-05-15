@@ -8,6 +8,7 @@ class ForgeSite extends Data
 {
     public function __construct(
         public int $id,
+        public int $server_id,
         public string $name,
         public array $aliases,
         public string $directory,
@@ -20,7 +21,9 @@ class ForgeSite extends Data
         public string $deployment_url,
         public bool $is_secured,
         public array $tags,
+        public ?string $repository,
         public ?string $repository_provider,
+        public ?string $repository_branch,
         public ?string $repository_status,
         public ?string $deployment_status,
         public ?string $app,

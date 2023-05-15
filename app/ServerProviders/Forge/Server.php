@@ -45,6 +45,7 @@ class Server implements ServerInterface
             return $validPhpVersions->first();
         }
 
+        // TODO: Hm, should we get this from the server instead of just having it hardcoded?
         $available = collect([
             'php56' => '5.6',
             'php70' => '7.0',
@@ -71,22 +72,26 @@ class Server implements ServerInterface
     }
 
     /** @return Collection<PhpVersion> */
+    public function getPhpVersions(): Collection
+    {
+        return collect($this->client->get('php')->json())
+            ->sortByDesc('version')
+            ->map(fn ($version) => new PhpVersion(
+                version: $version['version'],
+                binary: $version['binary_name'],
+                display: $version['displayable_version'],
+            ));
+    }
+
+    /** @return Collection<PhpVersion> */
     public function validPhpVersionsFromProject(): Collection
     {
         $requiredPhpVersion = $this->getRequiredPhpVersion(Project::dir());
 
-        $phpVersions = collect($this->client->get('php')->json())->sortByDesc('version');
-
-        return $phpVersions->filter(
-            fn ($p) => Semver::satisfies(
-                Str::replace('php', '', $p['binary_name']),
+        return $this->getPhpVersions()->filter(
+            fn (PhpVersion $p) => Semver::satisfies(
+                Str::replace('php', '', $p->binary),
                 $requiredPhpVersion
-            )
-        )->map(
-            fn ($phpVersion) => new PhpVersion(
-                version: $phpVersion['version'],
-                binary: $phpVersion['binary_name'],
-                display: $phpVersion['displayable_version'],
             )
         )->values();
     }
@@ -172,14 +177,8 @@ class Server implements ServerInterface
                 } catch (RequestException $e) {
                     if ($e->getCode() === 422) {
                         // PHP version already installed
-                        $phpVersion = collect($this->client->get('php')->json())->first(
-                            fn ($p) => $p['version'] === $version
-                        );
-
-                        return new PhpVersion(
-                            version: $phpVersion['version'],
-                            binary: $phpVersion['binary_name'],
-                            display: $phpVersion['displayable_version'],
+                        return $this->getPhpVersions()->first(
+                            fn (PhpVersion $p) => $p->version === $version
                         );
                     }
 
@@ -187,8 +186,8 @@ class Server implements ServerInterface
                 }
 
                 do {
-                    $phpVersion = collect($this->client->get('php')->json())->first(
-                        fn ($p) => $p['version'] === $version
+                    $phpVersion = $this->getPhpVersions()->first(
+                        fn (PhpVersion $p) => $p->version === $version
                     );
 
                     Sleep::for(2)->seconds();

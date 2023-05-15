@@ -5,8 +5,10 @@ namespace Bellows\ServerProviders\Forge;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\InstallRepoParams;
+use Bellows\Data\PhpVersion;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
+use Bellows\Env;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Sleep;
@@ -14,6 +16,8 @@ use Illuminate\Support\Sleep;
 class Site implements SiteInterface
 {
     protected PendingRequest $client;
+
+    protected Env $env;
 
     public function __construct(
         protected ForgeSite $site,
@@ -35,9 +39,22 @@ class Site implements SiteInterface
         $this->site = ForgeSite::from($site);
     }
 
-    public function getEnv(): string
+    public function getPhpVersion()
     {
-        return (string) $this->client->get('env');
+        return with(new Server($this->server))->getPhpVersions()->first(
+            fn (PhpVersion $version) => $version->version === $this->site->php_version
+        );
+    }
+
+    public function getEnv(): Env
+    {
+        if (isset($this->env)) {
+            return $this->env;
+        }
+
+        $this->env = new Env((string) $this->client->get('env'));
+
+        return $this->env;
     }
 
     public function updateEnv(string $env): void

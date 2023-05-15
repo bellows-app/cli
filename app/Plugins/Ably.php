@@ -78,4 +78,9 @@ class Ably extends Plugin
             'ABLY_KEY'         => $this->key,
         ];
     }
+
+    public function canDeploy(): bool
+    {
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'ably' || !$this->site->getEnv()->has('ABLY_KEY');
+    }
 }

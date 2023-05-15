@@ -2,9 +2,8 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
-use Bellows\Data\InstallRepoParams;
+use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
@@ -19,29 +18,29 @@ use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
+use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
 
-class Launch extends Command
+class Deploy extends Command
 {
-    protected $signature = 'launch';
+    protected $signature = 'deploy';
 
-    protected $description = 'Launch the current repository as a site on a Forge server.';
+    protected $description = 'Deploy a feature(s) of the current repository to a site on a Forge server.';
 
     public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $serverProvider)
     {
-        $pluginManager->setMode(PluginMode::LAUNCH);
+        $pluginManager->setMode(PluginMode::DEPLOY);
 
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');
-        $this->info("🚀 Launch time! Let's do this.");
+        $this->info("🚀 Time to deploy! Let's do this.");
         $this->newLine();
 
         // Set the base credentials for the server provider (currently only Forge)
@@ -77,50 +76,54 @@ class Launch extends Command
             return;
         }
 
+        $siteChoices = $server->getSites()->map(
+            fn (ForgeSite $site) => $site->name,
+        )->sort()->values()->toArray();
+
+        $siteName = $this->choice(
+            'Which site would you like to deploy to?',
+            $siteChoices,
+        );
+
+        /** @var ForgeSite $site */
+        $site = $server->getSites()->first(fn (ForgeSite $site) => $site->name === $siteName);
+
+        $siteProvider = new Site($site, $server->serverData());
+
+        try {
+            // TODO: Load balancer tho
+            $siteEnv = $siteProvider->getEnv();
+        } catch (\Exception $e) {
+            $this->error('Error parsing the .env file! Aborting.');
+            $this->newLine();
+            $this->error('Env file: ' . $siteEnv);
+            $this->error('Error message: ' . $e->getMessage());
+
+            return;
+        }
+
         $providerConfig = $serverProvider->getConfigFromServer($server);
-
-        $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
-
-        $domain = $providerConfig->getDomain();
 
         $providerConfig->setup();
 
         $servers = $providerConfig->servers();
 
-        if ($existingSite = $providerConfig->getExistingSite()) {
-            if ($this->confirm('View existing site in Forge?', true)) {
-                Process::run(
-                    "open https://forge.laravel.com/servers/{$existingSite->getServer()->id}/sites/{$existingSite->id}"
-                );
-            }
+        // TODO: Maybe we don't do this until we need to? Or rather, see if we need to?
+        // $dnsProvider = $this->getDnsProvider($site->name);
 
-            return;
-        }
+        // App::instance(DnsProvider::class, $dnsProvider);
 
-        $this->newLine();
-
-        $isolatedUser = $this->ask('Isolated User', Str::snake($appName));
-
-        $repo = $this->getGitInfo($dir, $domain);
-
-        $dnsProvider = $this->getDnsProvider($domain);
-
-        $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
-
-        $this->newLine();
-
-        App::instance(DnsProvider::class, $dnsProvider);
-
-        $phpVersion = $providerConfig->determinePhpVersion();
+        $phpVersion = $siteProvider->getPhpVersion();
 
         $projectConfig = new ProjectConfig(
-            isolatedUser: $isolatedUser,
-            repository: $repo,
+            isolatedUser: $site->username,
+            // TODO: What if we don't have one? Do we care?
+            repository: new Repository($site->repository, $site->repository_branch),
             phpVersion: $phpVersion,
             directory: $dir,
-            domain: $domain,
-            appName: $appName,
-            secureSite: $secureSite ?? false,
+            domain: $site->name,
+            appName: $siteEnv->get('APP_NAME') ?? '',
+            secureSite: Str::contains($siteEnv->get('APP_URL'), 'https://'),
         );
 
         Project::setConfig($projectConfig);
@@ -182,49 +185,6 @@ class Launch extends Command
         $pluginManager->setServer($server);
 
         $this->step("Launching on {$server->name}");
-
-        $this->step('Site');
-
-        $baseParams = new CreateSiteParams(
-            domain: Project::config()->domain,
-            projectType: 'php',
-            directory: '/public',
-            isolated: true,
-            username: Project::config()->isolatedUser,
-            phpVersion: Project::config()->phpVersion->version,
-        );
-
-        $createSiteParams = array_merge(
-            $baseParams->toArray(),
-            ...$pluginManager->createSiteParams($baseParams),
-        );
-
-        /** @var SiteInterface $site */
-        $site = $this->withSpinner(
-            title: 'Creating',
-            task: fn () => $server->createSite(CreateSiteParams::from($createSiteParams)),
-        );
-
-        $pluginManager->setSite($site);
-
-        $baseRepoParams = new InstallRepoParams(
-            provider: 'github',
-            repository: Project::config()->repository->url,
-            branch: Project::config()->repository->branch,
-            composer: true,
-        );
-
-        $installRepoParams = array_merge(
-            $baseRepoParams->toArray(),
-            ...$pluginManager->installRepoParams($baseRepoParams),
-        );
-
-        $this->step('Repository');
-
-        $this->withSpinner(
-            title: 'Installing',
-            task: fn () => $site->installRepo(InstallRepoParams::from($installRepoParams)),
-        );
 
         $this->step('Environment Variables');
 
