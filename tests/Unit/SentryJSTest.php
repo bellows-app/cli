@@ -7,10 +7,6 @@ use Illuminate\Support\Str;
 
 uses(Tests\PluginTestCase::class)->group('plugin');
 
-// beforeEach(function () {
-//     installNpmPackage('sentry/sentry-laravel');
-// });
-
 it('can choose an app from the list', function ($package, $dsn) {
     installNpmPackage($package);
 
