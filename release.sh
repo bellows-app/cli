@@ -9,7 +9,7 @@ mv .env .env.bak
 mv .env.bak .env
 
 if [[ $(git status --porcelain) ]]; then
-    git add bellows
+    git add builds/bellows
     git commit -m "Release $version"
 fi
 
