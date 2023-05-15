@@ -16,7 +16,7 @@ it('can choose an app from the list', function () {
 
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
-        ->expectsConfirmation('Create Bugsnag PHP Project?', 'no')
+        ->expectsConfirmation('Create Bugsnag PHP project?', 'no')
         ->expectsQuestion('Select a Bugsnag project', 'Forge It Test')
         ->setup();
 
@@ -44,7 +44,7 @@ it('can create a new app', function ($package, $projectType) {
 
     $mock = $this->plugin()
         ->expectsQuestion('Select account', 'joe')
-        ->expectsConfirmation('Create Bugsnag PHP Project?', 'yes')
+        ->expectsConfirmation('Create Bugsnag PHP project?', 'yes')
         ->expectsQuestion('Project name', 'Test App')
         ->setup();
 

@@ -26,7 +26,7 @@ class BugsnagJS extends Bugsnag
 
         $this->setupClient();
 
-        if (Console::confirm('Create Bugsnag JS Project?', true)) {
+        if (Console::confirm('Create Bugsnag JS project?', true)) {
             $project = $this->createProject($type);
             $this->bugsnagKey = $project['api_key'];
 
