@@ -3,8 +3,13 @@
 namespace Bellows\Commands;
 
 use Bellows\Config;
+use Bellows\Data\CreateSiteParams;
 use Bellows\Data\ForgeServer;
+use Bellows\Data\InstallRepoParams;
+use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
+use Bellows\Data\Repository;
+use Bellows\Facades\Project;
 use LaravelZero\Framework\Commands\Command;
 
 class PluginTester extends Command
@@ -15,19 +20,23 @@ class PluginTester extends Command
 
     public function handle()
     {
-        app()->bind(ProjectConfig::class, function () {
-            return ProjectConfig::from([
-                'isolatedUser'     => $this->option('project.isolatedUser'),
-                'repositoryUrl'    => $this->option('project.repositoryUrl'),
-                'repositoryBranch' => $this->option('project.repositoryBranch'),
-                'phpVersion'       => $this->option('project.phpVersion'),
-                'phpBinary'        => $this->option('project.phpBinary'),
-                'projectDirectory' => $this->option('project.projectDirectory'),
-                'domain'           => $this->option('project.domain'),
-                'appName'          => $this->option('project.appName'),
-                'secureSite'       => $this->option('project.secureSite'),
-            ]);
-        });
+        Project::setDir($this->option('project.projectDirectory'));
+        Project::setConfig(new ProjectConfig(
+            isolatedUser: $this->option('project.isolatedUser'),
+            repository: new Repository(
+                $this->option('project.repositoryUrl'),
+                $this->option('project.repositoryBranch')
+            ),
+            phpVersion: new PhpVersion(
+                $this->option('project.phpVersion'),
+                $this->option('project.phpBinary'),
+                $this->option('project.phpVersion')
+            ),
+            directory: $this->option('project.projectDirectory'),
+            domain: $this->option('project.domain'),
+            appName: $this->option('project.appName'),
+            secureSite: $this->option('project.secureSite'),
+        ));
 
         app()->bind(ForgeServer::class, function () {
             return ForgeServer::from([
@@ -62,8 +71,24 @@ DEPLOY;
         $plugin->setup();
 
         dd([
-            'createSiteParams'     => $plugin->createSiteParams([]),
-            'installRepoParams'    => $plugin->installRepoParams([]),
+            'createSiteParams'     => $plugin->createSiteParams(
+                new CreateSiteParams(
+                    domain: $this->option('project.domain'),
+                    projectType: 'php',
+                    directory: $this->option('project.projectDirectory'),
+                    isolated: true,
+                    username: $this->option('project.isolatedUser'),
+                    phpVersion: $this->option('project.phpVersion'),
+                ),
+            ),
+            'installRepoParams'    => $plugin->installRepoParams(
+                new InstallRepoParams(
+                    'github',
+                    $this->option('project.repositoryUrl'),
+                    $this->option('project.repositoryBranch'),
+                    composer: true,
+                ),
+            ),
             'environmentVariables' => $plugin->environmentVariables(),
             'updateDeployScript'   => $plugin->updateDeployScript($deployScript),
             'workers'              => $plugin->workers(),
