@@ -239,7 +239,7 @@ it('can create a worker', function () {
 
 it('can create a lets encrypt certificate', function () {
     Http::fake([
-        'servers/456/sites/123/certificates' => Http::response(['certificates' => []]),
+        'servers/456/sites/123/certificates'             => Http::response(['certificates' => []]),
         'servers/456/sites/123/certificates/letsencrypt' => Http::response(),
     ]);
 
@@ -274,7 +274,7 @@ it('will skip certificate creation if a certificate already exists', function ()
     Http::fake([
         'servers/456/sites/123/certificates' => Http::response([
             'certificates' => [
-                ['domain' => 'sslsite.com', 'active' => true]
+                ['domain' => 'sslsite.com', 'active' => true],
             ],
         ]),
     ]);
@@ -310,7 +310,7 @@ it('will skip certificate creation if a certificate already exists with multiple
     Http::fake([
         'servers/456/sites/123/certificates' => Http::response([
             'certificates' => [
-                ['domain' => 'sslsite.com,www.sslsite.com', 'active' => true]
+                ['domain' => 'sslsite.com,www.sslsite.com', 'active' => true],
             ],
         ]),
     ]);
