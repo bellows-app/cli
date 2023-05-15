@@ -39,4 +39,10 @@ class SharedAccount
     {
         return array_key_exists($name, $this->accounts);
     }
+
+    public function clear()
+    {
+        // This is here primarily for testing purposes, unfortunately.
+        $this->accounts = [];
+    }
 }

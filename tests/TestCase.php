@@ -7,6 +7,7 @@ use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
 use Bellows\Facades\Project;
+use Bellows\Util\SharedAccount;
 use Illuminate\Support\Sleep;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;
 use Spatie\Fork\Fork;
@@ -65,6 +66,8 @@ abstract class TestCase extends BaseTestCase
     protected function tearDown(): void
     {
         $this->resetStubFiles(app(ProjectConfig::class)->directory);
+
+        SharedAccount::getInstance()->clear();
 
         parent::tearDown();
     }
