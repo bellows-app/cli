@@ -110,9 +110,9 @@ JSON);
         file_put_contents($projectDir . '/package.json', <<<'JSON'
 {
     "private": true,
-    "scripts": [],
-    "devDependencies": [],
-    "dependencies": []
+    "scripts": {},
+    "devDependencies": {},
+    "dependencies": {}
 }
 JSON);
     }
