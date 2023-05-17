@@ -408,7 +408,6 @@ SCRIPT;
     expect($result)->toBe($expected);
 });
 
-
 it('can add a string after git pull', function () {
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
