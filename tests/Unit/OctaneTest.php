@@ -71,7 +71,7 @@ it('can set the env variable if there are other ports in use', function () {
     expect($plugin->environmentVariables())->toBe([
         'OCTANE_SERVER' => 'swoole',
         'OCTANE_PORT'   => 8002,
-        'OCTANE_HTTPS'  => 'true',
+        'OCTANE_HTTPS'  => true,
     ]);
 
     $daemons = $plugin->daemons();
@@ -120,7 +120,7 @@ it('can set the env variable if there are no other ports in use', function () {
     expect($plugin->environmentVariables())->toBe([
         'OCTANE_SERVER' => 'swoole',
         'OCTANE_PORT'   => 8000,
-        'OCTANE_HTTPS'  => 'true',
+        'OCTANE_HTTPS'  => true,
     ]);
 
     $daemons = $plugin->daemons();

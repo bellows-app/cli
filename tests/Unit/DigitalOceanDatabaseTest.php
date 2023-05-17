@@ -34,7 +34,7 @@ it('can create a new user and database', function () {
         'DB_HOST'              => 'private-joe-codes-primary-db-do-user-267404-0.a.db.ondigitalocean.com',
         'DB_PORT'              => '25060',
         'DB_PASSWORD'          => 'secretstuff',
-        'DB_ALLOW_DISABLED_PK' => 'true',
+        'DB_ALLOW_DISABLED_PK' => true,
     ]);
 
     Http::assertSent(function ($request) {
@@ -66,6 +66,6 @@ it('can opt for an existing user and database', function () {
         'DB_HOST'              => 'private-joe-codes-primary-db-do-user-267404-0.a.db.ondigitalocean.com',
         'DB_PORT'              => '25060',
         'DB_PASSWORD'          => 'AVNS_OWsCMvRHbLc0mloU43l',
-        'DB_ALLOW_DISABLED_PK' => 'true',
+        'DB_ALLOW_DISABLED_PK' => true,
     ]);
 });
