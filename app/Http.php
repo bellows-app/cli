@@ -169,6 +169,28 @@ class Http
         Console::info($addCredentialsPrompt->helpText ?? 'Retrieve your token here:');
         Console::comment($addCredentialsPrompt->url);
 
+        if (count($addCredentialsPrompt->requiredScopes)) {
+            Console::newLine();
+            Console::info(
+                'Required scopes: '
+                    . implode(
+                        ', ',
+                        array_map(fn ($s) => "<comment>{$s}</comment>", $addCredentialsPrompt->requiredScopes)
+                    )
+            );
+        }
+
+        if (count($addCredentialsPrompt->optionalScopes)) {
+            Console::newLine();
+            Console::info(
+                'Optional scopes (include them if you want Bellows to handle these actions): '
+                    . implode(
+                        ', ',
+                        array_map(fn ($s) => "<comment>{$s}</comment>", $addCredentialsPrompt->optionalScopes)
+                    )
+            );
+        }
+
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
             fn ($value) => [
                 $value => Console::secret(
