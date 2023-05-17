@@ -5,8 +5,6 @@ use Bellows\DeployScript;
 uses(Tests\TestCase::class);
 
 it('can add a string after the composer install command', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -21,7 +19,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addAfterComposerInstall(
+    $result = DeployScript::addAfterComposerInstall(
         $current,
         'npm run production'
     );
@@ -46,8 +44,6 @@ SCRIPT;
 });
 
 it('can add an array of strings after the composer install command', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -62,7 +58,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addAfterComposerInstall(
+    $result = DeployScript::addAfterComposerInstall(
         $current,
         ['npm run production', 'npm run another-thing']
     );
@@ -88,8 +84,6 @@ SCRIPT;
 });
 
 it('can add a string before the php reload command', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -106,7 +100,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addBeforePHPReload(
+    $result = DeployScript::addBeforePHPReload(
         $current,
         'npm run production'
     );
@@ -133,8 +127,6 @@ SCRIPT;
 });
 
 it('can add an array of strings before the php reload command', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -151,7 +143,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addBeforePHPReload(
+    $result = DeployScript::addBeforePHPReload(
         $current,
         ['npm run production', 'npm run another-thing']
     );
@@ -179,7 +171,6 @@ SCRIPT;
 });
 
 it('can add a string before the php reload command in an octane script', function () {
-    $script = app(DeployScript::class);
     $current = <<<'SCRIPT'
     cd /home/test/testproject.com
 git pull origin $FORGE_SITE_BRANCH
@@ -193,7 +184,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addBeforePHPReload(
+    $result = DeployScript::addBeforePHPReload(
         $current,
         'npm run production'
     );
@@ -218,8 +209,6 @@ SCRIPT;
 });
 
 it('can add a string after an arbitrary line', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -234,7 +223,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addAfterLine(
+    $result = DeployScript::addAfterLine(
         $current,
         'fi',
         'npm run production'
@@ -261,8 +250,6 @@ SCRIPT;
 });
 
 it('can add an array of strings after an arbitrary line', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -277,7 +264,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addAfterLine(
+    $result = DeployScript::addAfterLine(
         $current,
         'fi',
         ['npm run production', 'npm run another-thing']
@@ -305,8 +292,6 @@ SCRIPT;
 });
 
 it('can add a string before an arbitrary line', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -321,7 +306,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addBeforeLine($current, 'if [ -f artisan ]; then', 'npm run production');
+    $result = DeployScript::addBeforeLine($current, 'if [ -f artisan ]; then', 'npm run production');
 
     $expected = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
@@ -343,8 +328,6 @@ SCRIPT;
 });
 
 it('can add an array of strings before an arbitrary line', function () {
-    $script = app(DeployScript::class);
-
     $current = <<<'SCRIPT'
 cd /home/forgeittest/forgeittest.com
 git pull origin $FORGE_SITE_BRANCH
@@ -359,7 +342,7 @@ if [ -f artisan ]; then
 fi
 SCRIPT;
 
-    $result = $script->addBeforeLine(
+    $result = DeployScript::addBeforeLine(
         $current,
         'if [ -f artisan ]; then',
         ['npm run production', 'npm run another-thing']
@@ -376,6 +359,86 @@ $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autol
 
 npm run production
 npm run another-thing
+
+if [ -f artisan ]; then
+    $FORGE_PHP artisan migrate --force
+fi
+SCRIPT;
+
+    expect($result)->toBe($expected);
+});
+
+it('can add an array of strings after git pull', function () {
+    $current = <<<'SCRIPT'
+cd /home/forgeittest/forgeittest.com
+git pull origin $FORGE_SITE_BRANCH
+
+$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+( flock -w 10 9 || exit 1
+    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+
+if [ -f artisan ]; then
+    $FORGE_PHP artisan migrate --force
+fi
+SCRIPT;
+
+    $result = DeployScript::addAfterGitPull(
+        $current,
+        ['npm run production', 'npm run another-thing']
+    );
+
+    $expected = <<<'SCRIPT'
+cd /home/forgeittest/forgeittest.com
+git pull origin $FORGE_SITE_BRANCH
+
+npm run production
+npm run another-thing
+
+$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+( flock -w 10 9 || exit 1
+    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+
+if [ -f artisan ]; then
+    $FORGE_PHP artisan migrate --force
+fi
+SCRIPT;
+
+    expect($result)->toBe($expected);
+});
+
+
+it('can add a string after git pull', function () {
+    $current = <<<'SCRIPT'
+cd /home/forgeittest/forgeittest.com
+git pull origin $FORGE_SITE_BRANCH
+
+$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+( flock -w 10 9 || exit 1
+    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+
+if [ -f artisan ]; then
+    $FORGE_PHP artisan migrate --force
+fi
+SCRIPT;
+
+    $result = DeployScript::addAfterGitPull(
+        $current,
+        'npm run another-thing',
+    );
+
+    $expected = <<<'SCRIPT'
+cd /home/forgeittest/forgeittest.com
+git pull origin $FORGE_SITE_BRANCH
+
+npm run another-thing
+
+$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+( flock -w 10 9 || exit 1
+    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
 
 if [ -f artisan ]; then
     $FORGE_PHP artisan migrate --force
