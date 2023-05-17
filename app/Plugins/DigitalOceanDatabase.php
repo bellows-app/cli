@@ -84,7 +84,7 @@ class DigitalOceanDatabase extends Plugin
             'DB_HOST'              => $this->host,
             'DB_PORT'              => $this->port,
             'DB_PASSWORD'          => $this->password,
-            'DB_ALLOW_DISABLED_PK' => 'true',
+            'DB_ALLOW_DISABLED_PK' => true,
         ];
     }
 
