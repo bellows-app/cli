@@ -10,6 +10,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http as HttpFacade;
+use Illuminate\Support\Str;
 
 class Http
 {
@@ -20,6 +21,11 @@ class Http
     public function __construct(
         protected Config $config,
     ) {
+    }
+
+    public function clearClients()
+    {
+        $this->clients = [];
     }
 
     public function createClient(
@@ -164,7 +170,11 @@ class Http
         Console::comment($addCredentialsPrompt->url);
 
         $value = collect($addCredentialsPrompt->credentials)->mapWithKeys(
-            fn ($value) => [$value => Console::secret(ucwords($value))]
+            fn ($value) => [
+                $value => Console::secret(
+                    Str::of($value)->replace('_', ' ')->title()->replace(' Id', ' ID')->toString()
+                ),
+            ]
         )->toArray();
 
         do {
