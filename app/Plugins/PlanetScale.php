@@ -45,32 +45,6 @@ class PlanetScale extends Plugin
             fn (PendingRequest $request) => $request->get('organizations', ['per_page' => 1]),
         );
 
-        $this->getCredentials();
-    }
-
-    public function environmentVariables(): array
-    {
-        return $this->credentials;
-    }
-
-    protected function isForbidden(array $response): bool
-    {
-        return Arr::get($response, 'code') === 'forbidden';
-    }
-
-    protected function missingScope(string $action, array $scopes): void
-    {
-        $scope = implode(', ', array_map(fn ($s) => "<comment>{$s}</comment>", $scopes));
-        $descriptor = Str::plural('scope', $scopes);
-
-        Console::warn("Bellows doesn't have permission to {$action}.");
-        Console::info("Make sure your service token has the {$scope} {$descriptor}.");
-        Console::info('You can update your service token at ' .
-            "<comment>https://app.planetscale.com/{$this->organizationName}/settings/service-tokens</comment>");
-    }
-
-    protected function getCredentials(): void
-    {
         $organizations = $this->http->client()->get('organizations', ['per_page' => 1])->json();
 
         if ($this->isForbidden($organizations)) {
@@ -114,6 +88,11 @@ class PlanetScale extends Plugin
         $this->credentials['MYSQL_ATTR_SSL_CA'] = '/etc/ssl/certs/ca-certificates.crt';
     }
 
+    public function environmentVariables(): array
+    {
+        return $this->credentials;
+    }
+
     protected function getBranch(): ?array
     {
         $branches = $this->http->client()->get(
@@ -146,7 +125,7 @@ class PlanetScale extends Plugin
         )->json();
 
         if ($this->isForbidden($password)) {
-            $this->missingScope('create password', ['{database}:connect_branch']);
+            $this->missingScope('create a password', ['{database}:connect_branch']);
 
             return null;
         }
@@ -264,5 +243,21 @@ class PlanetScale extends Plugin
         Console::confirm('Once you have added the scopes: Continue?', true);
 
         return $database;
+    }
+
+    protected function isForbidden(array $response): bool
+    {
+        return Arr::get($response, 'code') === 'forbidden';
+    }
+
+    protected function missingScope(string $action, array $scopes): void
+    {
+        $scope = implode(', ', array_map(fn ($s) => "<comment>{$s}</comment>", $scopes));
+        $descriptor = Str::plural('scope', $scopes);
+
+        Console::warn("Bellows doesn't have permission to {$action}.");
+        Console::info("Make sure your service token has the {$scope} {$descriptor}.");
+        Console::info('You can update your service token at ' .
+            "<comment>https://app.planetscale.com/{$this->organizationName}/settings/service-tokens</comment>");
     }
 }
