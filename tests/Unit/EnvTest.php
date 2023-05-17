@@ -171,3 +171,35 @@ MIX_APP_NAME="my site"
 FOO=bar
 ENV);
 });
+
+it('will keep a true value as is', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+ENV);
+
+    $newEnv = $env->update('ENABLED', true);
+
+    expect($newEnv)->toBe(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+
+ENABLED=true
+ENV);
+});
+
+it('will keep a false value as is', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+ENV);
+
+    $newEnv = $env->update('ENABLED', false);
+
+    expect($newEnv)->toBe(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+
+ENABLED=false
+ENV);
+});

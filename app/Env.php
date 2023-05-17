@@ -61,6 +61,10 @@ class Env
             $value = '"' . $value . '"';
         }
 
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        }
+
         if (Str::contains($this->raw, "{$key}=")) {
             return preg_replace("/{$key}=.*/", "{$key}={$value}", $this->raw);
         }
@@ -102,6 +106,10 @@ class Env
     {
         if ($quote) {
             return true;
+        }
+
+        if (is_bool($value) || $value === 'true' || $value === 'false') {
+            return false;
         }
 
         if (Str::startsWith($value, '"')) {
