@@ -40,7 +40,18 @@ class PlanetScale extends Plugin
                 credentials: ['service_token_id', 'service_token'],
                 displayName: 'PlanetScale',
                 helpText: 'Once you are logged into your organization, ' .
-                    'click the <comment>Settings</comment> tab, then <comment>Service Tokens</comment>.'
+                    'click the <comment>Settings</comment> tab, then <comment>Service Tokens</comment>.',
+                requiredScopes: [
+                    'read_organization',
+                    'read_databases',
+                    '{database}:read_branch',
+                    '{database}:read_database',
+                    '{database}:connect_branch',
+                ],
+                optionalScopes: [
+                    'create_databases',
+                    '{database}:create_branch',
+                ],
             ),
             fn (PendingRequest $request) => $request->get('organizations', ['per_page' => 1]),
         );
