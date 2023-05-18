@@ -57,7 +57,7 @@ class Octane extends Plugin
             'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
         ], Project::config()->secureSite ? [
-            'OCTANE_HTTPS' => 'true',
+            'OCTANE_HTTPS' => true,
         ] : []);
     }
 

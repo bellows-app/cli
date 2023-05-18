@@ -10,6 +10,8 @@ class AddApiCredentialsPrompt extends Data
         public string $url,
         public array $credentials,
         public string $displayName,
+        public array $requiredScopes = [],
+        public array $optionalScopes = [],
         public ?string $helpText = null,
     ) {
     }

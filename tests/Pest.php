@@ -21,6 +21,7 @@ use Bellows\Http;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 use Bellows\ServerProviders\ServerInterface;
+use Illuminate\Http\Client\Request;
 use Tests\DuskyCommand;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -66,6 +67,22 @@ function pluginConstructorArgs()
         app(Artisan::class),
         app(ServerInterface::class),
     ];
+}
+
+function matchesRequest(Request $request, $url, $method, $data)
+{
+    return isUrl($request, $url)
+        && strtoupper($request->method()) === strtoupper($method)
+        && $request->data() === $data;
+}
+
+function isUrl(Request $request, string $path): bool
+{
+    if (str_contains($path, 'https://')) {
+        return $request->url() === $path;
+    }
+
+    return parse_url($request->url(), PHP_URL_PATH) === $path;
 }
 
 function command(string $command): DuskyCommand

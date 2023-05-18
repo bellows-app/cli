@@ -14,7 +14,7 @@ use LaravelZero\Framework\Commands\Command;
 
 class PluginTester extends Command
 {
-    protected $signature = 'plugin:test {plugin} {--project.isolatedUser=tester} {--project.repositoryUrl=bellows/tester} {--project.repositoryBranch=main} {--project.phpVersion=8.1} {--project.phpBinary=php81} {--project.projectDirectory=tests/stubs/plugins/default} {--project.domain=bellowstester.com} {--project.appName=Bellows Tester} {--project.secureSite=true}';
+    protected $signature = 'plugin:test {plugin} {--demo} {--project.isolatedUser=bellows_tester} {--project.repositoryUrl=bellows/tester} {--project.repositoryBranch=main} {--project.phpVersion=8.1} {--project.phpBinary=php81} {--project.projectDirectory=tests/stubs/plugins/default} {--project.domain=bellowstester.com} {--project.appName=Bellows Tester} {--project.secureSite=true}';
 
     protected $description = 'Test plugins in isolation';
 
@@ -66,35 +66,45 @@ if [ -f artisan ]; then
 fi
 DEPLOY;
 
+        if ($this->option('demo')) {
+            $this->newLine(30);
+        }
+
+        $this->info("Configuring <comment>{$this->argument('plugin')}</comment> plugin...");
+
         $plugin = app('\\Bellows\\Plugins\\' . $this->argument('plugin'));
 
         $plugin->setup();
 
-        dd([
-            'createSiteParams'     => $plugin->createSiteParams(
-                new CreateSiteParams(
-                    domain: $this->option('project.domain'),
-                    projectType: 'php',
-                    directory: $this->option('project.projectDirectory'),
-                    isolated: true,
-                    username: $this->option('project.isolatedUser'),
-                    phpVersion: $this->option('project.phpVersion'),
+        $this->newLine(2);
+
+        if (!$this->option('demo')) {
+            dd([
+                'createSiteParams'     => $plugin->createSiteParams(
+                    new CreateSiteParams(
+                        domain: $this->option('project.domain'),
+                        projectType: 'php',
+                        directory: $this->option('project.projectDirectory'),
+                        isolated: true,
+                        username: $this->option('project.isolatedUser'),
+                        phpVersion: $this->option('project.phpVersion'),
+                    ),
                 ),
-            ),
-            'installRepoParams'    => $plugin->installRepoParams(
-                new InstallRepoParams(
-                    'github',
-                    $this->option('project.repositoryUrl'),
-                    $this->option('project.repositoryBranch'),
-                    composer: true,
+                'installRepoParams'    => $plugin->installRepoParams(
+                    new InstallRepoParams(
+                        'github',
+                        $this->option('project.repositoryUrl'),
+                        $this->option('project.repositoryBranch'),
+                        composer: true,
+                    ),
                 ),
-            ),
-            'environmentVariables' => $plugin->environmentVariables(),
-            'updateDeployScript'   => $plugin->updateDeployScript($deployScript),
-            'workers'              => $plugin->workers(),
-            'jobs'                 => $plugin->jobs(),
-            'daemons'              => $plugin->daemons(),
-            // 'wrapUp' => $plugin->wrapUp(),
-        ]);
+                'environmentVariables' => $plugin->environmentVariables(),
+                'updateDeployScript'   => $plugin->updateDeployScript($deployScript),
+                'workers'              => $plugin->workers(),
+                'jobs'                 => $plugin->jobs(),
+                'daemons'              => $plugin->daemons(),
+                // 'wrapUp' => $plugin->wrapUp(),
+            ]);
+        }
     }
 }

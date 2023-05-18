@@ -10,6 +10,8 @@ class DeployScript
 {
     const COMPOSER_INSTALL = '$FORGE_COMPOSER install';
 
+    const GIT_PULL = 'git pull';
+
     const PHP_RELOAD = '( flock -w 10 9 || exit 1';
 
     const OCTANE_RELOAD = '! $FORGE_PHP artisan octane:status';
@@ -19,6 +21,11 @@ class DeployScript
     public static function addAfterComposerInstall(string $currentScript, string|array $toAdd): string
     {
         return static::addAfterLine($currentScript, static::COMPOSER_INSTALL, $toAdd);
+    }
+
+    public static function addAfterGitPull(string $currentScript, string|array $toAdd): string
+    {
+        return static::addAfterLine($currentScript, static::GIT_PULL, $toAdd);
     }
 
     public static function addBeforePHPReload(string $currentScript, string|array $toAdd): string
