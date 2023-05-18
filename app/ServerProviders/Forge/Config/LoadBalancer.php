@@ -59,18 +59,16 @@ class LoadBalancer implements ServerDeployTarget
     public function setup(): void
     {
         if ($site = $this->server->getSiteByDomain($this->getDomain())) {
-            if (!Console::confirm('Load balancer already exists, use it?', true)) {
-                unset($this->domain);
-
-                $this->getDomain();
-                $this->setup();
-
+            if (Console::confirm('Load balancer already exists, use it?', true)) {
+                $this->primarySite = new Site($site, $this->server->serverData());
+                $this->setLoadBalancedServers();
                 return;
             }
 
-            $this->primarySite = new Site($site, $this->server->serverData());
+            unset($this->domain);
 
-            $this->setLoadBalancedServers();
+            $this->getDomain();
+            $this->setup();
 
             return;
         }
