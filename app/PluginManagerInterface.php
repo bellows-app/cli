@@ -7,14 +7,15 @@ use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
-use Bellows\Enums\PluginMode;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 
 interface PluginManagerInterface
 {
-    public function setActive();
+    public function setActiveForLaunch();
+
+    public function setActiveForDeploy(SiteInterface $site);
 
     public function getAllAvailablePluginNames(): Collection;
 
@@ -25,8 +26,6 @@ interface PluginManagerInterface
     public function environmentVariables(): array;
 
     public function updateDeployScript(string $deployScript): string;
-
-    public function setMode(PluginMode $mode): void;
 
     /**
      * @return Collection<PluginDaemon>

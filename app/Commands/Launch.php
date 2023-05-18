@@ -77,17 +77,17 @@ class Launch extends Command
             return;
         }
 
-        $providerConfig = $serverProvider->getServerDeployTargetFromServer($server);
+        $serverDeployTarget = $serverProvider->getServerDeployTargetFromServer($server);
 
         $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
 
-        $domain = $providerConfig->getDomain();
+        $domain = $serverDeployTarget->getDomain();
 
-        $providerConfig->setup();
+        $serverDeployTarget->setupForLaunch();
 
-        $servers = $providerConfig->servers();
+        $servers = $serverDeployTarget->servers();
 
-        if ($existingSite = $providerConfig->getExistingSite()) {
+        if ($existingSite = $serverDeployTarget->getExistingSite()) {
             if ($this->confirm('View existing site in Forge?', true)) {
                 Process::run(
                     "open https://forge.laravel.com/servers/{$existingSite->getServer()->id}/sites/{$existingSite->id}"
@@ -111,7 +111,7 @@ class Launch extends Command
 
         App::instance(DnsProvider::class, $dnsProvider);
 
-        $phpVersion = $providerConfig->determinePhpVersion();
+        $phpVersion = $serverDeployTarget->determinePhpVersion();
 
         $projectConfig = new ProjectConfig(
             isolatedUser: $isolatedUser,
@@ -128,9 +128,9 @@ class Launch extends Command
         $this->step('Plugins');
 
         $pluginManager->setPrimaryServer($server);
-        $pluginManager->setPrimarySite($providerConfig->getPrimarySite());
+        $pluginManager->setPrimarySite($serverDeployTarget->getPrimarySite());
 
-        $pluginManager->setActive();
+        $pluginManager->setActiveForLaunch();
 
         $this->info('💨 Off we go!');
 

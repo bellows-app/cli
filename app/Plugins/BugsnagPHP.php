@@ -13,6 +13,11 @@ class BugsnagPHP extends Bugsnag
         'bugsnag/bugsnag',
     ];
 
+    public function getName(): string
+    {
+        return 'Bugsnag PHP';
+    }
+
     public function setup(): void
     {
         $this->bugsnagKey = Project::env()->get('BUGSNAG_API_KEY');

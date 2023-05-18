@@ -26,9 +26,9 @@ class Console
         }
     }
 
-    public function choice($question, array $choices, $default = null, $attempts = null, $multiple = false): array|string
+    public function choice($question, array $choices, $default = null, $attempts = null, $multiple = false, $required = true): array|string
     {
-        if ($default === null && count($choices) === 1) {
+        if ($default === null && count($choices) === 1 && $required) {
             $default = array_key_first($choices);
         }
 

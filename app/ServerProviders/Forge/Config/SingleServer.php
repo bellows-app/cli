@@ -5,8 +5,8 @@ namespace Bellows\ServerProviders\Forge\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
-use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Site;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
@@ -17,13 +17,20 @@ class SingleServer implements ServerDeployTarget
 
     protected string $domain;
 
+    protected SiteInterface $primarySite;
+
     public function __construct(
         protected ServerInterface $server,
     ) {
     }
 
-    public function setup(): void
+    public function setupForLaunch(): void
     {
+    }
+
+    public function setupForDeploy(SiteInterface $site): void
+    {
+        $this->primarySite = $site;
     }
 
     public function servers(): Collection
@@ -40,13 +47,24 @@ class SingleServer implements ServerDeployTarget
 
     public function getExistingSite(): ?SiteInterface
     {
-        $site = $this->server->getSiteByDomain($this->getDomain());
+        $site = Console::withSpinner(
+            title: 'Checking for existing domain on ' . $this->server->name,
+            task: fn () => $this->server->getSiteByDomain($this->getDomain()),
+            message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
+            success: fn ($result) => $result === null,
+        );
 
         if ($site) {
             return new Site($site, $this->server->serverData());
         }
 
         return null;
+    }
+
+    /** @return Collection<ServerInterface> */
+    public function getSitesFromPrimary(): Collection
+    {
+        return collect([$this->primarySite]);
     }
 
     public function determinePhpVersion(): PhpVersion

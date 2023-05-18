@@ -106,13 +106,8 @@ class Server implements ServerInterface
 
     public function getSiteByDomain(string $domain): ?ForgeSite
     {
-        $existingDomain = Console::withSpinner(
-            title: 'Checking for existing domain on ' . $this->server->name,
-            task: fn () => collect($this->client->get('sites')->json()['sites'])->first(
-                fn ($site) => $site['name'] === $domain
-            ),
-            message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
-            success: fn ($result) => $result === null,
+        $existingDomain = collect($this->client->get('sites')->json()['sites'])->first(
+            fn ($site) => $site['name'] === $domain
         );
 
         if ($existingDomain) {

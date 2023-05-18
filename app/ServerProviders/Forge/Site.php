@@ -9,6 +9,7 @@ use Bellows\Data\PhpVersion;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
 use Bellows\Env;
+use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Sleep;
@@ -109,9 +110,15 @@ class Site implements SiteInterface
         return $this->client->delete('');
     }
 
+    // TODO: Get rid of this method and just use the get server provider method?
     public function getServer(): ForgeServer
     {
         return $this->server;
+    }
+
+    public function getServerProvider(): ServerInterface
+    {
+        return new Server($this->server);
     }
 
     protected function setClient(): void

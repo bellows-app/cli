@@ -7,7 +7,6 @@ use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
-use Bellows\Enums\PluginMode;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -25,8 +24,6 @@ class PluginManager implements PluginManagerInterface
     // If load balancing, the primary server, if not, the same as the $server property
     protected ServerInterface $primaryServer;
 
-    protected PluginMode $mode;
-
     public function __construct(
         protected Config $config,
         protected array $pluginPaths = [],
@@ -37,22 +34,62 @@ class PluginManager implements PluginManagerInterface
         }
     }
 
-    public function setActive()
+    public function setActiveForDeploy(SiteInterface $site)
+    {
+        $plugins = $this->getAllPlugins();
+
+        [$enabledBasedOnProject, $noAutoDecision] = $plugins->partition(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision());
+
+        $enabledBasedOnProject = $enabledBasedOnProject->filter(fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled);
+
+        // Loop through each site, and check if the plugin is deployable for the site
+        $enabled = $enabledBasedOnProject->map(
+            fn (Plugin $p) => $p->setSite($site)
+        )->filter(fn ($p) => $p->canDeploy())->values();
+
+        $optional = $noAutoDecision->map(
+            fn (Plugin $p) => $p->setSite($site)
+        )->filter(fn ($p) => $p->canDeploy())->values();
+
+        Console::info(
+            sprintf(
+                'Confirm plugins to deploy on <comment>%s</comment> (<comment>%s</comment>):',
+                $site->name,
+                $site->getServer()->name,
+            ),
+        );
+        Console::newLine();
+
+        $allPlugins = $enabled->merge($optional);
+
+        $allChoices = $allPlugins->map(fn ($p) => $p->getName());
+
+        $response = Console::choice(
+            'Plugins:',
+            $allChoices->toArray(),
+            $enabled->keys()->join(',') ?: null,
+            null,
+            true,
+            false, // Required false so that it doesn't auto-select if there is only one (usually the desired behavior)
+        );
+
+        $this->activePlugins = $allPlugins->filter(fn ($p) => in_array($p->getName(), $response))
+            ->filter(fn ($p) => $this->configure($p, true));
+    }
+
+    public function setActiveForLaunch()
     {
         $plugins = $this->getAllPlugins();
 
         $autoDecision = $plugins->filter(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision())->sortByDesc(
             fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled
-        )->filter(fn (Plugin $plugin) => match ($this->mode) {
-            PluginMode::LAUNCH => $plugin->canLaunch(),
-            PluginMode::DEPLOY => $plugin->canDeploy(),
-        });
+        );
 
         Console::table(
             ['', 'Plugin', 'Reason'],
             $autoDecision->map(fn (Plugin $p) => [
                 $p->getDefaultEnabled()->enabled ? '<info>✓</info>' : '<warning>✗</warning>',
-                get_class($p),
+                $p->getName(),
                 $p->getDefaultEnabled()->reason,
             ])->toArray(),
         );
@@ -162,11 +199,6 @@ class PluginManager implements PluginManagerInterface
     public function setServer(ServerInterface $server): void
     {
         $this->call('setServer')->withArgs($server)->run();
-    }
-
-    public function setMode(PluginMode $mode): void
-    {
-        $this->mode = $mode;
     }
 
     protected function getAllPlugins(): Collection

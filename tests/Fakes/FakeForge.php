@@ -2,9 +2,9 @@
 
 namespace Tests\Fakes;
 
-use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;
 use Bellows\ServerProviders\Forge\Config\SingleServer;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\ServerInterface;
 use Illuminate\Support\Collection;
 

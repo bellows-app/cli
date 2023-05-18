@@ -8,10 +8,10 @@ use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
-use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Client;
 use Bellows\ServerProviders\Forge\Server;
 use Bellows\ServerProviders\Forge\Site;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
@@ -39,7 +39,12 @@ class LoadBalancer implements ServerDeployTarget
     public function getExistingSite(): ?SiteInterface
     {
         foreach ($this->servers as $server) {
-            $site = $server->getSiteByDomain($this->getDomain());
+            $site = Console::withSpinner(
+                title: 'Checking for existing domain on ' . $this->server->name,
+                task: fn () => $server->getSiteByDomain($this->getDomain()),
+                message: fn ($result) => $result ? 'Domain already exists on server!' : 'No site found, on we go!',
+                success: fn ($result) => $result === null,
+            );
 
             if ($site) {
                 return new Site($site, $server->serverData());
@@ -49,6 +54,19 @@ class LoadBalancer implements ServerDeployTarget
         return null;
     }
 
+    /**
+     * @return Collection<ServerInterface>
+     */
+    public function getSitesFromPrimary(): Collection
+    {
+        return $this->servers->map(
+            fn (ServerInterface $server) => $server->getSiteByDomain($this->primarySite->name)
+        )
+            // TODO: We're doing that as a failsafe... is this ok? I guess we should only deploy to valid sites?
+            ->filter()
+            ->map(fn (ForgeSite $site, $i) => new Site($site, $this->servers[$i]->serverData()));
+    }
+
     public function getDomain(): string
     {
         $this->domain ??= $this->askForDomain();
@@ -56,19 +74,25 @@ class LoadBalancer implements ServerDeployTarget
         return $this->domain;
     }
 
-    public function setup(): void
+    public function setupForDeploy(SiteInterface $site): void
+    {
+        $this->primarySite = $site;
+        $this->setLoadBalancedServers();
+    }
+
+    public function setupForLaunch(): void
     {
         if ($site = $this->server->getSiteByDomain($this->getDomain())) {
             if (Console::confirm('Load balancer already exists, use it?', true)) {
-                $this->primarySite = new Site($site, $this->server->serverData());
-                $this->setLoadBalancedServers();
+                $this->setupForDeploy(new Site($site, $this->server->serverData()));
+
                 return;
             }
 
             unset($this->domain);
 
             $this->getDomain();
-            $this->setup();
+            $this->setupForLaunch();
 
             return;
         }

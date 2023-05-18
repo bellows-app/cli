@@ -29,4 +29,6 @@ interface SiteInterface
     public function addSecurityRule(SecurityRule $rule): array;
 
     public function getServer(): ForgeServer;
+
+    public function getServerProvider(): ServerInterface;
 }

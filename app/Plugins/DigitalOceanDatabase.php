@@ -31,6 +31,11 @@ class DigitalOceanDatabase extends Plugin
     ) {
     }
 
+    public function getName(): string
+    {
+        return 'DigitalOcean Database';
+    }
+
     public function setup(): void
     {
         $this->http->createJsonClient(
@@ -86,6 +91,11 @@ class DigitalOceanDatabase extends Plugin
             'DB_PASSWORD'          => $this->password,
             'DB_ALLOW_DISABLED_PK' => true,
         ];
+    }
+
+    public function canDeploy(): bool
+    {
+        return true;
     }
 
     protected function getDefaultNewAccountName(string $token): ?string

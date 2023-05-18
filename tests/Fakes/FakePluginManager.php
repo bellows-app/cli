@@ -33,7 +33,7 @@ class FakePluginManager implements PluginManagerInterface
         $this->record(__FUNCTION__);
     }
 
-    public function setActive()
+    public function setActiveForLaunch()
     {
         $this->record(__FUNCTION__);
     }

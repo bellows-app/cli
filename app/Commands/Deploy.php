@@ -13,16 +13,14 @@ use Bellows\Data\Repository;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
-use Bellows\Enums\PluginMode;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagerInterface;
 use Bellows\ServerProviders\Forge\Site;
-use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\ServerProviders\SiteInterface;
 use Exception;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
@@ -33,10 +31,8 @@ class Deploy extends Command
 
     protected $description = 'Deploy a feature(s) of the current repository to a site on a Forge server.';
 
-    public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $serverProvider)
+    public function handle(ServerProviderInterface $serverProvider)
     {
-        $pluginManager->setMode(PluginMode::DEPLOY);
-
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');
@@ -104,9 +100,11 @@ class Deploy extends Command
 
         $serverDeployTarget = $serverProvider->getServerDeployTargetFromServer($server);
 
-        $serverDeployTarget->setup();
+        $serverDeployTarget->setupForDeploy($siteProvider);
 
         $servers = $serverDeployTarget->servers();
+
+        $sites = $serverDeployTarget->getSitesFromPrimary();
 
         // TODO: Maybe we don't do this until we need to? Or rather, see if we need to?
         // $dnsProvider = $this->getDnsProvider($site->name);
@@ -130,31 +128,25 @@ class Deploy extends Command
 
         $this->step('Plugins');
 
-        $pluginManager->setPrimaryServer($server);
-        $pluginManager->setPrimarySite($serverDeployTarget->getPrimarySite());
+        $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider) {
+            $pluginManager = app(PluginManagerInterface::class);
+            $pluginManager->setPrimaryServer($server);
+            $pluginManager->setPrimarySite($siteProvider);
+            $pluginManager->setActiveForDeploy($site);
 
-        $pluginManager->setActive();
+            $this->info('💨 Off we go!');
+            $url = $this->deployToSite($site, $pluginManager);
 
-        $this->info('💨 Off we go!');
+            return $url;
+        });
 
-        $siteUrls = $servers->map(
-            fn (ServerInterface $server) => $this->createSite($server, $pluginManager)
-        );
+        $siteUrls->each(fn (string $siteUrl) => $this->info($siteUrl));
+        $this->newLine();
 
-        if ($siteUrls->count() === 1) {
-            $siteUrl = $siteUrls->first();
+        $descriptor = Str::plural('site', $siteUrls);
 
-            $this->info($siteUrl);
-            $this->newLine();
-
-            if ($this->confirm('Open site in Forge?', true)) {
-                Process::run("open {$siteUrl}");
-            }
-        } else {
-            $this->info('Sites created:');
-            // TODO: Also list primary load balancing site
-            $siteUrls->each(fn (string $siteUrl) => $this->info($siteUrl));
-            $this->newLine();
+        if ($this->confirm("Open {$descriptor} in Forge?", true)) {
+            Process::run($siteUrls->map(fn ($u) => 'open ' . $u)->join(' && '));
         }
     }
 
@@ -178,62 +170,30 @@ class Deploy extends Command
         return $dnsProvider;
     }
 
-    protected function createSite(
-        ServerInterface $server,
+    protected function deployToSite(
+        SiteInterface $site,
         PluginManagerInterface $pluginManager,
     ): string {
+        $server = $site->getServerProvider();
+
+        $pluginManager->setSite($site);
         $pluginManager->setServer($server);
 
-        $this->step("Launching on {$server->name}");
+        $this->step("Deploying to {$site->name} ({$site->getServer()->name})");
 
         $this->step('Environment Variables');
 
         $siteEnv = $site->getEnv();
 
-        $updatedEnvValues = collect(array_merge(
-            [
-                'APP_NAME'     => Project::config()->appName,
-                'APP_URL'      => 'http://' . Project::config()->domain,
-                'VITE_APP_ENV' => '${APP_ENV}',
-            ],
-            $pluginManager->environmentVariables(),
-        ));
+        $updatedEnvValues = collect($pluginManager->environmentVariables());
 
-        $updatedEnvValues->map(
+        $updatedEnvValues->each(
             fn ($v, $k) => $siteEnv->update(
                 $k,
                 is_array($v) ? $v[0] : $v,
                 is_array($v),
             )
         );
-
-        $inLocalButNotInRemote = collect(
-            array_keys(Project::env()->all())
-        )->diff(
-            array_keys($siteEnv->all())
-        )->values();
-
-        if ($inLocalButNotInRemote->isNotEmpty()) {
-            $this->newLine();
-            $this->info('The following environment variables are in your local .env file but not in your remote .env file:');
-            $this->newLine();
-
-            $inLocalButNotInRemote->each(
-                fn ($k) => $this->comment($k)
-            );
-
-            if ($this->confirm('Would you like to add any of them? They will be added with their existing values.')) {
-                $toAdd = $this->choice(
-                    question: 'Which environment variables would you like to add?',
-                    choices: $inLocalButNotInRemote->toArray(),
-                    multiple: true,
-                );
-
-                collect($toAdd)->each(
-                    fn ($k) => $siteEnv->update($k, Project::env()->get($k))
-                );
-            }
-        }
 
         $this->withSpinner(
             title: 'Updating',
@@ -243,11 +203,11 @@ class Deploy extends Command
         $this->step('Deploy Script');
 
         $deployScript = $site->getDeploymentScript();
-        $deployScript = $pluginManager->updateDeployScript($deployScript);
+        $updatedDeployScript = $pluginManager->updateDeployScript($deployScript);
 
         $this->withSpinner(
             title: 'Updating',
-            task: fn () => $site->updateDeploymentScript($deployScript),
+            task: fn () => $site->updateDeploymentScript($updatedDeployScript),
         );
 
         $this->step('Daemons');
@@ -326,7 +286,7 @@ class Deploy extends Command
                 ],
                 [
                     'Deploy Script',
-                    $deployScript,
+                    $updatedDeployScript !== $deployScript ? $deployScript : '-',
                 ],
                 [
                     'Daemons',
@@ -347,12 +307,10 @@ class Deploy extends Command
         );
 
         $this->newLine();
-        $this->info('🎉 Site created successfully!');
+        $this->info('🎉 Site deployed successfully!');
         $this->newLine();
 
-        $siteUrl = "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
-
-        return $siteUrl;
+        return "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
     }
 
     protected function getGitInfo(string $dir, string $domain): Repository

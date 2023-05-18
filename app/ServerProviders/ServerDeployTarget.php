@@ -18,5 +18,10 @@ interface ServerDeployTarget
 
     public function getPrimarySite(): ?SiteInterface;
 
-    public function setup(): void;
+    public function setupForLaunch(): void;
+
+    public function setupForDeploy(SiteInterface $site): void;
+
+    /** @return Collection<SiteInterface> */
+    public function getSitesFromPrimary(): Collection;
 }

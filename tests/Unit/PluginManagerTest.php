@@ -42,7 +42,7 @@ it('can set the active plugins', function () {
 
     $manager->setPrimaryServer(app(ServerInterface::class));
 
-    $manager->setActive();
+    $manager->setActiveForLaunch();
 
     $manager->wrapUp();
 

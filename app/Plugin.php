@@ -9,6 +9,7 @@ use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
+use ReflectionClass;
 
 abstract class Plugin
 {
@@ -29,6 +30,11 @@ abstract class Plugin
 
     // If load balancing, the primary server, if not, the same as the $server property
     protected ServerInterface $primaryServer;
+
+    public function getName(): string
+    {
+        return (new ReflectionClass($this))->getShortName();
+    }
 
     public function setSite(SiteInterface $site): self
     {
