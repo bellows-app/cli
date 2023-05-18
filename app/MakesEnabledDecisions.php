@@ -119,10 +119,12 @@ trait MakesEnabledDecisions
         $packageList = collect($packages)->implode(', ');
         $descriptor = count($packages) > 1 ? 'are' : 'is';
 
+        $packageManagerName = strtolower($packageManager::getName());
+
         return $this->getDefaultEnabledDecision(
             $packagesInstalled,
-            "{$packageList} {$descriptor} installed in this project [{$packageManager}]",
-            "{$packageList} {$descriptor} not installed in this project [{$packageManager}]",
+            "{$packageList} {$descriptor} installed [{$packageManagerName}]",
+            "{$packageList} {$descriptor} not installed [{$packageManagerName}]",
         );
     }
 

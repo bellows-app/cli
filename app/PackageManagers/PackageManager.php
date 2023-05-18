@@ -4,6 +4,11 @@ namespace Bellows\PackageManagers;
 
 abstract class PackageManager
 {
+    public static function getName()
+    {
+        return collect(explode('\\', static::class))->last();
+    }
+
     public static function allPackagesAreInstalled(array $packages): bool
     {
         return collect($packages)->filter(
