@@ -33,11 +33,7 @@ class SingleServer implements ServerDeployTarget
 
     public function getDomain(): string
     {
-        if (isset($this->domain)) {
-            return $this->domain;
-        }
-
-        $this->domain = $this->askForDomain();
+        $this->domain ??= $this->askForDomain();
 
         return $this->domain;
     }

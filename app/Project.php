@@ -34,9 +34,7 @@ class Project
 
     public function env(): Env
     {
-        if (!isset($this->env)) {
-            $this->env = Env::fromDir($this->dir);
-        }
+        $this->env ??= Env::fromDir($this->dir);
 
         return $this->env;
     }

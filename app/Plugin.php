@@ -34,11 +34,9 @@ abstract class Plugin
     {
         $this->site = $site;
 
-        if (!isset($this->primarySite)) {
-            // If we don't have a primary site at this point, also set this as the primary site
-            // TODO: Is this an ugly/unexpected side effect? Oof.
-            $this->primarySite = $site;
-        }
+        // If we don't have a primary site at this point, also set this as the primary site
+        // TODO: Is this an ugly/unexpected side effect? Oof.
+        $this->primarySite ??= $site;
 
         return $this;
     }

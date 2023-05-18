@@ -48,11 +48,7 @@ class Site implements SiteInterface
 
     public function getEnv(): Env
     {
-        if (isset($this->env)) {
-            return $this->env;
-        }
-
-        $this->env = new Env((string) $this->client->get('env'));
+        $this->env ??= new Env((string) $this->client->get('env'));
 
         return $this->env;
     }
