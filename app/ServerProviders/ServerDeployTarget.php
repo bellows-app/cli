@@ -5,7 +5,7 @@ namespace Bellows\ServerProviders;
 use Bellows\Data\PhpVersion;
 use Illuminate\Support\Collection;
 
-interface ConfigInterface
+interface ServerDeployTarget
 {
     /** @return Collection<ServerInterface> */
     public function servers(): Collection;

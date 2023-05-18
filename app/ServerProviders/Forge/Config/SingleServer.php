@@ -5,13 +5,13 @@ namespace Bellows\ServerProviders\Forge\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
-use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 
-class SingleServer implements ConfigInterface
+class SingleServer implements ServerDeployTarget
 {
     use AsksForDomain;
 

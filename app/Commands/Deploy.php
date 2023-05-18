@@ -102,11 +102,11 @@ class Deploy extends Command
             return;
         }
 
-        $providerConfig = $serverProvider->getConfigFromServer($server);
+        $serverDeployTarget = $serverProvider->getServerDeployTargetFromServer($server);
 
-        $providerConfig->setup();
+        $serverDeployTarget->setup();
 
-        $servers = $providerConfig->servers();
+        $servers = $serverDeployTarget->servers();
 
         // TODO: Maybe we don't do this until we need to? Or rather, see if we need to?
         // $dnsProvider = $this->getDnsProvider($site->name);
@@ -131,7 +131,7 @@ class Deploy extends Command
         $this->step('Plugins');
 
         $pluginManager->setPrimaryServer($server);
-        $pluginManager->setPrimarySite($providerConfig->getPrimarySite());
+        $pluginManager->setPrimarySite($serverDeployTarget->getPrimarySite());
 
         $pluginManager->setActive();
 

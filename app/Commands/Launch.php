@@ -77,7 +77,7 @@ class Launch extends Command
             return;
         }
 
-        $providerConfig = $serverProvider->getConfigFromServer($server);
+        $providerConfig = $serverProvider->getServerDeployTargetFromServer($server);
 
         $appName = $this->ask('App Name', Project::env()->get('APP_NAME'));
 

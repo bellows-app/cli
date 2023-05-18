@@ -2,7 +2,7 @@
 
 namespace Tests\Fakes;
 
-use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;
 use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerInterface;
@@ -15,7 +15,7 @@ class FakeForge implements \Bellows\ServerProviders\ServerProviderInterface
         return collect();
     }
 
-    public function getConfigFromServer(ServerInterface $server): ConfigInterface
+    public function getServerDeployTargetFromServer(ServerInterface $server): ServerDeployTarget
     {
         if ($server->type === 'loadbalancer') {
             return new LoadBalancer($server);

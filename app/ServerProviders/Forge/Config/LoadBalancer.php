@@ -8,7 +8,7 @@ use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
-use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Client;
 use Bellows\ServerProviders\Forge\Server;
 use Bellows\ServerProviders\Forge\Site;
@@ -18,7 +18,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class LoadBalancer implements ConfigInterface
+class LoadBalancer implements ServerDeployTarget
 {
     use AsksForDomain;
 

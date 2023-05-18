@@ -5,7 +5,7 @@ namespace Bellows\ServerProviders\Forge;
 use Bellows\Config;
 use Bellows\Data\ForgeServer;
 use Bellows\Facades\Console;
-use Bellows\ServerProviders\ConfigInterface;
+use Bellows\ServerProviders\ServerDeployTarget;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;
 use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerInterface;
@@ -59,7 +59,7 @@ class Forge implements ServerProviderInterface
         return new Server($server);
     }
 
-    public function getConfigFromServer(ServerInterface $server): ConfigInterface
+    public function getServerDeployTargetFromServer(ServerInterface $server): ServerDeployTarget
     {
         if ($server->type === 'loadbalancer') {
             Console::miniTask('Detected', 'Load Balancer', true);

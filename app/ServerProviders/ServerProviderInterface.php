@@ -12,5 +12,5 @@ interface ServerProviderInterface
 
     public function getServer(): ?ServerInterface;
 
-    public function getConfigFromServer(ServerInterface $server): ConfigInterface;
+    public function getServerDeployTargetFromServer(ServerInterface $server): ServerDeployTarget;
 }
