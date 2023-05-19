@@ -32,6 +32,7 @@
         "laravel-zero/framework": "^10.0",
         "laravel/pint": "^1.2",
         "mockery/mockery": "^1.4.4",
+        "nunomaduro/larastan": "^2.0",
         "nunomaduro/termwind": "^1.14",
         "pestphp/pest": "^2.0",
         "pestphp/pest-plugin-faker": "^2.0",
