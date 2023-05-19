@@ -19,9 +19,9 @@ class Hashids extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool

@@ -41,9 +41,11 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable
         $this->bugsnagKey = $project['api_key'];
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
         $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool
@@ -53,10 +55,6 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
-        if (!$this->bugsnagKey) {
-            return [];
-        }
-
         return ['BUGSNAG_API_KEY' => $this->bugsnagKey];
     }
 }

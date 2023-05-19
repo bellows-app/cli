@@ -57,8 +57,11 @@ class QueueWorker extends Plugin implements Launchable, Deployable
         } while ($addAnother);
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        $this->launch();
+
+        return true;
     }
 
     public function workers(): array

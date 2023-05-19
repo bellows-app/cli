@@ -45,13 +45,19 @@ class Octane extends Plugin implements Launchable, Deployable
         ], Project::env()->get('OCTANE_SERVER') ?? 'swoole');
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        return !$this->site->getEnv()->hasAll('OCTANE_PORT', 'OCTANE_SERVER');
+        return !$this->site->getEnv()->hasAll('OCTANE_PORT', 'OCTANE_SERVER')
+            || !$this->server->getDaemons()->contains(
+                fn ($daemon) => str_contains($daemon['command'], Artisan::forDaemon('octane:start'))
+            );
     }
 
     public function createSiteParams(CreateSiteParams $params): array
@@ -64,12 +70,16 @@ class Octane extends Plugin implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
-        return  array_merge([
+        $vars = [
             'OCTANE_SERVER' => $this->octaneServer,
             'OCTANE_PORT'   => $this->octanePort,
-        ], Project::config()->secureSite ? [
-            'OCTANE_HTTPS' => true,
-        ] : []);
+        ];
+
+        if (Project::config()->secureSite) {
+            $vars['OCTANE_HTTPS'] = true;
+        }
+
+        return $vars;
     }
 
     public function daemons(): array

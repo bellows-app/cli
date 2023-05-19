@@ -22,15 +22,14 @@ class RunSchedule extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        // TODO: Check if job is already scheduled?
-        return false;
+        return $this->server->hasJob(Artisan::forJob('schedule:run'));
     }
 
     public function jobs(): array

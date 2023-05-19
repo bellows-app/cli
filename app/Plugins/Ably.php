@@ -9,10 +9,13 @@ use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Util\Deploy;
 use Illuminate\Http\Client\PendingRequest;
 
 class Ably extends Plugin implements Launchable, Deployable
 {
+    protected const BROADCAST_DRIVER = 'ably';
+
     protected string $key;
 
     protected array $requiredComposerPackages = [
@@ -69,36 +72,34 @@ class Ably extends Plugin implements Launchable, Deployable
         )['key'];
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        $currentDriver = $this->site->getEnv()->get('BROADCAST_DRIVER');
-
         if (
-            $currentDriver
-            && $currentDriver !== 'ably'
-            && !Console::confirm("Change broadcast driver to Ably from {$currentDriver}?", true)
+            !Deploy::wantsToChangeValueTo(
+                $this->site->getEnv()->get('BROADCAST_DRIVER'),
+                self::BROADCAST_DRIVER,
+                'Change broadcast driver to Ably'
+            )
         ) {
-            return;
+            return false;
         }
 
         $this->launch();
+
+        return true;
     }
 
     public function environmentVariables(): array
     {
-        if (!isset($this->key)) {
-            return [];
-        }
-
         return [
-            'BROADCAST_DRIVER' => 'ably',
+            'BROADCAST_DRIVER' => self::BROADCAST_DRIVER,
             'ABLY_KEY'         => $this->key,
         ];
     }
 
     public function canDeploy(): bool
     {
-        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'ably'
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== self::BROADCAST_DRIVER
             || !$this->site->getEnv()->has('ABLY_KEY');
     }
 }

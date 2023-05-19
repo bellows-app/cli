@@ -3,7 +3,6 @@
 namespace Bellows\Plugins;
 
 use Bellows\Artisan;
-use Bellows\Data\Daemon;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PluginDaemon;
 use Bellows\DeployScript;
@@ -41,9 +40,11 @@ class InertiaServerSideRendering extends Plugin implements Launchable, Deployabl
         $this->ssrPort = $highestSSRPortInUse + 1;
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
         $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool

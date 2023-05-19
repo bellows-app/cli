@@ -8,10 +8,13 @@ use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Util\Deploy;
 use Illuminate\Http\Client\PendingRequest;
 
 class Pusher extends Plugin implements Launchable, Deployable
 {
+    protected const BROADCAST_DRIVER = 'pusher';
+
     protected array $appConfig;
 
     protected array $requiredComposerPackages = [
@@ -44,13 +47,26 @@ class Pusher extends Plugin implements Launchable, Deployable
         $this->presentChoices();
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        if (
+            !Deploy::wantsToChangeValueTo(
+                $this->site->getEnv()->get('BROADCAST_DRIVER'),
+                self::BROADCAST_DRIVER,
+                'Change broadcast driver to Pusher'
+            )
+        ) {
+            return false;
+        }
+
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'pusher'
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== self::BROADCAST_DRIVER
             || !$this->site->getEnv()->hasAll(
                 'PUSHER_APP_ID',
                 'PUSHER_APP_KEY',
@@ -62,7 +78,7 @@ class Pusher extends Plugin implements Launchable, Deployable
     public function environmentVariables(): array
     {
         return [
-            'BROADCAST_DRIVER'   => 'pusher',
+            'BROADCAST_DRIVER'   => self::BROADCAST_DRIVER,
             'PUSHER_APP_ID'      => $this->appConfig['app_id'],
             'PUSHER_APP_KEY'     => $this->appConfig['key'],
             'PUSHER_APP_SECRET'  => $this->appConfig['secret'],

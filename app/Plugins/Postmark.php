@@ -2,6 +2,7 @@
 
 namespace Bellows\Plugins;
 
+use Bellows\Commands\Deploy;
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 
 class Postmark extends Plugin implements Launchable, Deployable
 {
+    protected const MAILER = 'postmark';
+
     protected array $postmarkServer;
 
     protected array $sendingDomain;
@@ -68,11 +71,51 @@ class Postmark extends Plugin implements Launchable, Deployable
         );
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        if (
+            !Deploy::wantsToChangeValueTo(
+                $this->site->getEnv()->get('MAIL_MAILER'),
+                self::MAILER,
+                'Change mailer to Postmark'
+            )
+        ) {
+            return false;
+        }
+
+        $this->launch();
+
+        return true;
     }
 
-    public function getMessageStreamId()
+    public function canDeploy(): bool
+    {
+        return $this->site->getEnv()->get('MAIL_MAILER') !== self::MAILER
+            || !$this->site->getEnv()->hasAll('POSTMARK_MESSAGE_SREAM_ID', 'POSTMARK_TOKEN');
+    }
+
+    public function wrapUp(): void
+    {
+        if ($this->verifyReturnPath) {
+            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyReturnPath");
+        }
+
+        if ($this->verifyDKIM) {
+            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyDkim ");
+        }
+    }
+
+    public function environmentVariables(): array
+    {
+        return [
+            'MAIL_MAILER'                => self::MAILER,
+            'MAIL_FROM_ADDRESS'          => $this->fromEmail,
+            'POSTMARK_MESSAGE_STREAM_ID' => $this->messageStreamId,
+            'POSTMARK_TOKEN'             => $this->postmarkServer['ApiTokens'][0],
+        ];
+    }
+
+    protected function getMessageStreamId()
     {
         $token = $this->postmarkServer['ApiTokens'][0];
 
@@ -99,7 +142,7 @@ class Postmark extends Plugin implements Launchable, Deployable
         );
     }
 
-    public function updateDomainRecordsWithProvider()
+    protected function updateDomainRecordsWithProvider()
     {
         if (
             $this->sendingDomain['ReturnPathDomainVerified']
@@ -140,7 +183,7 @@ class Postmark extends Plugin implements Launchable, Deployable
         }
     }
 
-    public function getServer()
+    protected function getServer()
     {
         if (Console::confirm('Create new Postmark server?', true)) {
             $name = Console::ask('Server name', Project::config()->appName);
@@ -181,7 +224,7 @@ class Postmark extends Plugin implements Launchable, Deployable
         );
     }
 
-    public function getDomain()
+    protected function getDomain()
     {
         if (Console::confirm('Create new Postmark domain?', true)) {
             $name = Console::ask('Domain name', 'mail.' . Project::config()->domain);
@@ -206,32 +249,5 @@ class Postmark extends Plugin implements Launchable, Deployable
         )['ID'];
 
         return $this->http->client()->get("domains/{$domainId}")->json();
-    }
-
-    public function canDeploy(): bool
-    {
-        return $this->site->getEnv()->get('MAIL_MAILER') !== 'postmark'
-            || !$this->site->getEnv()->hasAll('POSTMARK_MESSAGE_SREAM_ID', 'POSTMARK_TOKEN');
-    }
-
-    public function wrapUp(): void
-    {
-        if ($this->verifyReturnPath) {
-            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyReturnPath");
-        }
-
-        if ($this->verifyDKIM) {
-            $this->http->client()->put("domains/{$this->sendingDomain['ID']}/verifyDkim ");
-        }
-    }
-
-    public function environmentVariables(): array
-    {
-        return [
-            'MAIL_MAILER'                => 'postmark',
-            'MAIL_FROM_ADDRESS'          => $this->fromEmail,
-            'POSTMARK_MESSAGE_STREAM_ID' => $this->messageStreamId,
-            'POSTMARK_TOKEN'             => $this->postmarkServer['ApiTokens'][0],
-        ];
     }
 }

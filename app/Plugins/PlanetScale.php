@@ -106,8 +106,21 @@ class PlanetScale extends Plugin implements Launchable, Deployable
         $this->credentials['MYSQL_ATTR_SSL_CA'] = '/etc/ssl/certs/ca-certificates.crt';
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        $current = $this->site->getEnv()->get('DB_HOST');
+
+        if (
+            $current
+            && !Str::contains($current, 'psdb.cloud')
+            && !Console::confirm("Your current database connection is pointed to {$current}, continue?", true)
+        ) {
+            return false;
+        }
+
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool

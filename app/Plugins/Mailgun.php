@@ -10,6 +10,7 @@ use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Util\Deploy;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 
 class Mailgun extends Plugin implements Launchable, Deployable
 {
+    protected const MAILER = 'mailgun';
+
     protected string $domain;
 
     protected string $endpoint;
@@ -61,8 +64,21 @@ class Mailgun extends Plugin implements Launchable, Deployable
         }
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        if (
+            !Deploy::wantsToChangeValueTo(
+                $this->site->getEnv()->get('MAIL_MAILER'),
+                self::MAILER,
+                'Change mailer to Mailgun'
+            )
+        ) {
+            return false;
+        }
+
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool
@@ -71,7 +87,7 @@ class Mailgun extends Plugin implements Launchable, Deployable
             'MAILGUN_DOMAIN',
             'MAILGUN_SECRET',
             'MAILGUN_ENDPOINT',
-        );
+        ) || $this->site->getEnv()->get('MAIL_MAILER') !== self::MAILER;
     }
 
     public function wrapUp(): void
@@ -84,6 +100,7 @@ class Mailgun extends Plugin implements Launchable, Deployable
     public function environmentVariables(): array
     {
         return [
+            'MAIL_MAILER'      => self::MAILER,
             'MAILGUN_DOMAIN'   => $this->domain,
             'MAILGUN_SECRET'   => $this->http->client()->getOptions()['auth'][1],
             'MAILGUN_ENDPOINT' => $this->endpoint,

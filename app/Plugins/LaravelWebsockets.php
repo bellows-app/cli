@@ -5,9 +5,12 @@ namespace Bellows\Plugins;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Util\Deploy;
 
 class LaravelWebsockets extends Plugin implements Launchable, Deployable
 {
+    protected const BROADCAST_DRIVER = 'pusher';
+
     protected array $requiredComposerPackages = [
         'beyondcode/laravel-websockets',
     ];
@@ -17,20 +20,32 @@ class LaravelWebsockets extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        if (
+            !Deploy::wantsToChangeValueTo(
+                $this->site->getEnv()->get('BROADCAST_DRIVER'),
+                self::BROADCAST_DRIVER,
+                'Change broadcast driver to Laravel Websockets'
+            )
+        ) {
+            return false;
+        }
+
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'pusher';
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== self::BROADCAST_DRIVER;
     }
 
     public function environmentVariables(): array
     {
         return [
-            'BROADCAST_DRIVER' => 'pusher',
+            'BROADCAST_DRIVER' => self::BROADCAST_DRIVER,
         ];
     }
 }

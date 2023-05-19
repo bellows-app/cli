@@ -19,15 +19,14 @@ class QuickDeploy extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        // TODO: Check if quick deploy is enabled currently?
-        return false;
+        return !$this->site->quick_deploy;
     }
 
     public function wrapUp(): void

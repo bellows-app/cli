@@ -50,7 +50,7 @@ class Statamic extends Plugin implements Launchable, Deployable
         Console::comment('https://statamic.dev/git-automation#customizing-commits');
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
         // Nothing to do here
     }

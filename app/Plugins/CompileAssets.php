@@ -8,7 +8,6 @@ use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
-use Illuminate\Support\Str;
 
 class CompileAssets extends Plugin implements Launchable, Deployable
 {
@@ -34,9 +33,9 @@ class CompileAssets extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool

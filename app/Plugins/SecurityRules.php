@@ -60,9 +60,11 @@ class SecurityRules extends Plugin implements Launchable, Deployable
         } while (Console::confirm('Add another security rule group?'));
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool

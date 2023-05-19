@@ -26,8 +26,11 @@ class SentryPHP extends Sentry implements Launchable, Deployable
         $this->setupSentry();
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
+        $this->launch();
+
+        return true;
     }
 
     public function canDeploy(): bool

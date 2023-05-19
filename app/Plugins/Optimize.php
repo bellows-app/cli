@@ -21,15 +21,19 @@ class Optimize extends Plugin implements Launchable, Deployable
         // Nothing to do here
     }
 
-    public function deploy(): void
+    public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool
     {
-        // TODO: Check deploy script
-        return false;
+        return !$this->site->isInDeploymentScript([
+            'config:cache',
+            'route:cache',
+            'view:cache',
+            'event:cache',
+        ]);
     }
 
     public function updateDeployScript(string $deployScript): string

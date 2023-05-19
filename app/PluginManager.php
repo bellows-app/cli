@@ -78,7 +78,7 @@ class PluginManager implements PluginManagerInterface
         );
 
         $this->activePlugins = $allPlugins->filter(fn ($p) => in_array($p->getName(), $response))
-            ->filter(fn ($p) => $this->configure($p, true));
+            ->filter(fn ($p) => $this->configure($p, 'deploy', true));
     }
 
     public function setActiveForLaunch()
@@ -111,10 +111,10 @@ class PluginManager implements PluginManagerInterface
                     return false;
                 }
 
-                return $this->configure($p, true);
+                return $this->configure($p, 'launch', true);
             }
 
-            return $this->configure($p);
+            return $this->configure($p, 'launch');
         })->values();
     }
 
@@ -234,7 +234,7 @@ class PluginManager implements PluginManagerInterface
             ]);
     }
 
-    protected function configure(Plugin $p, ?bool $isEnabled = null): bool
+    protected function configure(Plugin $p, string $method, ?bool $isEnabled = null): bool
     {
         Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
         Console::newLine();
@@ -242,7 +242,11 @@ class PluginManager implements PluginManagerInterface
         $enabled = $isEnabled ?? $p->enabled();
 
         if ($enabled) {
-            $this->call('setup', $p)->run();
+            $result = $this->call($method, $p)->run();
+
+            if (is_bool($result->first())) {
+                return $result->first();
+            }
         }
 
         return $enabled;

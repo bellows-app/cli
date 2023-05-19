@@ -16,9 +16,9 @@ class Npm extends PackageManager
         );
 
         return match ($lockFile) {
-            'yarn.lock' => 'yarn',
+            'yarn.lock'         => 'yarn',
             'package-lock.json' => 'npm',
-            default => null,
+            default             => null,
         };
     }
 
