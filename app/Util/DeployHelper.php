@@ -4,7 +4,7 @@ namespace Bellows\Util;
 
 use Bellows\Facades\Console;
 
-class Deploy
+class DeployHelper
 {
     public static function wantsToChangeValueTo($current, $new, $message)
     {

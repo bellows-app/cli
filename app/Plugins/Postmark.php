@@ -10,7 +10,7 @@ use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
-use Bellows\Util\Deploy;
+use Bellows\Util\DeployHelper;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -74,7 +74,7 @@ class Postmark extends Plugin implements Launchable, Deployable
     public function deploy(): bool
     {
         if (
-            !Deploy::wantsToChangeValueTo(
+            !DeployHelper::wantsToChangeValueTo(
                 $this->site->getEnv()->get('MAIL_MAILER'),
                 self::MAILER,
                 'Change mailer to Postmark'

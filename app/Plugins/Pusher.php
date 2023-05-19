@@ -8,7 +8,7 @@ use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
-use Bellows\Util\Deploy;
+use Bellows\Util\DeployHelper;
 use Illuminate\Http\Client\PendingRequest;
 
 class Pusher extends Plugin implements Launchable, Deployable
@@ -50,7 +50,7 @@ class Pusher extends Plugin implements Launchable, Deployable
     public function deploy(): bool
     {
         if (
-            !Deploy::wantsToChangeValueTo(
+            !DeployHelper::wantsToChangeValueTo(
                 $this->site->getEnv()->get('BROADCAST_DRIVER'),
                 self::BROADCAST_DRIVER,
                 'Change broadcast driver to Pusher'
