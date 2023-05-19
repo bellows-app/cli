@@ -58,7 +58,7 @@ class CompileAssets extends Plugin implements Launchable, Deployable
         return DeployScript::addAfterComposerInstall(
             $deployScript,
             match (Npm::getPackageManager()) {
-                'yarn' => $this->yarnLines,
+                'yarn'  => $this->yarnLines,
                 default => $this->npmLines,
             },
         );
