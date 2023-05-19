@@ -24,6 +24,10 @@ class Server implements ServerInterface
 {
     protected PendingRequest $client;
 
+    protected Collection $daemons;
+
+    protected Collection $jobs;
+
     public function __construct(
         protected ForgeServer $server,
     ) {
@@ -145,9 +149,37 @@ class Server implements ServerInterface
         return new Site($site, $this->server);
     }
 
+    public function getDaemons(): Collection
+    {
+        $this->daemons ??= collect($this->client->get('daemons')->json()['daemons']);
+
+        return $this->daemons;
+    }
+
+    public function hasDaemon(string $command): bool
+    {
+        return $this->getDaemons()->contains(
+            fn ($daemon) => $daemon['command'] === $command
+        );
+    }
+
     public function createDaemon(Daemon $daemon): array
     {
         return $this->client->post('daemons', $daemon->toArray())->json();
+    }
+
+    public function getJobs(): Collection
+    {
+        $this->jobs ??= collect($this->client->get('jobs')->json()['jobs']);
+
+        return $this->jobs;
+    }
+
+    public function hasJob(string $command): bool
+    {
+        return $this->getJobs()->contains(
+            fn ($job) => $job['command'] === $command
+        );
     }
 
     public function createJob(Job $job): array

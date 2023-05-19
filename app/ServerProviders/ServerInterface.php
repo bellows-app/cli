@@ -25,9 +25,17 @@ interface ServerInterface
 
     public function createSite(CreateSiteParams $params): SiteInterface;
 
+    public function getDaemons(): Collection;
+
+    public function hasDaemon(string $command): bool;
+
     public function createDaemon(Daemon $daemon): array;
 
+    public function getJobs(): Collection;
+
     public function createJob(Job $job): array;
+
+    public function hasJob(string $command): bool;
 
     public function getSiteEnv(int $id): string;
 

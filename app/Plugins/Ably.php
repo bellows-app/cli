@@ -71,6 +71,17 @@ class Ably extends Plugin implements Launchable, Deployable
 
     public function deploy(): void
     {
+        $currentDriver = $this->site->getEnv()->get('BROADCAST_DRIVER');
+
+        if (
+            $currentDriver
+            && $currentDriver !== 'ably'
+            && !Console::confirm("Change broadcast driver to Ably from {$currentDriver}?", true)
+        ) {
+            return;
+        }
+
+        $this->launch();
     }
 
     public function environmentVariables(): array
@@ -87,6 +98,7 @@ class Ably extends Plugin implements Launchable, Deployable
 
     public function canDeploy(): bool
     {
-        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'ably' || !$this->site->getEnv()->has('ABLY_KEY');
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'ably'
+            || !$this->site->getEnv()->has('ABLY_KEY');
     }
 }

@@ -16,10 +16,12 @@ class Hashids extends Plugin implements Launchable, Deployable
 
     public function launch(): void
     {
+        // Nothing to do here
     }
 
     public function deploy(): void
     {
+        // Nothing to do here
     }
 
     public function canDeploy(): bool

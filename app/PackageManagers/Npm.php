@@ -9,6 +9,19 @@ use Illuminate\Support\Facades\File;
 
 class Npm extends PackageManager
 {
+    public static function getPackageManager(): ?string
+    {
+        $lockFile = collect(['yarn.lock', 'package-lock.json'])->first(
+            fn ($file) => file_exists(Project::config()->directory . '/' . $file)
+        );
+
+        return match ($lockFile) {
+            'yarn.lock' => 'yarn',
+            'package-lock.json' => 'npm',
+            default => null,
+        };
+    }
+
     public static function packageIsInstalled(string $package): bool
     {
         $json = static::getPackageJson();

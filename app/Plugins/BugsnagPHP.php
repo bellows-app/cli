@@ -43,6 +43,7 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable
 
     public function deploy(): void
     {
+        $this->launch();
     }
 
     public function canDeploy(): bool

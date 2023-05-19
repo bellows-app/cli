@@ -12,13 +12,21 @@ use Bellows\Env;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Sleep;
+use Illuminate\Support\Str;
 
 class Site implements SiteInterface
 {
     protected PendingRequest $client;
 
     protected Env $env;
+
+    protected string $deploymentScript;
+
+    protected Collection $workers;
+
+    protected Collection $securityRules;
 
     public function __construct(
         protected ForgeSite $site,
@@ -61,12 +69,28 @@ class Site implements SiteInterface
 
     public function getDeploymentScript(): string
     {
-        return (string) $this->client->get('deployment/script');
+        $this->deploymentScript ??= (string) $this->client->get('deployment/script');
+
+        return $this->deploymentScript;
+    }
+
+    public function isInDeploymentScript(string|iterable $script): bool
+    {
+        return Str::contains($this->getDeploymentScript(), $script);
     }
 
     public function updateDeploymentScript(string $script): void
     {
         $this->client->put('deployment/script', ['content' => $script]);
+    }
+
+    public function getWorkers()
+    {
+        $this->workers ??= collect($this->client->get('workers')->json()['workers'])->map(
+            fn ($worker) => Worker::from($worker)
+        );
+
+        return $this->workers;
     }
 
     public function createWorker(Worker $worker): array

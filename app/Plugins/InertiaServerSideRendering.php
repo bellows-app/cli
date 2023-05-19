@@ -3,6 +3,7 @@
 namespace Bellows\Plugins;
 
 use Bellows\Artisan;
+use Bellows\Data\Daemon;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PluginDaemon;
 use Bellows\DeployScript;
@@ -42,12 +43,14 @@ class InertiaServerSideRendering extends Plugin implements Launchable, Deployabl
 
     public function deploy(): void
     {
+        $this->launch();
     }
 
     public function canDeploy(): bool
     {
-        // TODO: Check for deamons, deploy script
-        return !$this->site->getEnv()->hasALl('SSR_PORT', 'VITE_SSR_PORT');
+        return !$this->site->getEnv()->hasAll('SSR_PORT', 'VITE_SSR_PORT')
+            || !$this->site->isInDeploymentScript('inertia:stop-ssr')
+            || $this->server->hasDaemon('inertia:start-ssr');
     }
 
     public function environmentVariables(): array

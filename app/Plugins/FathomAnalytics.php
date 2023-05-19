@@ -66,6 +66,7 @@ class FathomAnalytics extends Plugin implements Launchable, Deployable
 
     public function deploy(): void
     {
+        $this->launch();
     }
 
     public function canDeploy(): bool

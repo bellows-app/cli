@@ -26,6 +26,8 @@ interface SiteInterface
 
     public function enableQuickDeploy(): void;
 
+    public function isInDeploymentScript(string|iterable $script): bool;
+
     public function addSecurityRule(SecurityRule $rule): array;
 
     public function getServer(): ForgeServer;

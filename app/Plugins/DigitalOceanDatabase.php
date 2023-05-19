@@ -79,6 +79,16 @@ class DigitalOceanDatabase extends Plugin implements Launchable, Deployable
 
     public function deploy(): void
     {
+        $currentHost = $this->site->getEnv()->get('DB_HOST');
+
+        if (
+            $currentHost
+            && !Console::confirm("Your current database connection is pointed to {$currentHost}, continue?", true)
+        ) {
+            return;
+        }
+
+        $this->launch();
     }
 
     public function canDeploy(): bool
