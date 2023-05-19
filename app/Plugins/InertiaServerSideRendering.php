@@ -51,7 +51,7 @@ class InertiaServerSideRendering extends Plugin implements Launchable, Deployabl
     {
         return !$this->site->getEnv()->hasAll('SSR_PORT', 'VITE_SSR_PORT')
             || !$this->site->isInDeploymentScript('inertia:stop-ssr')
-            || $this->server->hasDaemon('inertia:start-ssr');
+            || !$this->server->hasDaemon('inertia:start-ssr');
     }
 
     public function environmentVariables(): array

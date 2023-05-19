@@ -126,6 +126,9 @@ class Deploy extends Command
 
         $this->step('Plugins');
 
+        $this->comment('Gathering some information...');
+        $this->newLine();
+
         $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider) {
             $pluginManager = app(PluginManagerInterface::class);
             $pluginManager->setPrimaryServer($server);

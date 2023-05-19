@@ -11,6 +11,16 @@ use Bellows\Plugins\Contracts\Launchable;
 
 class CompileAssets extends Plugin implements Launchable, Deployable
 {
+    protected $yarnLines = [
+        'yarn',
+        'yarn build',
+    ];
+
+    protected $npmLines = [
+        'npm install',
+        'npm run build',
+    ];
+
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
         if (Npm::getPackageManager() === null) {
@@ -40,22 +50,17 @@ class CompileAssets extends Plugin implements Launchable, Deployable
 
     public function canDeploy(): bool
     {
-        return !$this->site->isInDeploymentScript($this->getDeployScriptLines());
+        return !$this->site->isInDeploymentScript($this->yarnLines) && !$this->site->isInDeploymentScript($this->npmLines);
     }
 
     public function updateDeployScript(string $deployScript): string
     {
-        return DeployScript::addAfterComposerInstall($deployScript, $this->getDeployScriptLines());
-    }
-
-    protected function getDeployScriptLines(): array
-    {
-        return Npm::getPackageManager() === 'yarn' ? [
-            'yarn',
-            'yarn build',
-        ] : [
-            'npm install',
-            'npm run build',
-        ];
+        return DeployScript::addAfterComposerInstall(
+            $deployScript,
+            match (Npm::getPackageManager()) {
+                'yarn' => $this->yarnLines,
+                default => $this->npmLines,
+            },
+        );
     }
 }

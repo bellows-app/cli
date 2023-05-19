@@ -2,7 +2,6 @@
 
 namespace Bellows\Plugins;
 
-use Bellows\Commands\Deploy;
 use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
@@ -11,6 +10,7 @@ use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Util\Deploy;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;

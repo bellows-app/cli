@@ -49,10 +49,14 @@ class PluginManager implements PluginManagerInterface
         // Loop through each site, and check if the plugin is deployable for the site
         $enabled = $enabledBasedOnProject->map(
             fn (Plugin $p) => $p->setSite($site)
+        )->map(
+            fn (Plugin $p) => $p->setServer($site->getServerProvider())
         )->filter(fn ($p) => $p->canDeploy())->values();
 
         $optional = $noAutoDecision->map(
             fn (Plugin $p) => $p->setSite($site)
+        )->map(
+            fn (Plugin $p) => $p->setServer($site->getServerProvider())
         )->filter(fn ($p) => $p->canDeploy())->values();
 
         Console::info(
