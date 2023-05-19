@@ -24,6 +24,11 @@ class SentryPHP extends Sentry
         $this->setupSentry();
     }
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('SENTRY_LARAVEL_DSN');
+    }
+
     public function environmentVariables(): array
     {
         if (!$this->sentryClientKey) {

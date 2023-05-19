@@ -48,6 +48,11 @@ class Statamic extends Plugin
         Console::comment('https://statamic.dev/git-automation#customizing-commits');
     }
 
+    public function canDeploy(): bool
+    {
+        return true;
+    }
+
     public function environmentVariables(): array
     {
         $vars = [];

@@ -12,6 +12,11 @@ class Hashids extends Plugin
         'vinkla/hashids',
     ];
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('HASH_IDS_SALT');
+    }
+
     public function environmentVariables(): array
     {
         return [

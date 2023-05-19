@@ -12,6 +12,12 @@ class MomentumTrail extends Plugin
         'based/momentum-trail',
     ];
 
+    public function canDeploy(): bool
+    {
+        // TODO: Check for deploy script
+        return false;
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
         // TODO: Probably add a check to see if the routes.json file exists and touch it if it doesn't

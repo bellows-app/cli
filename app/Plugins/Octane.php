@@ -43,6 +43,11 @@ class Octane extends Plugin
         ], Project::env()->get('OCTANE_SERVER') ?? 'swoole');
     }
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->hasAll('OCTANE_PORT', 'OCTANE_SERVER');
+    }
+
     public function createSiteParams(CreateSiteParams $params): array
     {
         return [

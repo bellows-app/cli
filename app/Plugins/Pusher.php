@@ -42,6 +42,17 @@ class Pusher extends Plugin
         $this->presentChoices();
     }
 
+    public function canDeploy(): bool
+    {
+        return $this->site->getEnv()->get('BROADCAST_DRIVER') !== 'pusher'
+            || !$this->site->getEnv()->hasAll(
+                'PUSHER_APP_ID',
+                'PUSHER_APP_KEY',
+                'PUSHER_APP_SECRET',
+                'PUSHER_APP_CLUSTER',
+            );
+    }
+
     public function environmentVariables(): array
     {
         return [

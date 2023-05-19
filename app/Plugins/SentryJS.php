@@ -26,6 +26,11 @@ class SentryJS extends Sentry
         $this->setupSentry();
     }
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->hasAll('SENTRY_JS_DSN', 'VITE_SENTRY_JS_DSN');
+    }
+
     public function environmentVariables(): array
     {
         if (!$this->sentryClientKey) {

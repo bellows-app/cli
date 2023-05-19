@@ -22,6 +22,11 @@ class SecurityRules extends Plugin
         );
     }
 
+    public function canDeploy(): bool
+    {
+        return true;
+    }
+
     public function setup(): void
     {
         $this->securityRules = collect();

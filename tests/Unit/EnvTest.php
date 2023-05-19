@@ -203,3 +203,37 @@ FOO=bar
 ENABLED=false
 ENV);
 });
+
+it('can check if an env has all of the requested keys', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+ENV);
+
+    expect($env->hasAll('APP_URL', 'FOO'))->toBeTrue();
+});
+
+it('can check if an env does not have all of the requested keys', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+ENV);
+
+    expect($env->hasAll('APP_URL', 'FOO'))->toBeFalse();
+});
+
+it('can check if an env has any of the requested keys', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+ENV);
+
+    expect($env->hasAny('APP_URL', 'FOO'))->toBeTrue();
+});
+
+it('can check if an env does not have any of the requested keys', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+FOO=bar
+ENV);
+
+    expect($env->hasAny('BLAH', 'WHATEVER'))->toBeFalse();
+});

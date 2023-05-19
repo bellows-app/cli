@@ -14,6 +14,12 @@ class Optimize extends Plugin
         return $this->enabledByDefault('You probably want to optimize your application');
     }
 
+    public function canDeploy(): bool
+    {
+        // TODO: Check deploy script
+        return false;
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
         return DeployScript::addBeforePHPReload($deployScript, [

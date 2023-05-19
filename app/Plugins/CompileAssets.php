@@ -34,6 +34,12 @@ class CompileAssets extends Plugin
         return $this->enabledByDefault('You probably want to compile your assets');
     }
 
+    public function canDeploy(): bool
+    {
+        // TODO: Check if the build script is already in the deploy script
+        return false;
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
         $toAdd = $this->getLockFile() === 'yarn.lock' ? [

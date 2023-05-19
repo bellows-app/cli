@@ -28,6 +28,11 @@ class PlanetScale extends Plugin
     ) {
     }
 
+    public function getName(): string
+    {
+        return 'PlanetScale';
+    }
+
     public function setup(): void
     {
         $this->http->createJsonClient(
@@ -97,6 +102,12 @@ class PlanetScale extends Plugin
         $this->credentials = $credentials->all();
         // Forge only uses Ubuntu so just ensure that that this is the value
         $this->credentials['MYSQL_ATTR_SSL_CA'] = '/etc/ssl/certs/ca-certificates.crt';
+    }
+
+    public function canDeploy(): bool
+    {
+        return !Str::contains($this->primarySite->getEnv()->get('DB_HOST'), 'psdb.cloud')
+            || !$this->site->getEnv()->has('MYSQL_ATTR_SSL_CA');
     }
 
     public function environmentVariables(): array

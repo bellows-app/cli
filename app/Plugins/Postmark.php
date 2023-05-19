@@ -202,6 +202,12 @@ class Postmark extends Plugin
         return $this->http->client()->get("domains/{$domainId}")->json();
     }
 
+    public function canDeploy(): bool
+    {
+        return $this->site->getEnv()->get('MAIL_MAILER') !== 'postmark'
+            || !$this->site->getEnv()->hasAll('POSTMARK_MESSAGE_SREAM_ID', 'POSTMARK_TOKEN');
+    }
+
     public function wrapUp(): void
     {
         if ($this->verifyReturnPath) {

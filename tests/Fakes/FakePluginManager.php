@@ -18,6 +18,10 @@ class FakePluginManager implements PluginManagerInterface
         $this->recorded = collect();
     }
 
+    public function setActiveForDeploy(SiteInterface $site)
+    {
+    }
+
     public function setPrimarySite(?SiteInterface $site): void
     {
         $this->record(__FUNCTION__);

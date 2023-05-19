@@ -31,11 +31,6 @@ class DigitalOceanDatabase extends Plugin
     ) {
     }
 
-    public function getName(): string
-    {
-        return 'DigitalOcean Database';
-    }
-
     public function setup(): void
     {
         $this->http->createJsonClient(
@@ -95,7 +90,7 @@ class DigitalOceanDatabase extends Plugin
 
     public function canDeploy(): bool
     {
-        return true;
+        return !Str::contains($this->site->getEnv()->get('DB_HOST'), 'db.ondigitalocean.com');
     }
 
     protected function getDefaultNewAccountName(string $token): ?string

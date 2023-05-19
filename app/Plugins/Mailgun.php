@@ -59,6 +59,15 @@ class Mailgun extends Plugin
         }
     }
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->hasAll(
+            'MAILGUN_DOMAIN',
+            'MAILGUN_SECRET',
+            'MAILGUN_ENDPOINT',
+        );
+    }
+
     public function wrapUp(): void
     {
         if ($this->verifyNewDomain) {

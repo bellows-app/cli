@@ -62,6 +62,11 @@ class FathomAnalytics extends Plugin
         )['id'];
     }
 
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('FATHOM_SITE_ID');
+    }
+
     public function environmentVariables(): array
     {
         return [

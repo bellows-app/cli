@@ -15,6 +15,12 @@ class RunSchedule extends Plugin
         return $this->enabledByDefault('You probably want to run your artisan schedule');
     }
 
+    public function canDeploy(): bool
+    {
+        // TODO: Check if job is already scheduled?
+        return false;
+    }
+
     public function jobs(): array
     {
         return [

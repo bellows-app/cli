@@ -18,6 +18,12 @@ class LetsEncryptSSL extends Plugin
         return $this->disabledByDefault('You opted out of securing your site');
     }
 
+    public function canDeploy(): bool
+    {
+        // TODO: Probably not the best check, but works in a pinch
+        return !str_contains($this->primarySite->getEnv()->get('APP_URL'), 'https://');
+    }
+
     public function wrapUp(): void
     {
         $domains = [Project::config()->domain];

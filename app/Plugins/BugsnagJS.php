@@ -12,11 +12,6 @@ class BugsnagJS extends Bugsnag
         '@bugsnag/js',
     ];
 
-    public function getName(): string
-    {
-        return 'Bugsnag JS';
-    }
-
     public function setup(): void
     {
         $this->bugsnagKey = Project::env()->get('BUGSNAG_JS_API_KEY');
@@ -57,6 +52,6 @@ class BugsnagJS extends Bugsnag
 
     public function canDeploy(): bool
     {
-        return !$this->site->getEnv()->has('BUGSNAG_JS_API_KEY') || !$this->site->getEnv()->has('VITE_BUGSNAG_JS_API_KEY');
+        return !$this->site->getEnv()->hasAll('BUGSNAG_JS_API_KEY', 'VITE_BUGSNAG_JS_API_KEY');
     }
 }

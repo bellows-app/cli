@@ -33,7 +33,11 @@ abstract class Plugin
 
     public function getName(): string
     {
-        return (new ReflectionClass($this))->getShortName();
+        return preg_replace(
+            '/(?|([A-Z])([A-Z][a-z])|([a-z])([A-Z]))/',
+            '$1 $2',
+            (new ReflectionClass($this))->getShortName(),
+        );
     }
 
     public function setSite(SiteInterface $site): self

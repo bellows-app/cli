@@ -14,7 +14,6 @@ use Bellows\Data\Repository;
 use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
-use Bellows\Enums\PluginMode;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
@@ -36,8 +35,6 @@ class Launch extends Command
 
     public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $serverProvider)
     {
-        $pluginManager->setMode(PluginMode::LAUNCH);
-
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');

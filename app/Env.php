@@ -38,6 +38,16 @@ class Env
         return $this->get($key) !== null;
     }
 
+    public function hasAll(...$keys): bool
+    {
+        return collect($keys)->every(fn ($key) => $this->has($key));
+    }
+
+    public function hasAny(...$keys): bool
+    {
+        return collect($keys)->some(fn ($key) => $this->has($key));
+    }
+
     public function all(): array
     {
         return $this->parsed;

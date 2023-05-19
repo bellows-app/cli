@@ -60,6 +60,11 @@ class QueueWorker extends Plugin
         return $this->queueWorkers;
     }
 
+    public function canDeploy(): bool
+    {
+        return true;
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
         return DeployScript::addBeforePHPReload($deployScript, [
