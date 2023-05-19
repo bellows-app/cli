@@ -73,9 +73,9 @@ class PluginManager implements PluginManagerInterface
         $allChoices = $allPlugins->map(fn ($p) => $p->getName());
 
         $response = Console::choice(
-            'Plugins:',
+            'Plugins',
             $allChoices->toArray(),
-            $enabled->keys()->join(',') ?: null,
+            $enabled->count() > 0 ? $enabled->keys()->join(',') : null,
             null,
             true,
             false, // Required false so that it doesn't auto-select if there is only one (usually the desired behavior)

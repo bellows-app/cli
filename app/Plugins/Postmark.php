@@ -91,7 +91,7 @@ class Postmark extends Plugin implements Launchable, Deployable
     public function canDeploy(): bool
     {
         return $this->site->getEnv()->get('MAIL_MAILER') !== self::MAILER
-            || !$this->site->getEnv()->hasAll('POSTMARK_MESSAGE_SREAM_ID', 'POSTMARK_TOKEN');
+            || !$this->site->getEnv()->hasAll('POSTMARK_MESSAGE_STREAM_ID', 'POSTMARK_TOKEN');
     }
 
     public function wrapUp(): void

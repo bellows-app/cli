@@ -106,30 +106,29 @@ class Deploy extends Command
 
         // TODO: Maybe we don't do this until we need to? Or rather, see if we need to?
         // $dnsProvider = $this->getDnsProvider($site->name);
-
         // App::instance(DnsProvider::class, $dnsProvider);
 
         $phpVersion = $siteProvider->getPhpVersion();
-
-        $projectConfig = new ProjectConfig(
-            isolatedUser: $site->username,
-            // TODO: What if we don't have one? Do we care?
-            repository: new Repository($site->repository, $site->repository_branch),
-            phpVersion: $phpVersion,
-            directory: $dir,
-            domain: $site->name,
-            appName: $siteEnv->get('APP_NAME') ?? '',
-            secureSite: Str::contains($siteEnv->get('APP_URL'), 'https://'),
-        );
-
-        Project::setConfig($projectConfig);
 
         $this->step('Plugins');
 
         $this->comment('Gathering some information...');
         $this->newLine();
 
-        $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider) {
+        $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider, $phpVersion, $dir, $siteEnv) {
+            $projectConfig = new ProjectConfig(
+                isolatedUser: $site->username,
+                // TODO: What if we don't have one? Do we care?
+                repository: new Repository($site->repository, $site->repository_branch),
+                phpVersion: $phpVersion,
+                directory: $dir,
+                domain: $site->name,
+                appName: $siteEnv->get('APP_NAME') ?? '',
+                secureSite: Str::contains($siteEnv->get('APP_URL'), 'https://'),
+            );
+
+            Project::setConfig($projectConfig);
+
             $pluginManager = app(PluginManagerInterface::class);
             $pluginManager->setPrimaryServer($server);
             $pluginManager->setPrimarySite($siteProvider);
