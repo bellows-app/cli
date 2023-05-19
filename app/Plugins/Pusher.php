@@ -6,9 +6,11 @@ use Bellows\Data\AddApiCredentialsPrompt;
 use Bellows\Facades\Console;
 use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Http\Client\PendingRequest;
 
-class Pusher extends Plugin
+class Pusher extends Plugin implements Launchable, Deployable
 {
     protected array $appConfig;
 
@@ -21,7 +23,7 @@ class Pusher extends Plugin
     ) {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://cli.pusher.com/',
@@ -40,6 +42,10 @@ class Pusher extends Plugin
         Console::info("If you'd like to create one head to <comment>https://dashboard.pusher.com/channels</comment> then refresh the list below.");
 
         $this->presentChoices();
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

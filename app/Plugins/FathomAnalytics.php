@@ -7,9 +7,11 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Http\Client\PendingRequest;
 
-class FathomAnalytics extends Plugin
+class FathomAnalytics extends Plugin implements Launchable, Deployable
 {
     protected $siteId;
 
@@ -25,7 +27,7 @@ class FathomAnalytics extends Plugin
         );
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://api.usefathom.com/v1/',
@@ -60,6 +62,10 @@ class FathomAnalytics extends Plugin
             'name',
             Project::config()->appName,
         )['id'];
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

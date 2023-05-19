@@ -72,11 +72,6 @@ abstract class Plugin
         return $this;
     }
 
-    public function setup(): void
-    {
-        //
-    }
-
     public function createSiteParams(CreateSiteParams $params): array
     {
         return [];
@@ -124,15 +119,5 @@ abstract class Plugin
     public function wrapUp(): void
     {
         //
-    }
-
-    public function canDeploy(): bool
-    {
-        return false;
-    }
-
-    public function canLaunch(): bool
-    {
-        return true;
     }
 }

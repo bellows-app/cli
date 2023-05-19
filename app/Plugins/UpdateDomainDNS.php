@@ -7,10 +7,11 @@ use Bellows\Dns\DnsProvider;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Util\Domain;
 use Illuminate\Support\Collection;
 
-class UpdateDomainDNS extends Plugin
+class UpdateDomainDNS extends Plugin implements Launchable
 {
     public int $priority = 100;
 
@@ -57,7 +58,7 @@ class UpdateDomainDNS extends Plugin
         );
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         once(fn () => $this->updateDomainRecords());
     }

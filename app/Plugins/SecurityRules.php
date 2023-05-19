@@ -6,10 +6,12 @@ use Bellows\Data\SecurityRule;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class SecurityRules extends Plugin
+class SecurityRules extends Plugin implements Launchable, Deployable
 {
     /** @var \Illuminate\Support\Collection<\Bellows\Data\SecurityRule> */
     protected Collection $securityRules;
@@ -22,12 +24,7 @@ class SecurityRules extends Plugin
         );
     }
 
-    public function canDeploy(): bool
-    {
-        return true;
-    }
-
-    public function setup(): void
+    public function launch(): void
     {
         $this->securityRules = collect();
 
@@ -61,6 +58,16 @@ class SecurityRules extends Plugin
                 ])
             );
         } while (Console::confirm('Add another security rule group?'));
+    }
+
+    public function deploy(): void
+    {
+        // Nothing to do here
+    }
+
+    public function canDeploy(): bool
+    {
+        return true;
     }
 
     public function wrapUp(): void

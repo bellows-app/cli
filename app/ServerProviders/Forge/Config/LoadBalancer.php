@@ -57,7 +57,7 @@ class LoadBalancer implements ServerDeployTarget
     /**
      * @return Collection<ServerInterface>
      */
-    public function getSitesFromPrimary(): Collection
+    public function sites(): Collection
     {
         return $this->servers->map(
             fn (ServerInterface $server) => $server->getSiteByDomain($this->primarySite->name)

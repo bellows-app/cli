@@ -8,12 +8,14 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class PlanetScale extends Plugin
+class PlanetScale extends Plugin implements Launchable, Deployable
 {
     protected array $credentials = [];
 
@@ -33,7 +35,7 @@ class PlanetScale extends Plugin
         return 'PlanetScale';
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://api.planetscale.com/v1/',
@@ -102,6 +104,10 @@ class PlanetScale extends Plugin
         $this->credentials = $credentials->all();
         // Forge only uses Ubuntu so just ensure that that this is the value
         $this->credentials['MYSQL_ATTR_SSL_CA'] = '/etc/ssl/certs/ca-certificates.crt';
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool
@@ -234,7 +240,7 @@ class PlanetScale extends Plugin
             Console::info('Starting PlanetScale setup again...');
 
             $this->http->clearClients();
-            $this->setup();
+            $this->launch();
 
             return null;
         }

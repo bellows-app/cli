@@ -74,7 +74,7 @@ DEPLOY;
 
         $plugin = app('\\Bellows\\Plugins\\' . $this->argument('plugin'));
 
-        $plugin->setup();
+        $plugin->launch();
 
         $this->newLine(2);
 

@@ -102,9 +102,7 @@ class Deploy extends Command
 
         $serverDeployTarget->setupForDeploy($siteProvider);
 
-        $servers = $serverDeployTarget->servers();
-
-        $sites = $serverDeployTarget->getSitesFromPrimary();
+        $sites = $serverDeployTarget->sites();
 
         // TODO: Maybe we don't do this until we need to? Or rather, see if we need to?
         // $dnsProvider = $this->getDnsProvider($site->name);

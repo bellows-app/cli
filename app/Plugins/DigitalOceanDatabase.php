@@ -7,12 +7,14 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class DigitalOceanDatabase extends Plugin
+class DigitalOceanDatabase extends Plugin implements Launchable, Deployable
 {
     protected string $host;
 
@@ -31,7 +33,7 @@ class DigitalOceanDatabase extends Plugin
     ) {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://api.digitalocean.com/v2/',
@@ -66,13 +68,22 @@ class DigitalOceanDatabase extends Plugin
         $this->dbType = collect(['pg' => 'pgsql'])->get($db['engine'], $db['engine']);
 
         if (!$this->setUser($db) || !$this->setDatabase($db)) {
-            $this->setup();
+            $this->launch();
 
             return;
         }
 
         $this->host = $db['private_connection']['host'];
         $this->port = $db['private_connection']['port'];
+    }
+
+    public function deploy(): void
+    {
+    }
+
+    public function canDeploy(): bool
+    {
+        return !Str::contains($this->site->getEnv()->get('DB_HOST'), 'db.ondigitalocean.com');
     }
 
     public function environmentVariables(): array
@@ -86,11 +97,6 @@ class DigitalOceanDatabase extends Plugin
             'DB_PASSWORD'          => $this->password,
             'DB_ALLOW_DISABLED_PK' => true,
         ];
-    }
-
-    public function canDeploy(): bool
-    {
-        return !Str::contains($this->site->getEnv()->get('DB_HOST'), 'db.ondigitalocean.com');
     }
 
     protected function getDefaultNewAccountName(string $token): ?string

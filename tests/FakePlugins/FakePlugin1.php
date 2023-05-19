@@ -14,7 +14,7 @@ class FakePlugin1 extends Plugin
         return $this->enabledByDefault('Yes');
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         //
     }

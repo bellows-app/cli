@@ -62,7 +62,7 @@ class SingleServer implements ServerDeployTarget
     }
 
     /** @return Collection<ServerInterface> */
-    public function getSitesFromPrimary(): Collection
+    public function sites(): Collection
     {
         return collect([$this->primarySite]);
     }

@@ -5,8 +5,10 @@ namespace Bellows\Plugins;
 use Bellows\DeployScript;
 use Bellows\Facades\Console;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class Statamic extends Plugin
+class Statamic extends Plugin implements Launchable, Deployable
 {
     protected bool $gitEnabled = false;
 
@@ -26,7 +28,7 @@ class Statamic extends Plugin
     {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->gitEnabled = Console::confirm('Enable git?', true);
 
@@ -46,6 +48,11 @@ class Statamic extends Plugin
 
         Console::info('To prevent circular deployments, customize your commit message as described here:');
         Console::comment('https://statamic.dev/git-automation#customizing-commits');
+    }
+
+    public function deploy(): void
+    {
+        // Nothing to do here
     }
 
     public function canDeploy(): bool

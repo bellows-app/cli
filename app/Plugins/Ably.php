@@ -7,9 +7,11 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Http\Client\PendingRequest;
 
-class Ably extends Plugin
+class Ably extends Plugin implements Launchable, Deployable
 {
     protected string $key;
 
@@ -22,7 +24,7 @@ class Ably extends Plugin
     ) {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://control.ably.net/v1/',
@@ -65,6 +67,10 @@ class Ably extends Plugin
             'name',
             Project::config()->appName,
         )['key'];
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function environmentVariables(): array

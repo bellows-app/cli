@@ -4,14 +4,16 @@ namespace Bellows\Plugins;
 
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class SentryPHP extends Sentry
+class SentryPHP extends Sentry implements Launchable, Deployable
 {
     protected array $anyRequiredComposerPackages = [
         'sentry/sentry-laravel',
     ];
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->sentryClientKey = Project::env()->get('SENTRY_LARAVEL_DSN');
 
@@ -22,6 +24,10 @@ class SentryPHP extends Sentry
         }
 
         $this->setupSentry();
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

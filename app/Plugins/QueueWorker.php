@@ -8,8 +8,10 @@ use Bellows\DeployScript;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class QueueWorker extends Plugin
+class QueueWorker extends Plugin implements Launchable, Deployable
 {
     protected $queueWorkers = [];
 
@@ -18,7 +20,7 @@ class QueueWorker extends Plugin
         return Console::confirm('Do you want to set up any queue workers?');
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $addAnother = true;
 
@@ -53,6 +55,10 @@ class QueueWorker extends Plugin
             // just offer that the first time
             $localConnection = null;
         } while ($addAnother);
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function workers(): array

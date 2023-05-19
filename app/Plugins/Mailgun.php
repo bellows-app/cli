@@ -8,12 +8,14 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class Mailgun extends Plugin
+class Mailgun extends Plugin implements Launchable, Deployable
 {
     protected string $domain;
 
@@ -31,7 +33,7 @@ class Mailgun extends Plugin
     ) {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $region = Console::choice('Which region is your Mailgun account in?', [
             'US',
@@ -57,6 +59,10 @@ class Mailgun extends Plugin
         } else {
             $this->selectDomain();
         }
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

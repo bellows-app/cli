@@ -7,10 +7,12 @@ use Bellows\Data\ForgeSite;
 use Bellows\Data\PluginDaemon;
 use Bellows\DeployScript;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
 
-class InertiaServerSideRendering extends Plugin
+class InertiaServerSideRendering extends Plugin implements Launchable, Deployable
 {
     protected int $ssrPort;
 
@@ -23,7 +25,7 @@ class InertiaServerSideRendering extends Plugin
         return 'Inertia Server-Side Rendering';
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $defaultSSRPort = 13716;
 
@@ -36,6 +38,10 @@ class InertiaServerSideRendering extends Plugin
             ->max() ?: $defaultSSRPort - 1;
 
         $this->ssrPort = $highestSSRPortInUse + 1;
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

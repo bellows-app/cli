@@ -10,6 +10,9 @@ interface ServerDeployTarget
     /** @return Collection<ServerInterface> */
     public function servers(): Collection;
 
+    /** @return Collection<SiteInterface> */
+    public function sites(): Collection;
+
     public function getDomain(): string;
 
     public function determinePhpVersion(): PhpVersion;
@@ -21,7 +24,4 @@ interface ServerDeployTarget
     public function setupForLaunch(): void;
 
     public function setupForDeploy(SiteInterface $site): void;
-
-    /** @return Collection<SiteInterface> */
-    public function getSitesFromPrimary(): Collection;
 }

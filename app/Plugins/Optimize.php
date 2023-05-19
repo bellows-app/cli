@@ -6,12 +6,24 @@ use Bellows\Artisan;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\DeployScript;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class Optimize extends Plugin
+class Optimize extends Plugin implements Launchable, Deployable
 {
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
         return $this->enabledByDefault('You probably want to optimize your application');
+    }
+
+    public function launch(): void
+    {
+        // Nothing to do here
+    }
+
+    public function deploy(): void
+    {
+        // Nothing to do here
     }
 
     public function canDeploy(): bool

@@ -5,14 +5,16 @@ namespace Bellows\Plugins;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Npm;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class BugsnagJS extends Bugsnag
+class BugsnagJS extends Bugsnag implements Launchable, Deployable
 {
     protected array $requiredNpmPackages = [
         '@bugsnag/js',
     ];
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->bugsnagKey = Project::env()->get('BUGSNAG_JS_API_KEY');
 
@@ -38,6 +40,15 @@ class BugsnagJS extends Bugsnag
         $this->bugsnagKey = $project['api_key'];
     }
 
+    public function deploy(): void
+    {
+    }
+
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->hasAll('BUGSNAG_JS_API_KEY', 'VITE_BUGSNAG_JS_API_KEY');
+    }
+
     public function environmentVariables(): array
     {
         if (!$this->bugsnagKey) {
@@ -48,10 +59,5 @@ class BugsnagJS extends Bugsnag
             'BUGSNAG_JS_API_KEY'      => $this->bugsnagKey,
             'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',
         ];
-    }
-
-    public function canDeploy(): bool
-    {
-        return !$this->site->getEnv()->hasAll('BUGSNAG_JS_API_KEY', 'VITE_BUGSNAG_JS_API_KEY');
     }
 }

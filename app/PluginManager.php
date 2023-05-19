@@ -8,6 +8,8 @@ use Bellows\Data\PluginDaemon;
 use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
 use Bellows\Facades\Console;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
@@ -36,7 +38,9 @@ class PluginManager implements PluginManagerInterface
 
     public function setActiveForDeploy(SiteInterface $site)
     {
-        $plugins = $this->getAllPlugins();
+        $plugins = $this->getAllPlugins()->filter(
+            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Deployable::class)
+        )->values();
 
         [$enabledBasedOnProject, $noAutoDecision] = $plugins->partition(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision());
 
@@ -79,7 +83,9 @@ class PluginManager implements PluginManagerInterface
 
     public function setActiveForLaunch()
     {
-        $plugins = $this->getAllPlugins();
+        $plugins = $this->getAllPlugins()->filter(
+            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Launchable::class)
+        )->values();
 
         $autoDecision = $plugins->filter(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision())->sortByDesc(
             fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled

@@ -3,14 +3,24 @@
 namespace Bellows\Plugins;
 
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Support\Str;
 
-class Hashids extends Plugin
+class Hashids extends Plugin implements Launchable, Deployable
 {
     protected array $anyRequiredComposerPackages = [
         'mtvs/eloquent-hashids',
         'vinkla/hashids',
     ];
+
+    public function launch(): void
+    {
+    }
+
+    public function deploy(): void
+    {
+    }
 
     public function canDeploy(): bool
     {

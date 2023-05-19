@@ -8,12 +8,14 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class Postmark extends Plugin
+class Postmark extends Plugin implements Launchable, Deployable
 {
     protected array $postmarkServer;
 
@@ -37,7 +39,7 @@ class Postmark extends Plugin
     ) {
     }
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->http->createJsonClient(
             'https://api.postmarkapp.com/',
@@ -64,6 +66,10 @@ class Postmark extends Plugin
             'From email',
             "hello@{$this->sendingDomain['Name']}"
         );
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function getMessageStreamId()

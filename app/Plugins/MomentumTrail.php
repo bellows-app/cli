@@ -5,12 +5,24 @@ namespace Bellows\Plugins;
 use Bellows\Artisan;
 use Bellows\DeployScript;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class MomentumTrail extends Plugin
+class MomentumTrail extends Plugin implements Launchable, Deployable
 {
     protected array $requiredComposerPackages = [
         'based/momentum-trail',
     ];
+
+    public function launch(): void
+    {
+        // Nothing to do here
+    }
+
+    public function deploy(): void
+    {
+        // Nothing to do here
+    }
 
     public function canDeploy(): bool
     {

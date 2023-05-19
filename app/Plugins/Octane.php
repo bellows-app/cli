@@ -9,10 +9,12 @@ use Bellows\Data\PluginDaemon;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 use Dotenv\Dotenv;
 use Illuminate\Support\Arr;
 
-class Octane extends Plugin
+class Octane extends Plugin implements Launchable, Deployable
 {
     protected int $octanePort;
 
@@ -22,7 +24,7 @@ class Octane extends Plugin
         'laravel/octane',
     ];
 
-    public function setup(): void
+    public function launch(): void
     {
         $defaultOctanePort = 8000;
 
@@ -41,6 +43,10 @@ class Octane extends Plugin
             'roadrunner',
             'swoole',
         ], Project::env()->get('OCTANE_SERVER') ?? 'swoole');
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

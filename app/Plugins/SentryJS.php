@@ -5,15 +5,17 @@ namespace Bellows\Plugins;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Npm;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class SentryJS extends Sentry
+class SentryJS extends Sentry implements Launchable, Deployable
 {
     protected array $anyRequiredNpmPackages = [
         '@sentry/vue',
         '@sentry/react',
     ];
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->sentryClientKey = Project::env()->get('SENTRY_JS_DSN');
 
@@ -24,6 +26,10 @@ class SentryJS extends Sentry
         }
 
         $this->setupSentry();
+    }
+
+    public function deploy(): void
+    {
     }
 
     public function canDeploy(): bool

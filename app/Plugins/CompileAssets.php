@@ -7,8 +7,10 @@ use Bellows\DeployScript;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class CompileAssets extends Plugin
+class CompileAssets extends Plugin implements Launchable, Deployable
 {
     protected array $lockFiles = [
         'yarn.lock',
@@ -32,6 +34,16 @@ class CompileAssets extends Plugin
         }
 
         return $this->enabledByDefault('You probably want to compile your assets');
+    }
+
+    public function launch(): void
+    {
+        // Nothing to do here
+    }
+
+    public function deploy(): void
+    {
+        // Nothing to do here
     }
 
     public function canDeploy(): bool

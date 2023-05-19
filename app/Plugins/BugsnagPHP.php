@@ -5,15 +5,17 @@ namespace Bellows\Plugins;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Composer;
+use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Launchable;
 
-class BugsnagPHP extends Bugsnag
+class BugsnagPHP extends Bugsnag implements Launchable, Deployable
 {
     protected array $anyRequiredComposerPackages = [
         'bugsnag/bugsnag-laravel',
         'bugsnag/bugsnag',
     ];
 
-    public function setup(): void
+    public function launch(): void
     {
         $this->bugsnagKey = Project::env()->get('BUGSNAG_API_KEY');
 
@@ -39,6 +41,15 @@ class BugsnagPHP extends Bugsnag
         $this->bugsnagKey = $project['api_key'];
     }
 
+    public function deploy(): void
+    {
+    }
+
+    public function canDeploy(): bool
+    {
+        return !$this->site->getEnv()->has('BUGSNAG_API_KEY');
+    }
+
     public function environmentVariables(): array
     {
         if (!$this->bugsnagKey) {
@@ -46,10 +57,5 @@ class BugsnagPHP extends Bugsnag
         }
 
         return ['BUGSNAG_API_KEY' => $this->bugsnagKey];
-    }
-
-    public function canDeploy(): bool
-    {
-        return !$this->site->getEnv()->has('BUGSNAG_API_KEY');
     }
 }
