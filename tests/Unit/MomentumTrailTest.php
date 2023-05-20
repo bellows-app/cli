@@ -9,7 +9,7 @@ it('can update the deploy script', function () {
     $this->plugin()->setup();
 
     $plugin = app(MomentumTrail::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $deployScript = $plugin->updateDeployScript(DeployScript::COMPOSER_INSTALL);
 

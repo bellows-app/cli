@@ -73,7 +73,7 @@ it('launches a simple site', function () {
         ->expectsConfirmation('Open site in Forge?', 'no')
         ->assertExitCode(0);
 
-    $this->pluginManager->assertMethodWasCalled('setActive');
+    $this->pluginManager->assertMethodWasCalled('setActiveForLaunch');
     $this->pluginManager->assertMethodWasCalled('setSite', fn ($args) => $args[0]->id === 123);
     $this->pluginManager->assertMethodWasCalled('installRepoParams', fn ($args) => $args[0]->toArray() === [
         'provider'   => 'github',

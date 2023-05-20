@@ -84,6 +84,9 @@ class Server implements ServerInterface
                 version: $version['version'],
                 binary: $version['binary_name'],
                 display: $version['displayable_version'],
+                status: $version['status'],
+                used_as_default: $version['used_as_default'],
+                used_on_cli: $version['used_on_cli'],
             ));
     }
 
@@ -218,13 +221,9 @@ class Server implements ServerInterface
                     );
 
                     Sleep::for(2)->seconds();
-                } while ($phpVersion['status'] !== 'installed');
+                } while ($phpVersion->status !== 'installed');
 
-                return new PhpVersion(
-                    version: $phpVersion['version'],
-                    binary: $phpVersion['binary_name'],
-                    display: $phpVersion['displayable_version'],
-                );
+                return $phpVersion;
             },
             message: fn ($result) => $result->binary ?? null,
             success: fn ($result) => $result !== null,

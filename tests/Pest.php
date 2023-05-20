@@ -244,6 +244,7 @@ function site(array $params): array
             'deployment_url'      => 'https://forge.laravel.com/servers/1234/sites/12345/deploy/http?token=asdfwqfwasdvzsd',
             'is_secured'          => true,
             'tags'                => [],
+            'server_id'           => 1,
         ],
         $params
     );

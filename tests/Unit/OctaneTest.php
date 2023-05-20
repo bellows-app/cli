@@ -48,7 +48,7 @@ it('can set the env variable if there are other ports in use', function () {
 
     $plugin = app(Octane::class);
     $plugin->setServer(app(ServerInterface::class));
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -113,7 +113,7 @@ it('can set the env variable if there are no other ports in use', function () {
 
     $plugin = app(Octane::class);
     $plugin->setServer(app(ServerInterface::class));
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

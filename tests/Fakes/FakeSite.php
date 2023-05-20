@@ -7,8 +7,11 @@ use Bellows\Data\ForgeSite;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
+use Bellows\Env;
+use Bellows\ServerProviders\ServerInterface;
+use Bellows\ServerProviders\SiteInterface;
 
-class FakeSite implements \Bellows\ServerProviders\SiteInterface
+class FakeSite implements SiteInterface
 {
     use RecordsMethodCalls;
 
@@ -19,8 +22,24 @@ class FakeSite implements \Bellows\ServerProviders\SiteInterface
         $this->recorded = collect();
     }
 
+    public function isInDeploymentScript(string|iterable $script): bool
+    {
+        $this->record(__FUNCTION__);
+
+        return false;
+    }
+
+    public function getServerProvider(): ServerInterface
+    {
+        $this->record(__FUNCTION__);
+
+        return new FakeServer($this->server);
+    }
+
     public function getServer(): ForgeServer
     {
+        $this->record(__FUNCTION__);
+
         return $this->server;
     }
 
@@ -29,11 +48,11 @@ class FakeSite implements \Bellows\ServerProviders\SiteInterface
         $this->record(__FUNCTION__, $params);
     }
 
-    public function getEnv(): string
+    public function getEnv(): Env
     {
         $this->record(__FUNCTION__);
 
-        return '';
+        return new Env('');
     }
 
     public function updateEnv(string $env): void

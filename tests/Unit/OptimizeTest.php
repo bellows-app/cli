@@ -9,7 +9,7 @@ it('can update the deploy script', function () {
     $this->plugin()->setup();
 
     $plugin = app(Optimize::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $deployScript = $plugin->updateDeployScript(DeployScript::PHP_RELOAD);
 

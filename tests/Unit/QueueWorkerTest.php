@@ -16,7 +16,7 @@ it('can create a single queue worker', function () {
 
     $plugin = app(QueueWorker::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -59,7 +59,7 @@ it('can create multiple queue workers', function () {
 
     $plugin = app(QueueWorker::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -118,7 +118,7 @@ it('can create a custom queue worker', function () {
 
     $plugin = app(QueueWorker::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

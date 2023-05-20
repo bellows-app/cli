@@ -14,7 +14,7 @@ it('can choose an app from the list', function () {
 
     $plugin = app(FathomAnalytics::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -39,7 +39,7 @@ it('can create a new app', function () {
 
     $plugin = app(FathomAnalytics::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

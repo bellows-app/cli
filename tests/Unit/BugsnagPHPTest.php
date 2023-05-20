@@ -22,7 +22,7 @@ it('can choose an app from the list', function () {
 
     $plugin = app(BugsnagPHP::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -50,7 +50,7 @@ it('can create a new app', function ($package, $projectType) {
 
     $plugin = app(BugsnagPHP::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -73,7 +73,7 @@ it('will use the .env variable if there is one', function () {
 
     $plugin = app(BugsnagPHP::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

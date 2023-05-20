@@ -19,11 +19,12 @@ it('can create a new domain', function () {
         ->setup();
 
     $plugin = app(Mailgun::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
     expect($plugin->environmentVariables())->toBe([
+        'MAIL_MAILER'      => 'mailgun',
         'MAILGUN_DOMAIN'   => 'mail.bellowstest.com',
         'MAILGUN_SECRET'   => '1b1c897b6b99c08558b3c75f37695532-b0aac6d0-0cf7a3c2',
         'MAILGUN_ENDPOINT' => 'api.mailgun.net',
@@ -46,11 +47,12 @@ it('can choose an existing domain', function () {
         ->setup();
 
     $plugin = app(Mailgun::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
     expect($plugin->environmentVariables())->toBe([
+        'MAIL_MAILER'      => 'mailgun',
         'MAILGUN_DOMAIN'   => 'sandbox316e51ab1d3f41e2a8be2d001a038e59.mailgun.org',
         'MAILGUN_SECRET'   => '1b1c897b6b99c08558b3c75f37695532-b0aac6d0-0cf7a3c2',
         'MAILGUN_ENDPOINT' => 'api.mailgun.net',

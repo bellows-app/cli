@@ -29,7 +29,7 @@ ENV
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -89,7 +89,7 @@ ENV
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -149,7 +149,7 @@ ENV
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -184,7 +184,7 @@ it('will bark if it does not have the correct database scopes', function () {
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 });
@@ -213,7 +213,7 @@ it('will bark if it does not have the correct create database scopes', function 
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 });
@@ -234,7 +234,7 @@ it('will bark if it does not have the correct list branches scopes', function ()
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 });
@@ -265,7 +265,7 @@ it('will bark if it does not have the correct create branch scopes', function ()
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 });
@@ -287,7 +287,7 @@ it('will bark if it does not have the correct create password scopes', function 
         ->setup();
 
     $plugin = app(PlanetScale::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 });

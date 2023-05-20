@@ -51,7 +51,7 @@ it('can create a new user and database', function () {
         ->setup();
 
     $plugin = app(Postmark::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -92,7 +92,7 @@ it('can select an existing server and domain from the list', function () {
         ->setup();
 
     $plugin = app(Postmark::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

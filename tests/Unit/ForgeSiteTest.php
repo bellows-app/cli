@@ -5,6 +5,7 @@ use Bellows\Data\ForgeSite;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Data\SecurityRule;
 use Bellows\Data\Worker;
+use Bellows\Env;
 use Bellows\ServerProviders\Forge\Forge;
 use Bellows\ServerProviders\Forge\Site;
 use Illuminate\Support\Facades\Http;
@@ -90,7 +91,10 @@ it('can get the env', function () {
 
     $result = $server->getEnv();
 
-    expect($result)->toBe('FOO=bar');
+    expect($result)->toBeInstanceOf(Env::class);
+    expect($result->all())->toBe([
+        'FOO' => 'bar',
+    ]);
 });
 
 it('can update the env', function () {

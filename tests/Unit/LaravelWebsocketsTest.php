@@ -8,7 +8,7 @@ it('can set the env variable', function () {
     $this->plugin()->setup();
 
     $plugin = app(LaravelWebsockets::class);
-    $plugin->setup();
+    $plugin->launch();
 
     expect($plugin->environmentVariables()['BROADCAST_DRIVER'])->toBe('pusher');
 });

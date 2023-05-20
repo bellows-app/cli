@@ -27,7 +27,7 @@ it('can create a single security rule', function () {
 
     $plugin = app(SecurityRules::class);
     $plugin->setSite($site);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -68,7 +68,7 @@ it('can add multiple users to a security group', function () {
 
     $plugin = app(SecurityRules::class);
     $plugin->setSite($site);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -119,7 +119,7 @@ it('can create multiple security rules', function () {
 
     $plugin = app(SecurityRules::class);
     $plugin->setSite($site);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

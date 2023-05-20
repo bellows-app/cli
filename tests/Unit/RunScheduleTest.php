@@ -8,7 +8,7 @@ it('can create the run schedule job', function () {
     $this->plugin()->setup();
 
     $plugin = app(RunSchedule::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $jobs = $plugin->jobs();
 

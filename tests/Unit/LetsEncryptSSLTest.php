@@ -18,7 +18,7 @@ it('will be disabled if the secure site flag is off', function () {
     $this->plugin()->setup();
 
     $plugin = app(LetsEncryptSSL::class);
-    $plugin->setup();
+    $plugin->launch();
 
     expect($plugin->isEnabledByDefault()->enabled)->toBeFalse();
 });
@@ -31,7 +31,7 @@ it('will be enabled if the secure site flag is on', function () {
     $this->plugin()->setup();
 
     $plugin = app(LetsEncryptSSL::class);
-    $plugin->setup();
+    $plugin->launch();
 
     expect($plugin->isEnabledByDefault()->enabled)->toBeTrue();
 });
@@ -44,7 +44,7 @@ it('can set the env variable', function () {
     $this->plugin()->setup();
 
     $plugin = app(LetsEncryptSSL::class);
-    $plugin->setup();
+    $plugin->launch();
 
     expect($plugin->environmentVariables())->toBe([
         'APP_URL' => 'https://bellowstester.com',

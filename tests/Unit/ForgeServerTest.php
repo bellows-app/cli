@@ -130,61 +130,49 @@ it('it will offer to install correct php version if it cannot be found', functio
 
     setPhpVersionForProject('^8.1');
 
-    // This is strange, but we need to track requests to handle the
-    // responses correctly
-    $requests = collect();
-
     Http::fake([
-        'servers/456/php' => function (Request $request) use ($requests) {
-            if ($request->method() === 'GET') {
-                if ($requests->count() === 0) {
-                    $requests->push(1);
-
-                    return [
-                        [
-                            'id'                  => 29,
-                            'version'             => 'php74',
-                            'status'              => 'installed',
-                            'displayable_version' => 'PHP 7.4',
-                            'binary_name'         => 'php7.4',
-                            'used_as_default'     => false,
-                            'used_on_cli'         => false,
-                        ],
-                    ];
-                }
-
-                return [
-                    [
-                        'id'                  => 29,
-                        'version'             => 'php74',
-                        'status'              => 'installed',
-                        'displayable_version' => 'PHP 7.4',
-                        'binary_name'         => 'php7.4',
-                        'used_as_default'     => false,
-                        'used_on_cli'         => false,
-                    ],
-                    [
-                        'id'                  => 30,
-                        'version'             => 'php81',
-                        'status'              => 'installed',
-                        'displayable_version' => 'PHP 8.1',
-                        'binary_name'         => 'php8.1',
-                        'used_as_default'     => false,
-                        'used_on_cli'         => false,
-                    ],
-                ];
-            }
-
-            return [
+        'servers/456/php' => Http::sequence([
+            [
+                [
+                    'id'                  => 29,
+                    'version'             => 'php74',
+                    'status'              => 'installed',
+                    'displayable_version' => 'PHP 7.4',
+                    'binary_name'         => 'php7.4',
+                    'used_as_default'     => false,
+                    'used_on_cli'         => false,
+                ],
+            ],
+            [
                 'id'                  => 30,
                 'version'             => 'php81',
-                'status'              => 'installed',
+                'status'              => 'installing',
                 'displayable_version' => 'PHP 8.1',
                 'binary_name'         => 'php8.1',
                 'used_as_default'     => false,
                 'used_on_cli'         => false,
-            ];
-        },
+            ],
+            [
+                [
+                    'id'                  => 29,
+                    'version'             => 'php74',
+                    'status'              => 'installed',
+                    'displayable_version' => 'PHP 7.4',
+                    'binary_name'         => 'php7.4',
+                    'used_as_default'     => false,
+                    'used_on_cli'         => false,
+                ],
+                [
+                    'id'                  => 30,
+                    'version'             => 'php81',
+                    'status'              => 'installed',
+                    'displayable_version' => 'PHP 8.1',
+                    'binary_name'         => 'php8.1',
+                    'used_as_default'     => false,
+                    'used_on_cli'         => false,
+                ],
+            ],
+        ]),
     ]);
 
     $mock = $this->plugin()
@@ -210,13 +198,12 @@ it('it will offer to install correct php version if it cannot be found', functio
 
     $mock->validate();
 
-    Http::assertSent(function (Request $request) {
-        return $request->url() === 'https://forge.laravel.com/api/v1/servers/456/php'
-            && $request->method() === 'POST'
-            && $request->data() === [
-                'version' => 'php81',
-            ];
-    });
+    Http::assertSent(fn (Request $request) => matchesRequest(
+        $request,
+        'https://forge.laravel.com/api/v1/servers/456/php',
+        'post',
+        ['version' => 'php81'],
+    ));
 });
 
 it('can retrieve a list of sites', function () {

@@ -11,7 +11,7 @@ it('can select a pusher app from the list', function () {
         ->setup();
 
     $plugin = app(Pusher::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -32,7 +32,7 @@ it('can refresh the list', function () {
         ->setup();
 
     $plugin = app(Pusher::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

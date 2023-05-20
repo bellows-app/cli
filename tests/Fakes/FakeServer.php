@@ -21,6 +21,41 @@ class FakeServer implements \Bellows\ServerProviders\ServerInterface
         $this->recorded = collect();
     }
 
+    public function getPhpVersions(): Collection
+    {
+        $this->record(__FUNCTION__);
+
+        return collect();
+    }
+
+    public function getDaemons(): Collection
+    {
+        $this->record(__FUNCTION__);
+
+        return collect();
+    }
+
+    public function hasDaemon(string $command): bool
+    {
+        $this->record(__FUNCTION__, $command);
+
+        return false;
+    }
+
+    public function getJobs(): Collection
+    {
+        $this->record(__FUNCTION__);
+
+        return collect();
+    }
+
+    public function hasJob(string $command): bool
+    {
+        $this->record(__FUNCTION__, $command);
+
+        return false;
+    }
+
     public function validPhpVersionsFromProject(): Collection
     {
         $this->record(__FUNCTION__);

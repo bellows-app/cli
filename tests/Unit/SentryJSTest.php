@@ -20,7 +20,7 @@ it('can choose an app from the list', function ($package, $dsn) {
 
     $plugin = app(SentryJS::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -46,7 +46,7 @@ it('can enable performance monitoring', function () {
 
     $plugin = app(SentryJS::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -93,7 +93,7 @@ it('can create a new project', function ($package, $projectType) {
 
     $plugin = app(SentryJS::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -121,7 +121,7 @@ it('will use the .env variable if there is one', function () {
 
     $plugin = app(SentryJS::class);
 
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

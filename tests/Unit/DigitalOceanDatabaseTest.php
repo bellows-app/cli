@@ -23,7 +23,7 @@ it('can create a new user and database', function () {
         ->setup();
 
     $plugin = app(DigitalOceanDatabase::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -55,7 +55,7 @@ it('can opt for an existing user and database', function () {
         ->setup();
 
     $plugin = app(DigitalOceanDatabase::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

@@ -16,7 +16,7 @@ it('can update the deploy script and .env variables', function () {
         ->setup();
 
     $plugin = app(Statamic::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -44,7 +44,7 @@ it('will skip the environment variables and deploy script check if git is not en
         ->setup();
 
     $plugin = app(Statamic::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 
@@ -69,7 +69,7 @@ it('will skip the push question if auto commit is off', function () {
         ->setup();
 
     $plugin = app(Statamic::class);
-    $plugin->setup();
+    $plugin->launch();
 
     $mock->validate();
 

@@ -10,6 +10,6 @@ beforeEach(function () {
 
 it('can set the env variable', function () {
     $plugin = app(Hashids::class);
-    $plugin->setup();
+    $plugin->launch();
     expect($plugin->environmentVariables()['HASH_IDS_SALT'])->toBeString();
 });
