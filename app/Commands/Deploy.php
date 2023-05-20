@@ -86,18 +86,6 @@ class Deploy extends Command
 
         $siteProvider = new Site($site, $server->serverData());
 
-        try {
-            // TODO: Load balancer tho
-            $siteEnv = $siteProvider->getEnv();
-        } catch (\Exception $e) {
-            $this->error('Error parsing the .env file! Aborting.');
-            $this->newLine();
-            $this->error('Env file: ' . $siteEnv);
-            $this->error('Error message: ' . $e->getMessage());
-
-            return;
-        }
-
         $serverDeployTarget = $serverProvider->getServerDeployTargetFromServer($server);
 
         $serverDeployTarget->setupForDeploy($siteProvider);
@@ -115,10 +103,11 @@ class Deploy extends Command
         $this->comment('Gathering some information...');
         $this->newLine();
 
-        $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider, $phpVersion, $dir, $siteEnv) {
+        $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider, $phpVersion, $dir) {
+            $siteEnv = $site->getEnv();
+
             $projectConfig = new ProjectConfig(
                 isolatedUser: $site->username,
-                // TODO: What if we don't have one? Do we care?
                 repository: new Repository($site->repository, $site->repository_branch),
                 phpVersion: $phpVersion,
                 directory: $dir,

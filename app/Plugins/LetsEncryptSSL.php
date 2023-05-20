@@ -39,7 +39,7 @@ class LetsEncryptSSL extends Plugin implements Launchable, Deployable
     public function canDeploy(): bool
     {
         // Probably not the best check, but works in a pinch
-        return !str_contains($this->primarySite->getEnv()->get('APP_URL'), 'https://');
+        return !str_contains($this->site->getEnv()->get('APP_URL'), 'https://');
     }
 
     public function wrapUp(): void
