@@ -33,6 +33,11 @@ class DigitalOceanDatabase extends Plugin implements Launchable, Deployable
     ) {
     }
 
+    public function getName(): string
+    {
+        return 'DigitalOcean Database';
+    }
+
     public function launch(): void
     {
         $this->http->createJsonClient(

@@ -11,6 +11,11 @@ use Bellows\Util\Domain;
 
 class LetsEncryptSSL extends Plugin implements Launchable, Deployable
 {
+    public function getName(): string
+    {
+        return "Let's Encrypt SSL";
+    }
+
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
         if (Project::config()->secureSite) {
