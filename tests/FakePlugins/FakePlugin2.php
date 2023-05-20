@@ -5,9 +5,10 @@ namespace Tests\FakePlugins;
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Plugin;
+use Bellows\Plugins\Contracts\Launchable;
 use Illuminate\Support\Facades\Http;
 
-class FakePlugin2 extends Plugin
+class FakePlugin2 extends Plugin implements Launchable
 {
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
