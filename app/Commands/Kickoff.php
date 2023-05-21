@@ -9,6 +9,7 @@ use Bellows\Facades\Project;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 use Bellows\PluginManagerInterface;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
@@ -39,6 +40,8 @@ class Kickoff extends Command
         $this->warn('');
         $this->info("🚀 Let's create a new project! This is exciting.");
         $this->newLine();
+
+        $config = $this->getConfig();
 
         $dir = trim(Process::run('pwd')->output());
 
@@ -110,31 +113,57 @@ class Kickoff extends Command
 
         $this->step('Composer Packages');
 
-        [$devPackages, $prodPackages] = collect(
-            $pluginManager->composerPackagesToInstall()
-        )->partition(fn ($package) => is_array($package));
+        collect($pluginManager->composerPackagesToInstall())
+            ->concat($config['composer'] ?? [])
+            ->unique()
+            ->values()
+            ->tap(
+                function ($packages) {
+                    if ($packages->isNotEmpty()) {
+                        Composer::require($packages->toArray());
+                    }
+                }
+            );
 
-        if ($devPackages->isNotEmpty()) {
-            Composer::require($devPackages->map(fn ($p) => $p[0])->toArray(), true);
-        }
-
-        if ($prodPackages->isNotEmpty()) {
-            Composer::require($prodPackages->toArray());
-        }
+        collect($pluginManager->composerDevPackagesToInstall())
+            ->concat($config['composer-dev'] ?? [])
+            ->unique()
+            ->values()
+            ->tap(
+                function ($packages) {
+                    if ($packages->isNotEmpty()) {
+                        Composer::require($packages->toArray(), true);
+                    }
+                }
+            );
 
         $this->step('NPM Packages');
 
-        [$devPackages, $prodPackages] = collect(
-            $pluginManager->npmPackagesToInstall()
-        )->partition(fn ($package) => is_array($package));
+        collect($pluginManager->npmPackagesToInstall())
+            ->concat($config['npm'] ?? [])
+            ->unique()
+            ->values()
+            ->tap(
+                function ($packages) {
+                    if ($packages->isNotEmpty()) {
+                        Npm::install($packages->toArray());
+                    }
+                }
+            );
 
-        if ($devPackages->isNotEmpty()) {
-            Npm::install($devPackages->map(fn ($p) => $p[0])->toArray(), true);
-        }
+        collect($pluginManager->npmDevPackagesToInstall())
+            ->concat($config['npm-dev'] ?? [])
+            ->unique()
+            ->values()
+            ->tap(
+                function ($packages) {
+                    if ($packages->isNotEmpty()) {
+                        Npm::install($packages->toArray(), true);
+                    }
+                }
+            );
 
-        if ($prodPackages->isNotEmpty()) {
-            Npm::install($prodPackages->toArray());
-        }
+        $pluginManager->installWrapUp();
 
         dd('done');
 
@@ -167,6 +196,34 @@ class Kickoff extends Command
 
         // TODO: CS command
         $this->info($this->url);
+    }
+
+    protected function getConfig(): array
+    {
+        $configs = collect(glob(env('HOME') . '/.bellows/kickoff/*.json'))
+            ->map(fn ($path) => [
+                'file'   => Str::replace('.json', '', basename($path)),
+                'config' => File::json($path),
+            ])
+            ->map(fn ($item) => array_merge(
+                $item,
+                [
+                    'name' => $item['config']['name'] ?? $item['file'],
+                ],
+            ))
+            ->sortBy('name');
+
+        // TODO: Offer to init a config if none exist
+        if ($configs->count() === 1) {
+            return $configs->first()['config'];
+        }
+
+        $name = $this->choice(
+            'What kind of project are we kicking off today?',
+            $configs->pluck('name')->toArray(),
+        );
+
+        return $configs->firstWhere('name', $name)['config'];
     }
 
     protected function commitChanges(string $message)
@@ -238,45 +295,6 @@ class Kickoff extends Command
             'resources/js/app.js',
             'vite.config.js',
         ])->each(fn ($p) => unlink($this->dir . '/' . $p));
-    }
-
-    protected function installComposerPackages()
-    {
-        $this->step('Installing composer packages...');
-
-        $packages = collect([
-            'laravel/cashier',
-            'predis/predis',
-            'spatie/laravel-data',
-            'spatie/laravel-honeypot',
-            'spatie/laravel-ray',
-            'spatie/laravel-slack-alerts',
-            'spatie/laravel-typescript-transformer',
-        ]);
-
-        exec('composer require ' . $packages->implode(' '));
-    }
-
-    protected function installJSPackages()
-    {
-
-        // TODO: These are just packages we need, we don't need to make full on plugins
-        // for them, that's silly. Just install them. But how?
-        $packages = collect([
-            '@bugsnag/plugin-vue',
-            '@headlessui/vue',
-            '@heroicons/vue',
-            '@inertiajs/server',
-            '@tailwindcss/forms',
-            '@tailwindcss/typography',
-            '@vue/tsconfig',
-            'flatpickr',
-            'tailwindcss',
-        ]);
-
-        $devPackages = collect([
-            'vite-plugin-watch',
-        ]);
     }
 
     protected function updateEnv()

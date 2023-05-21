@@ -44,6 +44,14 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
         $this->bugsnagKey = $project['api_key'];
     }
 
+    public function npmPackagesToInstall(): array
+    {
+        return [
+            // TODO: Can we determine if this is correct?
+            // '@bugsnag/plugin-vue',
+        ];
+    }
+
     public function deploy(): bool
     {
         $this->launch();

@@ -19,16 +19,20 @@ class Jetstream extends Plugin implements Installable
 
     protected bool $teams;
 
+    protected bool $darkMode;
+
     public function install(): void
     {
         $this->stack = strtolower(Console::choice('Which stack would you like to use for Jetstream?', ['Inertia', 'Livewire']));
 
         if ($this->stack === 'inertia') {
-            // TODO: Also there's some scaffolding that needs to happen here for SSR
+            // TODO: Do we have to deal with this: https://github.com/inertiajs/server/issues/10
             $this->ssr = Console::confirm('Would you like to enable server-side rendering?', false);
         }
 
         $this->teams = Console::confirm('Would you like to enable teams?', false);
+
+        $this->darkMode = Console::confirm('Would you like to enable dark mode support?', false);
     }
 
     public function composerPackagesToInstall(): array
@@ -50,6 +54,12 @@ class Jetstream extends Plugin implements Installable
             $command .= ' --ssr';
         }
 
-        Process::run(Artisan::local($command));
+        if ($this->darkMode) {
+            $command .= ' --dark';
+        }
+
+        Process::run(Artisan::local($command), function (string $type, string $output) {
+            echo $output;
+        });
     }
 }

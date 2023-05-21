@@ -10,5 +10,9 @@ interface Installable
 
     public function composerPackagesToInstall(): array;
 
+    public function composerDevPackagesToInstall(): array;
+
     public function npmPackagesToInstall(): array;
+
+    public function npmDevPackagesToInstall(): array;
 }

@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Data\ProjectConfig;
+use Illuminate\Support\Facades\File;
 
 class Project
 {
@@ -37,5 +38,15 @@ class Project
         $this->env ??= Env::fromDir($this->dir);
 
         return $this->env;
+    }
+
+    public function getFile(string $path): string
+    {
+        return File::get($this->dir . '/' . ltrim($path, '/'));
+    }
+
+    public function writeFile(string $path, string $contents): void
+    {
+        File::put($this->dir . '/' . ltrim($path, '/'), $contents);
     }
 }

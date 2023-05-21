@@ -18,10 +18,10 @@ class Ray extends Plugin implements Installable
 
     protected string $password;
 
-    public function composerPackagesToInstall(): array
+    public function composerDevPackagesToInstall(): array
     {
         return [
-            ['spatie/laravel-ray', true],
+            'spatie/laravel-ray',
         ];
     }
 }

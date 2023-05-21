@@ -19,7 +19,11 @@ interface PluginManagerInterface
 
     public function composerPackagesToInstall(): array;
 
+    public function composerDevPackagesToInstall(): array;
+
     public function npmPackagesToInstall(): array;
+
+    public function npmDevPackagesToInstall(): array;
 
     public function setActiveForDeploy(SiteInterface $site);
 
@@ -49,6 +53,8 @@ interface PluginManagerInterface
     public function jobs(): Collection;
 
     public function wrapUp();
+
+    public function installWrapUp();
 
     public function setPrimarySite(?SiteInterface $site): void;
 

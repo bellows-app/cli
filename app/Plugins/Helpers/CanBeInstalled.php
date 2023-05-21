@@ -27,6 +27,11 @@ trait CanBeInstalled
         return [];
     }
 
+    public function composerDevPackagesToInstall(): array
+    {
+        return [];
+    }
+
     public function npmPackagesToInstall(): array
     {
         if (count($this->requiredNpmPackages)) {
@@ -37,6 +42,11 @@ trait CanBeInstalled
             return [$this->anyRequiredNpmPackages[0]];
         }
 
+        return [];
+    }
+
+    public function npmDevPackagesToInstall(): array
+    {
         return [];
     }
 }

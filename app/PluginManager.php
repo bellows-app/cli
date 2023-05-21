@@ -206,6 +206,11 @@ class PluginManager implements PluginManagerInterface
         $this->call('wrapUp')->run();
     }
 
+    public function installWrapUp(): void
+    {
+        $this->call('installWrapUp')->run();
+    }
+
     public function setPrimarySite(?SiteInterface $site): void
     {
         if ($site) {
@@ -233,9 +238,19 @@ class PluginManager implements PluginManagerInterface
         return $this->call('composerPackagesToInstall')->reduce([]);
     }
 
+    public function composerDevPackagesToInstall(): array
+    {
+        return $this->call('composerDevPackagesToInstall')->reduce([]);
+    }
+
     public function npmPackagesToInstall(): array
     {
         return $this->call('npmPackagesToInstall')->reduce([]);
+    }
+
+    public function npmDevPackagesToInstall(): array
+    {
+        return $this->call('npmDevPackagesToInstall')->reduce([]);
     }
 
     protected function getAllPlugins(): Collection

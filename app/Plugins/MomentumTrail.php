@@ -9,19 +9,16 @@ use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
+use Bellows\Plugins\Helpers\CanBeLaunched;
+use Bellows\Util\Vite;
 
 class MomentumTrail extends Plugin implements Launchable, Deployable, Installable
 {
-    use CanBeInstalled;
+    use CanBeInstalled, CanBeLaunched;
 
     protected array $requiredComposerPackages = [
         'based/momentum-trail',
     ];
-
-    public function launch(): void
-    {
-        // Nothing to do here
-    }
 
     public function deploy(): bool
     {
@@ -35,11 +32,23 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
 
     public function npmPackagesToInstall(): array
     {
-        return [
-            // TODO: Is this the right place for this?
-            // ['vite-plugin-watch', true],
-            'momentum-trail',
-        ];
+        return ['momentum-trail'];
+    }
+
+    public function npmDevPackagesToInstall(): array
+    {
+        return ['vite-plugin-watch'];
+    }
+
+    public function installWrapUp(): void
+    {
+        Vite::addImport("import { watch } from 'vite-plugin-watch'");
+        Vite::addPlugin(<<<'PLUGIN'
+watch({
+    pattern: 'routes/*.php',
+    command: 'php artisan trail:generate',
+})
+PLUGIN);
     }
 
     public function updateDeployScript(string $deployScript): string
