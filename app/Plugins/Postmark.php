@@ -9,15 +9,19 @@ use Bellows\Facades\Project;
 use Bellows\Http as BellowsHttp;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\DeployHelper;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class Postmark extends Plugin implements Launchable, Deployable
+class Postmark extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected const MAILER = 'postmark';
 
     protected array $postmarkServer;
@@ -107,6 +111,10 @@ class Postmark extends Plugin implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
+        if (!isset($this->fromEmail)) {
+            return [];
+        }
+
         return [
             'MAIL_MAILER'                => self::MAILER,
             'MAIL_FROM_ADDRESS'          => $this->fromEmail,

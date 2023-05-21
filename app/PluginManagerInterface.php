@@ -13,7 +13,13 @@ use Illuminate\Support\Collection;
 
 interface PluginManagerInterface
 {
+    public function setActiveForInstall();
+
     public function setActiveForLaunch();
+
+    public function composerPackagesToInstall(): array;
+
+    public function npmPackagesToInstall(): array;
 
     public function setActiveForDeploy(SiteInterface $site);
 

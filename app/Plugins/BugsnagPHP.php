@@ -6,14 +6,25 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Composer;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class BugsnagPHP extends Bugsnag implements Launchable, Deployable
+class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected array $anyRequiredComposerPackages = [
         'bugsnag/bugsnag-laravel',
         'bugsnag/bugsnag',
     ];
+
+    public function install(): void
+    {
+        // TODO: Offer to handle account setup now if they want
+        // Disable local error reporting
+        // 'BUGSNAG_NOTIFY_RELEASE_STAGES' => 'production',
+    }
 
     public function launch(): void
     {
@@ -55,6 +66,10 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
+        if (!isset($this->bugsnagKey)) {
+            return [];
+        }
+
         return ['BUGSNAG_API_KEY' => $this->bugsnagKey];
     }
 }

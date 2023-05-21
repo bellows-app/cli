@@ -4,11 +4,15 @@ namespace Bellows\Plugins;
 
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Illuminate\Support\Str;
 
-class Hashids extends Plugin implements Launchable, Deployable
+class Hashids extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected array $anyRequiredComposerPackages = [
         'mtvs/eloquent-hashids',
         'vinkla/hashids',

@@ -2,10 +2,10 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 class Npm extends PackageManager
 {
@@ -30,17 +30,20 @@ class Npm extends PackageManager
             || Arr::get($json, 'devDependencies.' . $package) !== null;
     }
 
-    public static function installPackage(string $package): void
+    public static function install(string|array $package, bool $dev = false): void
     {
-        Console::info("Installing {$package}...");
+        $package = is_array($package) ? implode(' ', $package) : $package;
 
-        exec(
-            sprintf(
-                'cd %s && yarn add %s',
-                Project::config()->directory,
-                $package
-            )
-        );
+        if (!file_exists(Project::config()->directory . '/yarn.lock')) {
+            touch(Project::config()->directory . '/yarn.lock');
+        }
+
+        // TODO: Deal with yarn vs npm
+        $flag = $dev ? ' -D' : '';
+
+        Process::run("yarn add{$flag} {$package}", function (string $type, string $output) {
+            echo $output;
+        });
     }
 
     public static function hasScriptCommand(string $command): bool

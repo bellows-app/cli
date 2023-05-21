@@ -204,6 +204,20 @@ ENABLED=false
 ENV);
 });
 
+it('will keep a null value as is', function () {
+    $env = new Env(<<<'ENV'
+APP_URL=https://example.com
+ENV);
+
+    $newEnv = $env->update('ENABLED', null);
+
+    expect($newEnv)->toBe(<<<'ENV'
+APP_URL=https://example.com
+
+ENABLED=null
+ENV);
+});
+
 it('can check if an env has all of the requested keys', function () {
     $env = new Env(<<<'ENV'
 APP_URL=https://example.com

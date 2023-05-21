@@ -31,4 +31,9 @@ class Artisan
             trim($command),
         ])->join(' ');
     }
+
+    public static function local(string $command): string
+    {
+        return 'php artisan ' . trim($command);
+    }
 }

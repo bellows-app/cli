@@ -76,8 +76,17 @@ class Env
             $value = '"' . $value . '"';
         }
 
+        // TODO: We're repeating this logic in shouldQuote, refactor
         if (is_bool($value)) {
             $value = $value ? 'true' : 'false';
+        }
+
+        if (in_array($value, ['true', 'false'])) {
+            $value = $value === 'true' ? 'true' : 'false';
+        }
+
+        if ($value === null) {
+            $value = 'null';
         }
 
         if (Str::contains($this->raw, "{$key}=")) {
@@ -121,6 +130,10 @@ class Env
     {
         if ($quote) {
             return true;
+        }
+
+        if ($value === null) {
+            return false;
         }
 
         if (is_bool($value) || $value === 'true' || $value === 'false') {

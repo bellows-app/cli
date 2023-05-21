@@ -9,6 +9,7 @@ use Bellows\Data\PluginJob;
 use Bellows\Data\PluginWorker;
 use Bellows\Facades\Console;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -38,7 +39,7 @@ class PluginManager implements PluginManagerInterface
 
     public function setActiveForDeploy(SiteInterface $site)
     {
-        $plugins = $this->getAllPlugins()->filter(
+        $plugins = $this->getAllPluginsWithSiteAndServer()->filter(
             fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Deployable::class)
         )->values();
 
@@ -85,9 +86,25 @@ class PluginManager implements PluginManagerInterface
             ->filter(fn ($p) => $this->configure($p, 'deploy', true));
     }
 
-    public function setActiveForLaunch()
+    public function setActiveForInstall()
     {
         $plugins = $this->getAllPlugins()->filter(
+            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Installable::class)
+        )->values();
+
+        $plugins->each(function ($p) {
+            Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
+            Console::newLine();
+
+            $p->install();
+        });
+
+        $this->activePlugins = $plugins;
+    }
+
+    public function setActiveForLaunch()
+    {
+        $plugins = $this->getAllPluginsWithSiteAndServer()->filter(
             fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Launchable::class)
         )->values();
 
@@ -211,6 +228,16 @@ class PluginManager implements PluginManagerInterface
         $this->call('setServer')->withArgs($server)->run();
     }
 
+    public function composerPackagesToInstall(): array
+    {
+        return $this->call('composerPackagesToInstall')->reduce([]);
+    }
+
+    public function npmPackagesToInstall(): array
+    {
+        return $this->call('npmPackagesToInstall')->reduce([]);
+    }
+
     protected function getAllPlugins(): Collection
     {
         $blacklist = $this->config->get('plugins.launch.blacklist', []);
@@ -230,12 +257,17 @@ class PluginManager implements PluginManagerInterface
             })
             ->values()
             ->map(fn (string $plugin) => app($plugin))
-            ->each(fn (Plugin $p) => isset($this->primarySite) ? $p->setPrimarySite($this->primarySite) : null)
-            ->each(fn (Plugin $p) => $p->setPrimaryServer($this->primaryServer))
             ->sortBy([
                 fn (Plugin $a, Plugin $b) => $b->priority <=> $a->priority,
                 fn (Plugin $a, Plugin $b) => get_class($a) <=> get_class($b),
             ]);
+    }
+
+    protected function getAllPluginsWithSiteAndServer(): Collection
+    {
+        return $this->getAllPlugins()
+            ->each(fn (Plugin $p) => isset($this->primarySite) ? $p->setPrimarySite($this->primarySite) : null)
+            ->each(fn (Plugin $p) => $p->setPrimaryServer($this->primaryServer));
     }
 
     protected function configure(Plugin $p, string $method, ?bool $isEnabled = null): bool

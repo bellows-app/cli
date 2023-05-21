@@ -6,10 +6,14 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Npm;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class BugsnagJS extends Bugsnag implements Launchable, Deployable
+class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected array $requiredNpmPackages = [
         '@bugsnag/js',
     ];
@@ -54,6 +58,10 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
+        if (!isset($this->bugsnagKey)) {
+            return [];
+        }
+
         return [
             'BUGSNAG_JS_API_KEY'      => $this->bugsnagKey,
             'VITE_BUGSNAG_JS_API_KEY' => '${BUGSNAG_JS_API_KEY}',

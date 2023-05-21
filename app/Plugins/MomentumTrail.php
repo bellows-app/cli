@@ -6,10 +6,14 @@ use Bellows\Artisan;
 use Bellows\DeployScript;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class MomentumTrail extends Plugin implements Launchable, Deployable
+class MomentumTrail extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected array $requiredComposerPackages = [
         'based/momentum-trail',
     ];
@@ -27,6 +31,15 @@ class MomentumTrail extends Plugin implements Launchable, Deployable
     public function canDeploy(): bool
     {
         return !$this->site->isInDeploymentScript('trail:generate');
+    }
+
+    public function npmPackagesToInstall(): array
+    {
+        return [
+            // TODO: Is this the right place for this?
+            // ['vite-plugin-watch', true],
+            'momentum-trail',
+        ];
     }
 
     public function updateDeployScript(string $deployScript): string

@@ -2,9 +2,9 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 class Composer extends PackageManager
 {
@@ -15,17 +15,15 @@ class Composer extends PackageManager
         return isset($composerJson['require'][$package]);
     }
 
-    public static function require(string $package, bool $dev): void
+    public static function require(string|array $package, bool $dev = false): void
     {
-        Console::info("Installing {$package}...");
+        $package = is_array($package) ? implode(' ', $package) : $package;
 
-        exec(
-            sprintf(
-                'cd %s && composer require %s',
-                Project::config()->directory,
-                $package
-            )
-        );
+        $flag = $dev ? '--dev' : '';
+
+        Process::run("composer require {$package} {$flag}", function (string $type, string $output) {
+            echo $output;
+        });
     }
 
     protected static function getComposerJson(): array

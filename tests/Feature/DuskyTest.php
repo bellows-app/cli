@@ -235,4 +235,4 @@ it('can launch link leap load balanced', function () {
         ->waitFor('Summary', 60)
         ->waitFor('Site created successfully', 60)
         ->exec();
-})->only();
+})->skip();

@@ -236,6 +236,7 @@ class Launch extends Command
             $pluginManager->environmentVariables(),
         ));
 
+        // TODO: Should be each? Not map?
         $updatedEnvValues->map(
             fn ($v, $k) => $siteEnv->update(
                 $k,
