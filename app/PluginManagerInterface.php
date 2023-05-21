@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 
 interface PluginManagerInterface
 {
-    public function setActiveForInstall();
+    public function setActiveForInstall(array $plugins);
 
     public function setActiveForLaunch();
 

@@ -16,6 +16,7 @@ use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 use ReflectionClass;
 use Spatie\StructureDiscoverer\Discover;
+use Illuminate\Support\Str;
 
 class PluginManager implements PluginManagerInterface
 {
@@ -86,11 +87,11 @@ class PluginManager implements PluginManagerInterface
             ->filter(fn ($p) => $this->configure($p, 'deploy', true));
     }
 
-    public function setActiveForInstall()
+    public function setActiveForInstall(array $pluginsConfig)
     {
         $plugins = $this->getAllPlugins()->filter(
             fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Installable::class)
-        )->values();
+        )->filter(fn ($p) => Str::endsWith(get_class($p), $pluginsConfig))->values();
 
         $plugins->each(function ($p) {
             Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");

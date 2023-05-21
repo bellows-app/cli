@@ -37,11 +37,16 @@ class Kickoff extends Command
      */
     public function handle(PluginManagerInterface $pluginManager)
     {
+        if (Process::run('ls -A .')->output() !== '') {
+            $this->newLine();
+            $this->error('Directory is not empty. Kickoff only works with a fresh directory.');
+            $this->newLine();
+            return;
+        }
+
         $this->warn('');
         $this->info("🚀 Let's create a new project! This is exciting.");
         $this->newLine();
-
-        $config = $this->getConfig();
 
         $dir = trim(Process::run('pwd')->output());
 
@@ -49,10 +54,7 @@ class Kickoff extends Command
 
         $this->comment("Creating project in {$dir}");
 
-        if (Process::run('ls -A .')->output() !== '') {
-            $this->error('Directory is not empty. Kickoff only works with a fresh directory.');
-            exit;
-        }
+        $config = $this->getConfig();
 
         $topDirectory = trim(basename($dir));
 
@@ -76,7 +78,7 @@ class Kickoff extends Command
             )
         );
 
-        $pluginManager->setActiveForInstall();
+        $pluginManager->setActiveForInstall($config['plugins'] ?? []);
 
         $this->step('Installing Laravel');
 
