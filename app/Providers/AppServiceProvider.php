@@ -13,6 +13,7 @@ use Bellows\ServerProviders\ServerProviderInterface;
 use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Signals;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\ServiceProvider;
 use Phar;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -52,6 +53,12 @@ class AppServiceProvider extends ServiceProvider
                 )
             )
         );
+
+        Process::macro('runWithOutput', function ($command) {
+            Process::run($command, function ($type, $output) {
+                echo $output;
+            });
+        });
 
         Signals::resolveAvailabilityUsing(function () {
             return $this->app->runningInConsole()

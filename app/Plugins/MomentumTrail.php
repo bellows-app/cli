@@ -5,6 +5,7 @@ namespace Bellows\Plugins;
 use Bellows\Artisan;
 use Bellows\DeployScript;
 use Bellows\Facades\Project;
+use Bellows\Git\Git;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
@@ -48,6 +49,8 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
             Project::writeFile('resources/js/routes.json', '{}');
         }
 
+        Git::ignore('resources/js/routes.json');
+
         // TODO: Also update entry point file (app.js)
         Vite::addImport("import { watch } from 'vite-plugin-watch'");
         Vite::addPlugin(<<<'PLUGIN'
@@ -73,11 +76,17 @@ PLUGIN);
 
     public function updateDeployScript(string $deployScript): string
     {
-        // TODO: Probably add a check to see if the routes.json file exists and touch it if it doesn't
-        // (based on the config file, either the published one or the vendor one)
         return DeployScript::addAfterComposerInstall(
             $deployScript,
-            Artisan::inDeployScript('trail:generate'),
+            [
+                <<<'SCRIPT'
+if [ ! -f resources/js/routes.json ]; then
+    echo "Creating resources/js/routes.json"
+    echo "{}" > resources/js/routes.json
+fi
+SCRIPT,
+                Artisan::inDeployScript('trail:generate'),
+            ],
         );
     }
 }

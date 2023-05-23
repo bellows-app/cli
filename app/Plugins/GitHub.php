@@ -16,32 +16,45 @@ class GitHub extends Plugin implements Installable
 {
     use CanBeInstalled;
 
-    public function install(): void
+    public function installWrapUp(): void
     {
+        if (!Console::confirm('Initialize a GitHub repo?', true)) {
+            return;
+        }
+
         $username = $this->getUsername();
 
         if ($username) {
             $repo = $username . '/' . Str::slug(Project::config()->appName);
         }
 
-        // TODO: What if they don't want to create a repo? I guess they can just leave it blank.
-        $githubRepo = Console::ask('GitHub repo', $repo ?? null);
+        $githubRepo = Console::ask('GitHub repo name', $repo ?? null);
 
         if ($githubRepo) {
             Project::config()->repository = new Repository($githubRepo, 'main');
         }
 
-        // TODO: wrap up -> git add . commit push to remote
+        $ghInstalled = trim(Process::run('which gh')->output()) !== '';
 
-        // $this->step('Creating GitHub repo...');
+        if (!$ghInstalled) {
+            Console::warn('GitHub CLI is not installed. Cannot create remote repository.');
 
-        // exec("gh repo create {$this->githubRepo} --private");
-        // exec('git init');
-        // exec('git add .');
-        // exec('git commit -m "kickoff, just the framework"');
-        // exec('git branch -M main');
-        // exec("git remote add origin git@github.com:{$this->githubRepo}.git");
-        // exec('git push -u origin main');
+            return;
+        }
+
+        $repoVisiblitity = Console::choice(
+            'Repo visibility',
+            ['public', 'private'],
+            'private'
+        );
+
+        Process::runWithOutput("gh repo create {$githubRepo} --{$repoVisiblitity}");
+        Process::runWithOutput('git init');
+        Process::runWithOutput('git add .');
+        Process::runWithOutput('git commit -m "kickoff"');
+        Process::runWithOutput('git branch -M main');
+        Process::runWithOutput("git remote add origin git@github.com:{$githubRepo}.git");
+        Process::runWithOutput('git push -u origin main');
     }
 
     protected function getUsername(): string

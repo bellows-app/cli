@@ -13,11 +13,11 @@ class Valet extends Plugin implements Installable
 {
     use CanBeInstalled;
 
+    protected bool $secure = false;
+
     public function installWrapUp(): void
     {
         $urlBase = collect(explode('.', Project::config()->domain))->slice(0, -1)->implode('.');
-
-        ray($urlBase, Project::config()->domain);
 
         if (Console::confirm('Link this directory in Valet?', true)) {
             Process::run('valet link ' . $urlBase, function ($type, $line) {
@@ -29,6 +29,8 @@ class Valet extends Plugin implements Installable
             Process::run('valet secure ' . $urlBase, function ($type, $line) {
                 echo $line;
             });
+
+            $this->secure = true;
         }
 
         if (Console::confirm('Isolate PHP version for this project?', true)) {
@@ -51,5 +53,17 @@ class Valet extends Plugin implements Installable
                 }
             );
         }
+    }
+
+    public function environmentVariables(): array
+    {
+        // TODO: Yes... but the wrap up runs after the environment variables are set. Hm.
+        if ($this->secure) {
+            return [
+                'APP_URL' => 'https://' . Project::config()->domain,
+            ];
+        }
+
+        return [];
     }
 }

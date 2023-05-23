@@ -214,14 +214,12 @@ class Kickoff extends Command
 
         $pluginManager->installWrapUp();
 
-        dd('done');
+        $this->info('Consider yourself kicked off! 🚀');
+
+        $this->info(Project::env()->get('APP_URL'));
 
         // exec('php artisan queue:table');
         // Process::run('php artisan migrate');
-
-        // $this->handleValet();
-
-        // $this->step('Copying files...');
 
         // exec('echo ".yarn" >> .gitignore');
 
@@ -229,11 +227,6 @@ class Kickoff extends Command
 
         // Add repo to GitHub Desktop?
         // exec('github .');
-
-        $this->info('Consider yourself kicked off. 🚀');
-
-        // TODO: CS command
-        $this->info($this->url);
     }
 
     protected function getConfig(): array

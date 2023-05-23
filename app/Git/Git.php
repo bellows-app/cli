@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows\Util;
+namespace Bellows\Git;
 
 use Bellows\Facades\Project;
 use Illuminate\Support\Facades\File;

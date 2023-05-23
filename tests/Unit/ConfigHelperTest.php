@@ -343,7 +343,6 @@ return [
 CONFIG);
 })->group('newvalue');
 
-
 it('will create a new file if the file is not found and add the config', function () {
     (new ConfigHelper())->update('nada.thing', 'val val val');
 
