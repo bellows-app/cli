@@ -106,7 +106,17 @@ class ConfigHelper
 
         if ($currentChunk->count() === 1) {
             $currentChunk = collect([
-                $currentChunk->keys()->first() => $this->createNewChunkFromSingleLine($currentChunk, $phpArr),
+                $currentChunk->keys()->first() =>
+                $this->indentBasedOnKeys(
+                    $keys,
+                    trim(
+                        $this->createNewChunkFromSingleLine(
+                            $currentChunk,
+                            // Indent the multi-line value, but trim the whitepace after the "=>"
+                            $phpArr
+                        )
+                    )
+                ),
             ]);
 
             $this->lines->splice(
@@ -115,8 +125,10 @@ class ConfigHelper
                 $currentChunk,
             );
 
+            // Re-create the lines from the new string
             $this->lines = collect(explode(PHP_EOL, $this->lines->implode(PHP_EOL)));
 
+            // We now have all of the necessary keys. Play it again, Sam.
             return $this->findChunk(clone $this->keys, $this->lines);
         }
 
@@ -125,7 +137,9 @@ class ConfigHelper
         $lastElement = $currentChunk->pop();
 
         // We're in an array (it's a multi-line chunk) so trim off the surrounding brackets
-        $currentChunk->push(trim($phpArr, "[]\n"));
+        $currentChunk->push(
+            $this->indentBasedOnKeys($keys, trim($phpArr, "[]\n"))
+        );
 
         $currentChunk->push($lastElement);
 
@@ -141,6 +155,17 @@ class ConfigHelper
         }
 
         return $this->findChunk(clone $this->keys, $this->lines);
+    }
+
+    protected function indentBasedOnKeys(Collection $keys, string $str)
+    {
+        $usedKeys = $this->keys->count() - $keys->count();
+
+        $indent = Str::repeat(' ', ($usedKeys + $keys->count() - 1) * 4);
+
+        return collect(explode(PHP_EOL, $str))
+            ->map(fn ($l) => $indent . $l)
+            ->implode(PHP_EOL);
     }
 
     protected function createNewChunkFromSingleLine(Collection $currentChunk, string $phpArr): string
@@ -174,8 +199,17 @@ class ConfigHelper
             ->toString();
 
         $result = collect(explode(PHP_EOL, $result))
-            ->map(fn ($l) => trim($l), $result)
-            ->implode(PHP_EOL);
+            ->map(fn ($l) => trim($l), $result);
+
+        $midpoint = floor($result->count() / 2);
+
+        // Re-indent the array
+        $result = $result->map(
+            fn ($l, $i) => Str::repeat(
+                ' ',
+                ($i < $midpoint ? $i : $result->count() - $i - 1) * 4
+            ) . $l
+        )->implode(PHP_EOL);
 
         return str_replace("\n[", ' [', $result);
     }

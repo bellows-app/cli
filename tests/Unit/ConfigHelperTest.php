@@ -96,7 +96,7 @@ return [
         'routes' => resource_path('scripts/routes/routes.json'),
         'typescript' => resource_path('scripts/types/routes.d.ts'),
     ],
-'newthing' => 'here we are',
+    'newthing' => 'here we are',
 ];
 CONFIG);
 })->group('newvalue');
@@ -127,7 +127,7 @@ return [
     'output' => [
         'routes' => resource_path('scripts/routes/routes.json'),
         'typescript' => resource_path('scripts/types/routes.d.ts'),
-'newthing' => 'here we are',
+        'newthing' => 'here we are',
     ],
 ];
 CONFIG);
@@ -161,8 +161,8 @@ return [
         'routes' => resource_path('scripts/routes/routes.json'),
         'typescript' => resource_path('scripts/types/routes.d.ts'),
         'newthing' => [
-'otherthing' => 'ok sure',
-],
+            'otherthing' => 'ok sure',
+        ],
     ],
 ];
 CONFIG);
@@ -196,8 +196,8 @@ return [
         'routes' => resource_path('scripts/routes/routes.json'),
         'typescript' => resource_path('scripts/types/routes.d.ts'),
         'newthing' => [
-'otherthing' => 'ok sure',
-],
+            'otherthing' => 'ok sure',
+        ],
     ],
 ];
 CONFIG);
