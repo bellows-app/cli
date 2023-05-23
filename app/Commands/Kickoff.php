@@ -259,20 +259,4 @@ class Kickoff extends Command
 
         return [$config['file'], $config['config']];
     }
-
-    protected function updateEnv()
-    {
-        // TODO: Plugins: Stripe, Debugbar, Mailcoach, Oh Dear, Slack Webhook
-        collect([
-            // 'SUPPORT_EMAIL'                 => 'joe@joe.codes',
-            // 'STRIPE_KEY'                    => 'pk_test_oLS1gyEDw61F0VOh2NgExNFz',
-            // 'STRIPE_SECRET'                 => 'sk_test_Epuk39b3NRVRy8N8Uf0p2DCG',
-            // 'STRIPE_WEBHOOK_SECRET'         => '',
-            // 'QUEUE_CONNECTION'              => 'database',
-            // 'DEBUGBAR_ENABLED'              => 'false',
-            // 'MAILCOACH_API_TOKEN'           => '',
-            // 'OH_DEAR_HEALTH_CHECK_SECRET'   => '',
-            // 'SLACK_ALERT_WEBHOOK'           => '',
-        ])->map(fn ($v, $k) => $this->updateEnvKeyValue($k, is_array($v) ? $v[0] : $v, is_array($v)));
-    }
 }
