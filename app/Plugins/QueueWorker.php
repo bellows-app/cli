@@ -74,7 +74,10 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
             'beanstalkd',
             'sync',
         ]);
+    }
 
+    public function installWrapUp(): void
+    {
         if ($this->queueConnection === 'database') {
             Process::runWithOutput(Artisan::local('queue:table'));
         }

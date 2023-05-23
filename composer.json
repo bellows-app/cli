@@ -20,11 +20,13 @@
     ],
     "require": {
         "php": "^8.0",
+        "illuminate/database": "^10.0",
         "spatie/once": "^3.1",
         "symfony/yaml": "^6.2"
     },
     "require-dev": {
         "composer/semver": "^3.3",
+        "fakerphp/faker": "^1.9.1",
         "guzzlehttp/guzzle": "^7.5",
         "illuminate/http": "^10.0",
         "illuminate/log": "^10.0",

@@ -6,3 +6,4 @@
 .env
 storage
 tests/stubs/config/config.json
+/database/database.sqlite

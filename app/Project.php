@@ -42,16 +42,21 @@ class Project
 
     public function fileExists(string $path): bool
     {
-        return File::exists($this->dir . '/' . ltrim($path, '/'));
+        return File::exists($this->path($path));
     }
 
     public function getFile(string $path): string
     {
-        return File::get($this->dir . '/' . ltrim($path, '/'));
+        return File::get($this->path($path));
     }
 
     public function writeFile(string $path, string $contents): void
     {
-        File::put($this->dir . '/' . ltrim($path, '/'), $contents);
+        File::put($this->path($path), $contents);
+    }
+
+    public function path(string $path): string
+    {
+        return $this->dir . '/' . ltrim($path, '/');
     }
 }
