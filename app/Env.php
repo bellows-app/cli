@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Exceptions\EnvMissing;
+use Bellows\Util\Value;
 use Dotenv\Dotenv;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -72,22 +73,11 @@ class Env
 
     protected function getUpdatedRaw($key, $value, $quote = false): string
     {
-        if ($this->shouldQuote($value, $key, $quote)) {
-            $value = '"' . $value . '"';
-        }
-
-        // TODO: We're repeating this logic in shouldQuote, refactor
-        if (is_bool($value)) {
-            $value = $value ? 'true' : 'false';
-        }
-
-        if (in_array($value, ['true', 'false'])) {
-            $value = $value === 'true' ? 'true' : 'false';
-        }
-
-        if ($value === null) {
-            $value = 'null';
-        }
+        $value = Value::quoted(
+            $value,
+            Value::DOUBLE,
+            fn ($value) => Str::contains($value, ['${', ' ']) || Str::contains($key, ['PASSWORD'])
+        );
 
         if (Str::contains($this->raw, "{$key}=")) {
             return preg_replace("/{$key}=.*/", "{$key}={$value}", $this->raw);
@@ -124,27 +114,6 @@ class Env
         $keys->push($parts->first());
 
         return $keys;
-    }
-
-    protected function shouldQuote($value, $key, $quote)
-    {
-        if ($quote) {
-            return true;
-        }
-
-        if ($value === null) {
-            return false;
-        }
-
-        if (is_bool($value) || $value === 'true' || $value === 'false') {
-            return false;
-        }
-
-        if (Str::startsWith($value, '"')) {
-            return false;
-        }
-
-        return Str::contains($value, ['${', ' ']) || Str::contains($key, ['PASSWORD']);
     }
 
     public function __toString()
