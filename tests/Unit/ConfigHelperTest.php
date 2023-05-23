@@ -2,17 +2,23 @@
 
 use Bellows\Facades\Project;
 use Bellows\Util\ConfigHelper;
+use Bellows\Util\Value;
 
 uses(Tests\TestCase::class);
 
 beforeEach(function () {
     Project::config()->directory = __DIR__ . '/../stubs/test-app';
-    collect(glob(Project::config()->directory . '/config/*.php'))->each(fn ($file) => unlink($file));
+    cleanUpConfigs();
 });
 
 afterEach(function () {
-    collect(glob(Project::config()->directory . '/config/*.php'))->each(fn ($file) => unlink($file));
+    cleanUpConfigs();
 });
+
+function cleanUpConfigs()
+{
+    collect(glob(Project::config()->directory . '/config/*.php'))->each(fn ($file) => unlink($file));
+}
 
 function writeToConfig(string $content, string $filename = 'test')
 {
@@ -86,7 +92,6 @@ CONFIG);
 });
 
 it('can add a new top level value in a config', function () {
-
     writeToConfig(
         <<<'CONFIG'
     <?php
@@ -160,7 +165,7 @@ CONFIG
     );
 
     $key = 'test.output.newthing.otherthing';
-    $value = "ok sure";
+    $value = 'ok sure';
 
     (new ConfigHelper())->update($key, $value);
 
@@ -194,7 +199,7 @@ return [
 CONFIG
     );
 
-    $result = (new ConfigHelper())->update('test.output.newthing.otherthing', 'ok sure');
+    (new ConfigHelper())->update('test.output.newthing.otherthing', 'ok sure');
 
     expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
@@ -206,6 +211,133 @@ return [
         'newthing' => [
             'otherthing' => 'ok sure',
         ],
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
+it('will not quote a function when it is a value', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => null,
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.output.newthing', 'resource_path("ok sure")');
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => resource_path("ok sure"),
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
+it('will not quote pre determined values', function ($value, $expected) {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => null,
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.output.newthing', $value);
+
+    expect(getConfigContents())->toBe(<<<CONFIG
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => $expected,
+    ],
+];
+CONFIG);
+})->group('newvalue')->with([
+    [true, 'true'],
+    [false, 'false'],
+    ['true', 'true'],
+    ['false', 'false'],
+    [null, 'null'],
+    ['null', 'null'],
+    [1, '1'],
+    ['1', '1'],
+]);
+
+it('will not quote a number when it is a value', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => null,
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.output.newthing', 1);
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => 1,
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
+it('will ignore a raw value', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.routes', Value::raw('this should be quoted but it will not be'));
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => this should be quoted but it will not be,
+        'typescript' => 'scripts/types/routes.d.ts',
     ],
 ];
 CONFIG);

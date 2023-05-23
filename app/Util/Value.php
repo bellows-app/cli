@@ -12,12 +12,20 @@ class Value
 
     public static function quoted($value, $quoteType = null, callable $customChecker = null)
     {
-        if (is_bool($value) || in_array($value, ['true', 'false'])) {
-            return $value || $value === 'true' ? 'true' : 'false';
+        if ($value instanceof RawValue) {
+            return (string) $value;
+        }
+
+        if (is_numeric($value)) {
+            return $value;
         }
 
         if ($value === null || $value === 'null') {
             return 'null';
+        }
+
+        if (is_bool($value) || in_array($value, ['true', 'false'])) {
+            return $value === true || $value === 'true' ? 'true' : 'false';
         }
 
         if (Str::startsWith($value, [self::DOUBLE, self::SINGLE])) {
@@ -30,5 +38,10 @@ class Value
         }
 
         return $quoteType . addslashes($value) . $quoteType;
+    }
+
+    public static function raw($value)
+    {
+        return new RawValue($value);
     }
 }

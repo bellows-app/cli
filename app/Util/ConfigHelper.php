@@ -38,7 +38,8 @@ CONFIG;
         $value = Value::quoted(
             $value,
             Value::SINGLE,
-            fn ($value) => !Str::startsWith($value, '['),
+            // If it's an array or a function, leave it alone
+            fn ($value) => !Str::startsWith($value, '[') && !Str::match('/^[a-zA-Z0-9_]+\(/', $value),
         );
 
         File::put(
