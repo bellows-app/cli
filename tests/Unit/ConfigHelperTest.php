@@ -7,7 +7,7 @@ uses(Tests\TestCase::class);
 it('can replace a string value in a config', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -23,7 +23,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -38,7 +38,7 @@ CONFIG);
 it('can replace an array value in a config', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -57,7 +57,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -72,7 +72,7 @@ CONFIG);
 it('can add a new top level value in a config', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -88,7 +88,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -104,7 +104,7 @@ CONFIG);
 it('can add a nested value in a config', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -120,7 +120,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -136,7 +136,7 @@ CONFIG);
 it('can add a deeply nested value in a config', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -153,7 +153,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -171,7 +171,7 @@ CONFIG);
 it('can add a deeply nested value in a config to an array', function () {
     $helper = new ConfigHelper();
 
-    $config = <<<CONFIG
+    $config = <<<'CONFIG'
 <?php
 
 return [
@@ -188,7 +188,7 @@ CONFIG;
 
     $result = $helper->replace($config, $key, $value);
 
-    expect($result)->toBe(<<<CONFIG
+    expect($result)->toBe(<<<'CONFIG'
 <?php
 
 return [
