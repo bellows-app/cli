@@ -29,6 +29,10 @@ interface PluginManagerInterface
 
     public function getAllAvailablePluginNames(): Collection;
 
+    public function publishTags(): array;
+
+    public function updateConfig(): array;
+
     public function createSiteParams(CreateSiteParams $params): array;
 
     public function installRepoParams(InstallRepoParams $baseParams): array;

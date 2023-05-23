@@ -15,4 +15,8 @@ interface Installable
     public function npmPackagesToInstall(): array;
 
     public function npmDevPackagesToInstall(): array;
+
+    public function publishTags(): array;
+
+    public function updateConfig(): array;
 }

@@ -49,4 +49,14 @@ trait CanBeInstalled
     {
         return [];
     }
+
+    public function publishTags(): array
+    {
+        return [];
+    }
+
+    public function updateConfig(): array
+    {
+        return [];
+    }
 }

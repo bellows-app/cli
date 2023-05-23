@@ -42,6 +42,7 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
 
     public function installWrapUp(): void
     {
+        // TODO: Also update entry point file (app.js)
         Vite::addImport("import { watch } from 'vite-plugin-watch'");
         Vite::addPlugin(<<<'PLUGIN'
 watch({
@@ -49,6 +50,19 @@ watch({
     command: 'php artisan trail:generate',
 })
 PLUGIN);
+    }
+
+    public function updateConfig(): array
+    {
+        return [
+            'trail.output.routes'     => "resource_path('js/routes.json')",
+            'trail.output.typescript' => "resource_path('types/routes.d.ts')",
+        ];
+    }
+
+    public function publishTags(): array
+    {
+        return ['trail-config'];
     }
 
     public function updateDeployScript(string $deployScript): string

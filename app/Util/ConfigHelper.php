@@ -2,8 +2,11 @@
 
 namespace Bellows\Util;
 
+use Bellows\Facades\Console;
+use Bellows\Facades\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class ConfigHelper
@@ -12,23 +15,48 @@ class ConfigHelper
 
     protected Collection $keys;
 
-    public function replace(string $content, string $key, string $value)
+    public function update($key, $value)
+    {
+        $this->keys = collect(explode('.', $key));
+
+        $filename = $this->keys->shift();
+
+        $path = Project::config()->directory . '/config/' . $filename . '.php';
+
+        if (!file_exists($path)) {
+            Console::warn('Config file ' . $filename . ' does not exist! Creating now.');
+
+            $content = <<<'CONFIG'
+<?php
+
+return [];
+CONFIG;
+
+            File::put($path, $content);
+        }
+
+        File::put(
+            $path,
+            $this->replace(
+                File::get($path),
+                $value
+            ),
+        );
+    }
+
+    protected function replace(string $content, string $value)
     {
         $this->lines = collect(explode(PHP_EOL, trim($content)));
 
-        $this->keys = collect(explode('.', $key));
-
-        $chunkKeys = collect(explode('.', $key));
-
-        $chunk = $this->findChunk($chunkKeys, $this->lines);
+        $chunk = $this->findChunk(clone $this->keys, $this->lines);
 
         $replacement = $chunk->map(function ($line) use ($value) {
             // TODO: Account for double quotes
-            $regex = '/\s*\'' . $this->keys->last() . '\'\s*=>\s*(.*)/';
-
-            ray($regex);
-
-            preg_match($regex, $line, $matches);
+            preg_match(
+                '/\s*\'' . $this->keys->last() . '\'\s*=>\s*(.*)/',
+                $line,
+                $matches
+            );
 
             if (count($matches) === 0) {
                 return false;
@@ -106,8 +134,7 @@ class ConfigHelper
 
         if ($currentChunk->count() === 1) {
             $currentChunk = collect([
-                $currentChunk->keys()->first() =>
-                $this->indentBasedOnKeys(
+                $currentChunk->keys()->first() => $this->indentBasedOnKeys(
                     $keys,
                     trim(
                         $this->createNewChunkFromSingleLine(

@@ -2,6 +2,7 @@
 
 namespace Bellows\Commands;
 
+use Bellows\Artisan;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
@@ -9,6 +10,7 @@ use Bellows\Facades\Project;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 use Bellows\PluginManagerInterface;
+use Bellows\Util\ConfigHelper;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -41,6 +43,7 @@ class Kickoff extends Command
             $this->newLine();
             $this->error('Directory is not empty. Kickoff only works with a fresh directory.');
             $this->newLine();
+
             return;
         }
 
@@ -101,6 +104,7 @@ class Kickoff extends Command
                 'VITE_APP_ENV' => '${APP_ENV}',
             ],
             $pluginManager->environmentVariables(),
+            $config['env'] ?? [],
         ));
 
         $updatedEnvValues->each(
@@ -164,6 +168,27 @@ class Kickoff extends Command
                     }
                 }
             );
+
+        $this->step('Publish Tags');
+
+        collect($pluginManager->publishTags())
+            ->concat($config['publish-tags'] ?? [])
+            ->unique()
+            ->values()
+            ->each(
+                fn ($t) => Process::run(
+                    Artisan::local("vendor:publish --tag={$t}"),
+                    function ($type, $output) {
+                        echo $output;
+                    },
+                ),
+            );
+
+        $this->step('Update Config Files');
+
+        collect($pluginManager->updateConfig())
+            ->merge($config['config'] ?? [])
+            ->each(fn ($value, $key) => (new ConfigHelper)->update($key, $value));
 
         $pluginManager->installWrapUp();
 

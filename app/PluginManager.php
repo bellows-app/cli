@@ -14,9 +14,9 @@ use Bellows\Plugins\Contracts\Launchable;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use Spatie\StructureDiscoverer\Discover;
-use Illuminate\Support\Str;
 
 class PluginManager implements PluginManagerInterface
 {
@@ -171,6 +171,16 @@ class PluginManager implements PluginManagerInterface
     public function environmentVariables(): array
     {
         return $this->call('environmentVariables')->reduce([]);
+    }
+
+    public function publishTags(): array
+    {
+        return $this->call('publishTags')->reduce([]);
+    }
+
+    public function updateConfig(): array
+    {
+        return $this->call('updateConfig')->reduce([]);
     }
 
     public function updateDeployScript(string $deployScript): string
