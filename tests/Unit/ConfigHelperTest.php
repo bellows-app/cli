@@ -14,7 +14,7 @@ afterEach(function () {
     collect(glob(Project::config()->directory . '/config/*.php'))->each(fn ($file) => unlink($file));
 });
 
-function writeToConfig(string $filename, string $content)
+function writeToConfig(string $content, string $filename = 'test')
 {
     file_put_contents(
         Project::config()->directory . '/config/' . $filename . '.php',
@@ -22,7 +22,7 @@ function writeToConfig(string $filename, string $content)
     );
 }
 
-function getConfigContents(string $filename): string
+function getConfigContents(string $filename = 'test'): string
 {
     return file_get_contents(
         Project::config()->directory . '/config/' . $filename . '.php'
@@ -31,7 +31,6 @@ function getConfigContents(string $filename): string
 
 it('can replace a string value in a config', function () {
     writeToConfig(
-        'test',
         <<<'CONFIG'
 <?php
 
@@ -41,12 +40,12 @@ return [
         'typescript' => 'scripts/types/routes.d.ts',
     ],
 ];
-CONFIG
+CONFIG,
     );
 
     (new ConfigHelper())->update('test.output.routes', 'resources/routes/routes.json');
 
-    expect(getConfigContents('test'))->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -60,7 +59,6 @@ CONFIG);
 
 it('can replace an array value in a config', function () {
     writeToConfig(
-        'array-value',
         <<<'CONFIG'
         <?php
 
@@ -73,9 +71,9 @@ return [
 CONFIG
     );
 
-    $result = (new ConfigHelper())->update('array-value.output.routes', "['resources/routes/routes.json']");
+    $result = (new ConfigHelper())->update('test.output.routes', "['resources/routes/routes.json']");
 
-    expect(getConfigContents('array-value'))->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -88,25 +86,23 @@ CONFIG);
 });
 
 it('can add a new top level value in a config', function () {
-    $helper = new ConfigHelper();
 
-    //     $config = <<<'CONFIG'
-    // <?php
+    writeToConfig(
+        <<<'CONFIG'
+    <?php
 
-    // return [
-    //     'output' => [
-    //         'routes' => 'scripts/routes/routes.json',
-    //         'typescript' => 'scripts/types/routes.d.ts',
-    //     ],
-    // ];
-    // CONFIG;
+    return [
+        'output' => [
+            'routes' => 'scripts/routes/routes.json',
+            'typescript' => 'scripts/types/routes.d.ts',
+        ],
+    ];
+    CONFIG
+    );
 
-    $key = 'newthing';
-    $value = "here we are";
+    (new ConfigHelper())->update('test.newthing', 'here we are');
 
-    $result = $helper->update($key, $value);
-
-    expect($result)->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -120,25 +116,22 @@ CONFIG);
 })->group('newvalue');
 
 it('can add a nested value in a config', function () {
-    $helper = new ConfigHelper();
+    writeToConfig(
+        <<<'CONFIG'
+    <?php
 
-    //     $config = <<<'CONFIG'
-    // <?php
+    return [
+        'output' => [
+            'routes' => 'scripts/routes/routes.json',
+            'typescript' => 'scripts/types/routes.d.ts',
+        ],
+    ];
+    CONFIG
+    );
 
-    // return [
-    //     'output' => [
-    //         'routes' => 'scripts/routes/routes.json',
-    //         'typescript' => 'scripts/types/routes.d.ts',
-    //     ],
-    // ];
-    // CONFIG;
+    (new ConfigHelper())->update('test.output.newthing', 'here we are');
 
-    $key = 'test.output.newthing';
-    $value = "here we are";
-
-    $result = $helper->update($key, $value);
-
-    expect($result)->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -152,9 +145,8 @@ CONFIG);
 })->group('newvalue');
 
 it('can add a deeply nested value in a config', function () {
-    $helper = new ConfigHelper();
-
-    $config = <<<'CONFIG'
+    writeToConfig(
+        <<<'CONFIG'
 <?php
 
 return [
@@ -164,14 +156,15 @@ return [
         'newthing' => null,
     ],
 ];
-CONFIG;
+CONFIG
+    );
 
     $key = 'test.output.newthing.otherthing';
     $value = "ok sure";
 
-    $result = $helper->update($key, $value);
+    (new ConfigHelper())->update($key, $value);
 
-    expect($result)->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
@@ -187,9 +180,8 @@ CONFIG);
 })->group('newvalue');
 
 it('can add a deeply nested value in a config to an array', function () {
-    $helper = new ConfigHelper();
-
-    $config = <<<'CONFIG'
+    writeToConfig(
+        <<<'CONFIG'
 <?php
 
 return [
@@ -199,14 +191,12 @@ return [
         'newthing' => [],
     ],
 ];
-CONFIG;
+CONFIG
+    );
 
-    $key = 'test.output.newthing.otherthing';
-    $value = "ok sure";
+    $result = (new ConfigHelper())->update('test.output.newthing.otherthing', 'ok sure');
 
-    $result = $helper->update($key, $value);
-
-    expect($result)->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
