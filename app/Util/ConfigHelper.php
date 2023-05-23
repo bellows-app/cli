@@ -23,7 +23,7 @@ class ConfigHelper
 
         $path = Project::config()->directory . '/config/' . $filename . '.php';
 
-        if (!file_exists($path)) {
+        if (File::missing($path)) {
             Console::warn('Config file ' . $filename . ' does not exist! Creating now.');
 
             $content = <<<'CONFIG'
@@ -35,11 +35,17 @@ CONFIG;
             File::put($path, $content);
         }
 
+        $value = Value::quoted(
+            $value,
+            Value::SINGLE,
+            fn ($value) => !Str::startsWith($value, '['),
+        );
+
         File::put(
             $path,
             $this->replace(
                 File::get($path),
-                $value
+                $value,
             ),
         );
     }
