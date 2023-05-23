@@ -40,6 +40,11 @@ class Project
         return $this->env;
     }
 
+    public function fileExists(string $path): bool
+    {
+        return File::exists($this->dir . '/' . ltrim($path, '/'));
+    }
+
     public function getFile(string $path): string
     {
         return File::get($this->dir . '/' . ltrim($path, '/'));

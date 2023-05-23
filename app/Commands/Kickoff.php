@@ -57,7 +57,10 @@ class Kickoff extends Command
 
         $this->comment("Creating project in {$dir}");
 
-        $config = $this->getConfig();
+        [$configFile, $config] = $this->getConfig();
+
+        // TODO: Also check for a "default" or "common" config for all projects?
+        // Or is it better to have an "extend" property? Or both?
 
         $topDirectory = trim(basename($dir));
 
@@ -190,34 +193,42 @@ class Kickoff extends Command
             ->merge($config['config'] ?? [])
             ->each(fn ($value, $key) => (new ConfigHelper)->update($key, $value));
 
+        $this->step('Copying Files');
+
+        // TODO: Stop littering this config directory everywhere,
+        // centralize it and allow it to be overriden for tests
+        $copySourceDirectory = env('HOME') . '/.bellows/kickoff/' . $configFile;
+
+        if (is_dir($copySourceDirectory)) {
+            Process::run("cp -R {$copySourceDirectory}/* " . Project::config()->directory);
+        }
+
+        $this->step('Removing Files');
+
+        // TODO: Rename files?
+
+        collect($config['remove-files'] ?? [])
+            ->map(fn ($file) => Project::config()->directory . '/' . $file)
+            ->filter(fn ($file) => File::exists($file))
+            ->each(fn ($file) => File::delete($file));
+
         $pluginManager->installWrapUp();
 
         dd('done');
 
-        // TODO: Handle teams here? Probably not?
         // exec('php artisan queue:table');
-        Process::run('php artisan migrate');
+        // Process::run('php artisan migrate');
 
-        $this->commitChanges('composer packages added');
+        // $this->handleValet();
 
-        $this->installJSPackages();
+        // $this->step('Copying files...');
 
-        $this->commitChanges('js packages added');
+        // exec('echo ".yarn" >> .gitignore');
 
-        $this->handleValet();
-
-        $this->step('Copying files...');
-
-        exec('echo ".yarn" >> .gitignore');
-
-        $this->copyNewFiles();
-
-        $this->removeOldFiles();
-
-        $this->commitChanges('freshly kicked off');
+        // $this->commitChanges('freshly kicked off');
 
         // Add repo to GitHub Desktop?
-        exec('github .');
+        // exec('github .');
 
         $this->info('Consider yourself kicked off. 🚀');
 
@@ -242,7 +253,9 @@ class Kickoff extends Command
 
         // TODO: Offer to init a config if none exist
         if ($configs->count() === 1) {
-            return $configs->first()['config'];
+            $config = $configs->first();
+
+            return [$config['file'], $config['config']];
         }
 
         $name = $this->choice(
@@ -250,91 +263,20 @@ class Kickoff extends Command
             $configs->pluck('name')->toArray(),
         );
 
-        return $configs->firstWhere('name', $name)['config'];
-    }
+        $config = $configs->firstWhere('name', $name);
 
-    protected function commitChanges(string $message)
-    {
-        exec('git add .');
-        exec('git commit -m "' . $message . '"');
-        exec('git push');
-    }
-
-    protected function handleValet()
-    {
-        $this->step('Linking in Valet...');
-
-        exec("valet link {$this->urlBase}");
-        exec("valet secure {$this->urlBase}");
-        exec("valet isolate php@8.1 --site=\"{$this->urlBase}\"");
-    }
-
-    protected function copyNewFiles()
-    {
-        $paths = collect();
-
-        $dirIterator = new \RecursiveDirectoryIterator(resource_path('new-project'));
-        /** @var \RecursiveDirectoryIterator | \RecursiveIteratorIterator $it */
-        $it = new \RecursiveIteratorIterator($dirIterator);
-
-        // the valid() method checks if current position is valid eg there is a valid file or directory at the current position
-        while ($it->valid()) {
-            // isDot to make sure it is not current or parent directory
-            if (!$it->isDot() && $it->isFile() && $it->isReadable() && !Str::contains($it->current(), '.DS_Store')) {
-                $file = $it->current();
-                $paths->push((string) $file);
-            }
-
-            $it->next();
-        }
-
-        $paths->each(function ($path) {
-            $newPath = $this->dir . Str::replace(resource_path('new-project'), '', $path);
-
-            if (!file_exists($newPath)) {
-                $dir = dirname($newPath);
-
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0777, true);
-                }
-
-                touch($newPath);
-            }
-
-            $toReplace = [
-                '{{ APP_URL_HOST }}'       => $this->url,
-                '{{ APP_NAME }}'           => $this->name,
-                '{{ APP_PRODUCTION_URL }}' => Str::replace('.test', '.com', $this->url),
-                '{{ TODAYS_DATE }}'        => CarbonImmutable::now()->format('F j, Y'),
-            ];
-
-            $newContent = file_get_contents($path);
-
-            $newContent = Str::replace(array_keys($toReplace), array_values($toReplace), $newContent);
-
-            file_put_contents($newPath, $newContent);
-        });
-    }
-
-    protected function removeOldFiles()
-    {
-        collect([
-            'resources/js/app.js',
-            'vite.config.js',
-        ])->each(fn ($p) => unlink($this->dir . '/' . $p));
+        return [$config['file'], $config['config']];
     }
 
     protected function updateEnv()
     {
+        // TODO: Plugins: Stripe, Debugbar, Mailcoach, Oh Dear, Slack Webhook
         collect([
-            'APP_NAME'                      => [$this->name],
-            'APP_URL'                       => "https://{$this->url}",
-            'SUPPORT_EMAIL'                 => 'joe@joe.codes',
-            'STRIPE_KEY'                    => 'pk_test_oLS1gyEDw61F0VOh2NgExNFz',
-            'STRIPE_SECRET'                 => 'sk_test_Epuk39b3NRVRy8N8Uf0p2DCG',
-            'STRIPE_WEBHOOK_SECRET'         => '',
-            'QUEUE_CONNECTION'              => 'database',
-            'VITE_APP_ENV'                  => ['${APP_ENV}'],
+            // 'SUPPORT_EMAIL'                 => 'joe@joe.codes',
+            // 'STRIPE_KEY'                    => 'pk_test_oLS1gyEDw61F0VOh2NgExNFz',
+            // 'STRIPE_SECRET'                 => 'sk_test_Epuk39b3NRVRy8N8Uf0p2DCG',
+            // 'STRIPE_WEBHOOK_SECRET'         => '',
+            // 'QUEUE_CONNECTION'              => 'database',
             // 'DEBUGBAR_ENABLED'              => 'false',
             // 'MAILCOACH_API_TOKEN'           => '',
             // 'OH_DEAR_HEALTH_CHECK_SECRET'   => '',

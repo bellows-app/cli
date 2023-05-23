@@ -4,6 +4,7 @@ namespace Bellows\Plugins;
 
 use Bellows\Artisan;
 use Bellows\DeployScript;
+use Bellows\Facades\Project;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
@@ -11,6 +12,7 @@ use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Plugins\Helpers\CanBeLaunched;
 use Bellows\Util\Vite;
+use Illuminate\Support\Facades\File;
 
 class MomentumTrail extends Plugin implements Launchable, Deployable, Installable
 {
@@ -42,6 +44,10 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
 
     public function installWrapUp(): void
     {
+        if (!Project::fileExists('resources/js/routes.json')) {
+            Project::writeFile('resources/js/routes.json', '{}');
+        }
+
         // TODO: Also update entry point file (app.js)
         Vite::addImport("import { watch } from 'vite-plugin-watch'");
         Vite::addPlugin(<<<'PLUGIN'

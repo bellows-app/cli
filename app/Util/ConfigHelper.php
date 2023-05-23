@@ -168,6 +168,23 @@ CONFIG;
 
         $isTopLevel = $currentChunk->implode(PHP_EOL) === $this->lines->implode(PHP_EOL);
 
+        if ($isTopLevel && $currentChunk->last() === 'return [];') {
+            // Empty config file, just overwrite the last line and off we go
+            $currentChunk->pop();
+
+            $currentChunk->push('return [');
+
+            $currentChunk->push(
+                $this->indentBasedOnKeys($keys, trim($phpArr, "[]\n"))
+            );
+
+            $currentChunk->push('];');
+
+            $this->lines = $currentChunk;
+
+            return $this->findChunk(clone $this->keys, $this->lines);
+        }
+
         $lastElement = $currentChunk->pop();
 
         // We're in an array (it's a multi-line chunk) so trim off the surrounding brackets
