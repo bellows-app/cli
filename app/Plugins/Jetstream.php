@@ -58,8 +58,6 @@ class Jetstream extends Plugin implements Installable
             $command .= ' --dark';
         }
 
-        Process::run(Artisan::local($command), function (string $type, string $output) {
-            echo $output;
-        });
+        Process::runWithOutput(Artisan::local($command));
     }
 }

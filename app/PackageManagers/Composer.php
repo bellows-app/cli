@@ -21,9 +21,7 @@ class Composer extends PackageManager
 
         $flag = $dev ? '--dev' : '';
 
-        Process::run("composer require {$package} {$flag}", function (string $type, string $output) {
-            echo $output;
-        });
+        Process::runWithOutput("composer require {$package} {$flag}");
     }
 
     protected static function getComposerJson(): array

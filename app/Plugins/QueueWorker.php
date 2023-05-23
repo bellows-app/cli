@@ -9,11 +9,18 @@ use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
+use Illuminate\Support\Facades\Process;
 
-class QueueWorker extends Plugin implements Launchable, Deployable
+class QueueWorker extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected $queueWorkers = [];
+
+    protected string $queueConnection;
 
     public function enabled(): bool
     {
@@ -31,17 +38,18 @@ class QueueWorker extends Plugin implements Launchable, Deployable
         }
 
         do {
-            $connection = Console::anticipateRequired(
+            $this->queueConnection = Console::anticipateRequired(
                 'Connection',
-                ['database', 'sqs', 'redis', 'beanstalkd'],
+                ['database', 'sqs', 'redis', 'beanstalkd', 'sync'],
                 $localConnection
             );
+
             $queue = Console::ask('Queue', 'default');
 
             $params = $this->getParams();
 
             $worker = array_merge([
-                'connection' => $connection,
+                'connection' => $this->queueConnection,
                 'queue'      => $queue,
             ], collect($params)->mapWithKeys(
                 fn ($item, $key) => [$key => $item['value']]
@@ -55,6 +63,21 @@ class QueueWorker extends Plugin implements Launchable, Deployable
             // just offer that the first time
             $localConnection = null;
         } while ($addAnother);
+    }
+
+    public function install(): void
+    {
+        $this->queueConnection = Console::choice('Which queue driver would you like to use?', [
+            'database',
+            'sqs',
+            'redis',
+            'beanstalkd',
+            'sync',
+        ]);
+
+        if ($this->queueConnection === 'database') {
+            Process::runWithOutput(Artisan::local('queue:table'));
+        }
     }
 
     public function deploy(): bool
@@ -72,6 +95,17 @@ class QueueWorker extends Plugin implements Launchable, Deployable
     public function canDeploy(): bool
     {
         return true;
+    }
+
+    public function environmentVariables(): array
+    {
+        if (isset($this->queueConnection)) {
+            return [
+                'QUEUE_CONNECTION' => $this->queueConnection,
+            ];
+        }
+
+        return [];
     }
 
     public function updateDeployScript(string $deployScript): string

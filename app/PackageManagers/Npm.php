@@ -41,9 +41,7 @@ class Npm extends PackageManager
         // TODO: Deal with yarn vs npm
         $flag = $dev ? ' -D' : '';
 
-        Process::run("yarn add{$flag} {$package}", function (string $type, string $output) {
-            echo $output;
-        });
+        Process::runWithOutput("yarn add{$flag} {$package}");
     }
 
     public static function hasScriptCommand(string $command): bool

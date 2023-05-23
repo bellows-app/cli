@@ -188,7 +188,7 @@ class Console
     {
         return function (string $title) {
             $padding = 2;
-            $length = max(40, strlen($title) + ($padding * 2));
+            $length = max(40, mb_strlen($title) + ($padding * 2));
 
             $this->output->newLine();
             $this->output->writeln('<info>+' . str_repeat('-', $length) . '+</info>');
@@ -197,7 +197,7 @@ class Console
                 '<info>|'
                     . str_repeat(' ', $padding)
                     . '<comment>' . $title . '</comment>'
-                    . str_repeat(' ', $length - strlen($title) - $padding)
+                    . str_repeat(' ', $length - mb_strlen($title) - $padding)
                     . '|</info>'
             );
             $this->output->writeln('<info>|' . str_repeat(' ', $length) . '|</info>');

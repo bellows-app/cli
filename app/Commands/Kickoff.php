@@ -89,12 +89,7 @@ class Kickoff extends Command
         $this->step('Installing Laravel');
 
         // TODO: This is also probably a plugin? Maybe not, it always has to be done.
-        Process::run(
-            'composer create-project laravel/laravel .',
-            function (string $type, string $output) {
-                echo $output;
-            },
-        );
+        Process::runWithOutput('composer create-project laravel/laravel .');
 
         file_put_contents($dir . '/README.md', "# {$name}");
 
@@ -179,11 +174,8 @@ class Kickoff extends Command
             ->unique()
             ->values()
             ->each(
-                fn ($t) => Process::run(
+                fn ($t) => Process::runWithOutput(
                     Artisan::local("vendor:publish --tag={$t}"),
-                    function ($type, $output) {
-                        echo $output;
-                    },
                 ),
             );
 
@@ -193,37 +185,44 @@ class Kickoff extends Command
             ->merge($config['config'] ?? [])
             ->each(fn ($value, $key) => (new ConfigHelper)->update($key, $value));
 
-        $this->step('Copying Files');
-
         // TODO: Stop littering this config directory everywhere,
         // centralize it and allow it to be overriden for tests
         $copySourceDirectory = env('HOME') . '/.bellows/kickoff/' . $configFile;
 
         if (is_dir($copySourceDirectory)) {
+            $this->step('Copying Files');
+
             Process::run("cp -R {$copySourceDirectory}/* " . Project::config()->directory);
+
+            $this->info('Copied files from ' . $copySourceDirectory);
         }
 
-        $this->step('Removing Files');
-
-        // TODO: Rename files?
-
-        collect($config['remove-files'] ?? [])
+        $filesToRemove = collect($config['remove-files'] ?? [])
             ->map(fn ($file) => Project::config()->directory . '/' . $file)
-            ->filter(fn ($file) => File::exists($file))
-            ->each(fn ($file) => File::delete($file));
+            ->filter(fn ($file) => File::exists($file));
+
+        if ($filesToRemove->isNotEmpty()) {
+            $this->step('Removing Files');
+
+            $filesToRemove->each(function ($file) {
+                $this->info($file);
+                File::delete($file);
+            });
+        }
 
         $pluginManager->installWrapUp();
 
-        $this->info('Consider yourself kicked off! 🚀');
+        $this->step('Running Migrations');
 
-        $this->info(Project::env()->get('APP_URL'));
+        Process::runWithOutput(Artisan::local('migrate'));
 
-        // exec('php artisan queue:table');
-        // Process::run('php artisan migrate');
+        $this->step('Consider yourself kicked off!');
+
+        $this->info('Your new project awaits: <comment>' . Project::env()->get('APP_URL') . '</comment>');
+
+        $this->newLine();
 
         // exec('echo ".yarn" >> .gitignore');
-
-        // $this->commitChanges('freshly kicked off');
 
         // Add repo to GitHub Desktop?
         // exec('github .');
