@@ -73,7 +73,7 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
             'redis',
             'beanstalkd',
             'sync',
-        ]);
+        ], 'sync');
     }
 
     public function installWrapUp(): void

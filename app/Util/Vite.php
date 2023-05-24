@@ -9,7 +9,12 @@ class Vite
 {
     public static function addPlugin(string $content)
     {
-        $vite = Project::getFile('vite.config.js');
+        $path = collect([
+            'vite.config.js',
+            'vite.config.ts',
+        ])->first(fn ($p) => Project::fileExists($p));
+
+        $vite = Project::getFile($path);
 
         if (str_contains($vite, $content)) {
             return;
@@ -51,28 +56,11 @@ class Vite
             $lines->splice($pluginsStart, 0, $content);
         }
 
-        Project::writeFile('vite.config.js', $lines->implode(PHP_EOL));
+        Project::writeFile($path, $lines->implode(PHP_EOL));
     }
 
     public static function addImport(string $content)
     {
-        $vite = Project::getFile('vite.config.js');
-
-        if (Str::contains($vite, $content)) {
-            return;
-        }
-
-        $content = Str::finish($content, ';');
-
-        $lines = collect(explode(PHP_EOL, $vite));
-        $lastImport = $lines->search(fn ($l) => Str::startsWith($l, 'import'));
-
-        if ($lastImport === false) {
-            $lines->prepend($content);
-        } else {
-            $lines->splice($lastImport + 1, 0, $content);
-        }
-
-        Project::writeFile('vite.config.js', $lines->implode(PHP_EOL));
+        Project::file('vite.config.js')->addJsImport($content);
     }
 }

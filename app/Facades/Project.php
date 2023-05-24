@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool fileExists(string $path)
  * @method static string getFile(string $path)
  * @method static void writeFile(string $path, string $contents)
+ * @method static string path(string $path)
+ * @method static string getDir()
+ * @method static \Bellows\Util\FileHelper file(string $path)
+ *
  */
 class Project extends Facade
 {

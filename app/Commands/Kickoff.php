@@ -189,6 +189,22 @@ class Kickoff extends Command
         // centralize it and allow it to be overriden for tests
         $copySourceDirectory = env('HOME') . '/.bellows/kickoff/' . $configFile;
 
+        $filesToRename = collect($config['rename-files'] ?? []);
+
+        if ($filesToRename->isNotEmpty()) {
+            $this->step('Renaming Files');
+
+            $filesToRename->each(function ($newFile, $oldFile) {
+                if (File::missing(Project::path($oldFile))) {
+                    $this->warn("File {$oldFile} does not exist, skipping.");
+                    return;
+                }
+
+                $this->info("{$oldFile} -> {$newFile}");
+                File::move(Project::path($oldFile), Project::path($newFile));
+            });
+        }
+
         if (is_dir($copySourceDirectory)) {
             $this->step('Copying Files');
 
@@ -197,17 +213,26 @@ class Kickoff extends Command
             $this->info('Copied files from ' . $copySourceDirectory);
         }
 
-        $filesToRemove = collect($config['remove-files'] ?? [])
-            ->map(fn ($file) => Project::config()->directory . '/' . $file)
-            ->filter(fn ($file) => File::exists($file));
+        $filesToRemove = collect($config['remove-files'] ?? []);
 
         if ($filesToRemove->isNotEmpty()) {
             $this->step('Removing Files');
 
-            $filesToRemove->each(function ($file) {
-                $this->info($file);
-                File::delete($file);
-            });
+            $filesToRemove
+                ->map(fn ($file) => Project::config()->directory . '/' . $file)
+                ->filter(function ($file) {
+                    if (File::exists($file)) {
+                        return true;
+                    }
+
+                    $this->warn("File {$file} does not exist, skipping.");
+
+                    return false;
+                })
+                ->each(function ($file) {
+                    $this->info($file);
+                    File::delete($file);
+                });
         }
 
         $pluginManager->installWrapUp();
@@ -218,7 +243,13 @@ class Kickoff extends Command
 
         $this->step('Consider yourself kicked off!');
 
-        $this->info('Your new project awaits: <comment>' . Project::env()->get('APP_URL') . '</comment>');
+        $this->comment(
+            Project::env()->get('APP_NAME') . ' <info>awaits</info>: ' . Project::env()->get('APP_URL')
+        );
+
+        // TODO:
+        // npm run dev
+        // open in editor
 
         $this->newLine();
 

@@ -3,7 +3,9 @@
 namespace Bellows;
 
 use Bellows\Data\ProjectConfig;
+use Bellows\Util\FileHelper;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class Project
 {
@@ -58,5 +60,10 @@ class Project
     public function path(string $path): string
     {
         return $this->dir . '/' . ltrim($path, '/');
+    }
+
+    public function file(string $path): FileHelper
+    {
+        return new FileHelper($this->path($path));
     }
 }
