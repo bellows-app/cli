@@ -11,6 +11,7 @@ use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 use Bellows\PluginManagerInterface;
 use Bellows\Util\ConfigHelper;
+use Bellows\Util\RawValue;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -167,6 +168,23 @@ class Kickoff extends Command
                 }
             );
 
+        collect($pluginManager->installCommands())
+            ->unique()
+            ->values()
+            ->map(function ($command) {
+                if ($command instanceof RawValue) {
+                    return (string) $command;
+                }
+
+                if (Str::startsWith($command, 'php')) {
+                    return $command;
+                }
+
+                return Artisan::local($command);
+            })->each(
+                fn ($command) => Process::runWithOutput($command),
+            );
+
         $this->step('Publish Tags');
 
         collect($pluginManager->publishTags())
@@ -197,6 +215,7 @@ class Kickoff extends Command
             $filesToRename->each(function ($newFile, $oldFile) {
                 if (File::missing(Project::path($oldFile))) {
                     $this->warn("File {$oldFile} does not exist, skipping.");
+
                     return;
                 }
 

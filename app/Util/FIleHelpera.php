@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class FileHelper
 {
-    public function  __construct(protected string $path)
+    public function __construct(protected string $path)
     {
         if (Str::endsWith($path, ['.js', '.ts'])) {
             // Automatically look for js and ts version, whichever exists first
@@ -15,7 +15,7 @@ class FileHelper
                 $path,
                 Str::endsWith($path, '.js')
                     ? Str::replaceLast('.js', '.ts', $path)
-                    : Str::replaceLast('.ts', '.js', $path)
+                    : Str::replaceLast('.ts', '.js', $path),
             ];
 
             foreach ($paths as $path) {
@@ -25,16 +25,6 @@ class FileHelper
                 }
             }
         }
-    }
-
-    protected function getFile(): string
-    {
-        return File::get($this->path);
-    }
-
-    protected function writeFile(string $contents): void
-    {
-        File::put($this->path, $contents);
     }
 
     public function addJsImport(string $content): static
@@ -48,7 +38,7 @@ class FileHelper
         $content = Str::finish($content, ';');
 
         $lines = collect(explode(PHP_EOL, $vite));
-        $lastImport = $lines->search(fn ($l) => Str::startsWith($l, 'import'));
+        $lastImport = $lines->reverse()->search(fn ($l) => Str::startsWith($l, 'import'));
 
         if ($lastImport === false) {
             $lines->prepend($content);
@@ -66,5 +56,15 @@ class FileHelper
         $this->writeFile(str_replace($search, $replace, $this->getFile()));
 
         return $this;
+    }
+
+    protected function getFile(): string
+    {
+        return File::get($this->path);
+    }
+
+    protected function writeFile(string $contents): void
+    {
+        File::put($this->path, $contents);
     }
 }

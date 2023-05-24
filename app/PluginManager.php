@@ -183,6 +183,11 @@ class PluginManager implements PluginManagerInterface
         return $this->call('updateConfig')->reduce([]);
     }
 
+    public function installCommands(): array
+    {
+        return $this->call('installCommands')->reduce([]);
+    }
+
     public function updateDeployScript(string $deployScript): string
     {
         return $this->call('updateDeployScript')->reduce($deployScript);

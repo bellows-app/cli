@@ -19,4 +19,6 @@ interface Installable
     public function publishTags(): array;
 
     public function updateConfig(): array;
+
+    public function installCommands(): array;
 }

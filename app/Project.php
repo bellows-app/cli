@@ -5,7 +5,6 @@ namespace Bellows;
 use Bellows\Data\ProjectConfig;
 use Bellows\Util\FileHelper;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 class Project
 {

@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static string path(string $path)
  * @method static string getDir()
  * @method static \Bellows\Util\FileHelper file(string $path)
- *
  */
 class Project extends Facade
 {

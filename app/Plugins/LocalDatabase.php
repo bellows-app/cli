@@ -2,7 +2,6 @@
 
 namespace Bellows\Plugins;
 
-use Bellows\Artisan;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugin;
@@ -10,7 +9,6 @@ use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
 class LocalDatabase extends Plugin implements Installable

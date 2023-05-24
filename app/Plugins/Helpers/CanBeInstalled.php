@@ -14,6 +14,11 @@ trait CanBeInstalled
         //
     }
 
+    public function installCommands(): array
+    {
+        return [];
+    }
+
     public function composerPackagesToInstall(): array
     {
         if (count($this->requiredComposerPackages)) {

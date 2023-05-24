@@ -12,7 +12,6 @@ use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
-use Illuminate\Support\Facades\Process;
 
 class QueueWorker extends Plugin implements Launchable, Deployable, Installable
 {
@@ -76,11 +75,15 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
         ], 'sync');
     }
 
-    public function installWrapUp(): void
+    public function installCommands(): array
     {
         if ($this->queueConnection === 'database') {
-            Process::runWithOutput(Artisan::local('queue:table'));
+            return [
+                'queue:table',
+            ];
         }
+
+        return [];
     }
 
     public function deploy(): bool

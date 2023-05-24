@@ -2,16 +2,16 @@
 
 namespace Bellows\Plugins;
 
-use Bellows\Artisan;
 use Bellows\Facades\Console;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
-use Illuminate\Support\Facades\Process;
 
 class Jetstream extends Plugin implements Installable
 {
     use CanBeInstalled;
+
+    public int $priority = 100;
 
     protected string $stack;
 
@@ -42,7 +42,7 @@ class Jetstream extends Plugin implements Installable
         ];
     }
 
-    public function installWrapUp(): void
+    public function installCommands(): array
     {
         $command = 'jetstream:install ' . $this->stack;
 
@@ -58,6 +58,12 @@ class Jetstream extends Plugin implements Installable
             $command .= ' --dark';
         }
 
-        Process::runWithOutput(Artisan::local($command));
+        return [
+            $command,
+        ];
+    }
+
+    public function installWrapUp(): void
+    {
     }
 }

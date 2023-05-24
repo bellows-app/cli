@@ -31,6 +31,8 @@ interface PluginManagerInterface
 
     public function publishTags(): array;
 
+    public function installCommands(): array;
+
     public function updateConfig(): array;
 
     public function createSiteParams(CreateSiteParams $params): array;
