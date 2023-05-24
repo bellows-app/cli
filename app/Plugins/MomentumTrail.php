@@ -61,8 +61,10 @@ watch({
 PLUGIN);
 
         Project::file('resources/js/app.ts')
-            ->addJsImport("import { trail } from 'momentum-trail'")
-            ->addJsImport("import routes from '@/routes/routes.json'")
+            ->addJsImport([
+                "import { trail } from 'momentum-trail'",
+                "import routes from '@/routes/routes.json'",
+            ])
             ->replace('.use(ZiggyVue, Ziggy)', ".use(ZiggyVue, Ziggy)\n.use(trail, { routes })");
     }
 

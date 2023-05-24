@@ -21,4 +21,8 @@ interface Installable
     public function updateConfig(): array;
 
     public function installCommands(): array;
+
+    public function providersToRegister(): array;
+
+    public function aliasesToRegister(): array;
 }

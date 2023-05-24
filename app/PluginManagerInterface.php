@@ -23,6 +23,10 @@ interface PluginManagerInterface
 
     public function npmPackagesToInstall(): array;
 
+    public function aliasesToRegister(): array;
+
+    public function providersToRegister(): array;
+
     public function npmDevPackagesToInstall(): array;
 
     public function setActiveForDeploy(SiteInterface $site);

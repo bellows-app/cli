@@ -39,8 +39,8 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
             return;
         }
 
-        // TODO: Provide a way to bail if need be
         $project = $this->selectFromExistingProjects($type);
+
         $this->bugsnagKey = $project['api_key'];
     }
 
@@ -48,8 +48,29 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
     {
         return [
             // TODO: Can we determine if this is correct?
-            // '@bugsnag/plugin-vue',
+            '@bugsnag/plugin-vue',
         ];
+    }
+
+    public function installWrapUp(): void
+    {
+        Project::file('app.ts')
+            ->addJsImport([
+                "import Bugsnag from '@bugsnag/js'",
+                "import BugsnagPluginVue from '@bugsnag/plugin-vue'",
+            ])
+            ->addAfterJsImports(<<<'JS'
+if (import.meta.env.VITE_BUGSNAG_JS_API_KEY) {
+    Bugsnag.start({
+        apiKey: import.meta.env.VITE_BUGSNAG_JS_API_KEY,
+        plugins: [new BugsnagPluginVue()],
+        releaseStage: import.meta.env.VITE_APP_ENV,
+        enabledReleaseStages: ['development', 'production'],
+    });
+
+    const bugsnagVue = Bugsnag.getPlugin('vue');
+}
+JS);
     }
 
     public function deploy(): bool

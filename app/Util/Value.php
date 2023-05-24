@@ -28,6 +28,10 @@ class Value
             return $value === true || $value === 'true' ? 'true' : 'false';
         }
 
+        if (Str::endsWith($value, '::class')) {
+            return $value;
+        }
+
         if (Str::startsWith($value, [self::DOUBLE, self::SINGLE])) {
             return $value;
         }

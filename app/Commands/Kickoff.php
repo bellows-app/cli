@@ -197,6 +197,14 @@ class Kickoff extends Command
                 ),
             );
 
+        collect($pluginManager->aliasesToRegister())->each(
+            fn ($value, $key) => (new ConfigHelper)->update("app.aliases.{$key}", $value)
+        );
+
+        collect($pluginManager->providersToRegister())->unique()->values()->each(
+            fn ($provider) => (new ConfigHelper)->append('app.providers', $provider),
+        );
+
         $this->step('Update Config Files');
 
         collect($pluginManager->updateConfig())

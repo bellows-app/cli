@@ -27,17 +27,19 @@ class FileHelper
         }
     }
 
-    public function addJsImport(string $content): static
+    public function addJsImport(string|array $content): static
     {
-        $vite = $this->getFile();
+        $content = collect(is_array($content) ? $content : [$content])->map(
+            fn ($line) => Str::finish($line, ';')
+        )->implode(PHP_EOL);
 
-        if (Str::contains($vite, $content)) {
+        $fileContents = $this->getFile();
+
+        if (Str::contains($fileContents, $content)) {
             return $this;
         }
 
-        $content = Str::finish($content, ';');
-
-        $lines = collect(explode(PHP_EOL, $vite));
+        $lines = collect(explode(PHP_EOL, $fileContents));
         $lastImport = $lines->reverse()->search(fn ($l) => Str::startsWith($l, 'import'));
 
         if ($lastImport === false) {
@@ -49,6 +51,19 @@ class FileHelper
         $this->writeFile($lines->implode(PHP_EOL));
 
         return $this;
+    }
+
+    public function addAfterJsImports(string|array $content)
+    {
+        if (!is_array($content)) {
+            $content = [$content];
+        }
+
+        // Just add a line between the last import and the new content
+        array_unshift($content, PHP_EOL);
+
+        // We're effectively doing the same thing
+        return $this->addJsImport($content);
     }
 
     public function replace(string $search, string $replace): static

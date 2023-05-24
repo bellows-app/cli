@@ -315,6 +315,87 @@ return [
 CONFIG);
 })->group('newvalue');
 
+it('will not quote a class referenced statically', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => null,
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.output.newthing', 'SomeClass::class');
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'output' => [
+        'routes' => 'scripts/routes/routes.json',
+        'typescript' => 'scripts/types/routes.d.ts',
+        'newthing' => SomeClass::class,
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
+it('will fill in a deeply nested value that is missing', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'channels' => [
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => ['single', 'bugsnag'],
+            'ignore_exceptions' => false,
+        ],
+
+        'single' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->update('test.channels.bugsnag.driver', 'bugsnag');
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'channels' => [
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => ['single', 'bugsnag'],
+            'ignore_exceptions' => false,
+        ],
+
+        'single' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+        'bugsnag' => [
+            'driver' => 'bugsnag',
+        ],
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
 it('will ignore a raw value', function () {
     writeToConfig(
         <<<'CONFIG'
@@ -351,6 +432,34 @@ it('will create a new file if the file is not found and add the config', functio
 
 return [
     'thing' => 'val val val',
+];
+CONFIG);
+})->group('newvalue');
+
+
+it('can append a value to an existing config array', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'providers' => [
+        MyProvider::class,
+    ],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->append('test.app.providers', 'MyNewProvider::class');
+
+    expect(getConfigContents('nada'))->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'providers' => [
+        MyProvider::class,
+        MyNewProvider::class,
+    ],
 ];
 CONFIG);
 })->group('newvalue');

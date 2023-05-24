@@ -173,6 +173,16 @@ class PluginManager implements PluginManagerInterface
         return $this->call('environmentVariables')->reduce([]);
     }
 
+    public function aliasesToRegister(): array
+    {
+        return $this->call('aliasesToRegister')->reduce([]);
+    }
+
+    public function providersToRegister(): array
+    {
+        return $this->call('providersToRegister')->reduce([]);
+    }
+
     public function publishTags(): array
     {
         return $this->call('publishTags')->reduce([]);

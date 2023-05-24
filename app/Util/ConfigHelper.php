@@ -51,6 +51,12 @@ CONFIG;
         );
     }
 
+    public function append(string $key, mixed $value)
+    {
+        // TODO: Implement this
+        Console::error('ConfigHelper::append() not yet implemented');
+    }
+
     protected function replace(string $content, string $value)
     {
         $this->lines = collect(explode(PHP_EOL, trim($content)));
@@ -196,7 +202,7 @@ CONFIG;
 
         $this->lines->splice(
             $currentChunk->keys()->first(),
-            $currentChunk->count() - $keys->count(),
+            $currentChunk->count() - 1,
             $currentChunk,
         );
 
@@ -205,18 +211,31 @@ CONFIG;
             $this->lines->pop();
         }
 
+        $this->lines = collect(explode(PHP_EOL, $this->lines->implode(PHP_EOL)));
+
+        // We now have all of the necessary keys. Play it again, Sam.
         return $this->findChunk(clone $this->keys, $this->lines);
     }
 
     protected function indentBasedOnKeys(Collection $keys, string $str)
     {
+        $lines = collect(explode(PHP_EOL, $str));
+
+        if (Str::endsWith($str, '],')) {
+            $firstLineIndent = strlen($lines->first()) - strlen(ltrim($lines->first()));
+
+            $lines = $lines->map(fn ($l) => Str::replaceFirst(
+                Str::repeat(' ', $firstLineIndent),
+                '',
+                $l
+            ));
+        }
+
         $usedKeys = $this->keys->count() - $keys->count();
 
         $indent = Str::repeat(' ', ($usedKeys + $keys->count() - 1) * 4);
 
-        return collect(explode(PHP_EOL, $str))
-            ->map(fn ($l) => $indent . $l)
-            ->implode(PHP_EOL);
+        return $lines->map(fn ($l) => $indent . $l)->implode(PHP_EOL);
     }
 
     protected function createNewChunkFromSingleLine(Collection $currentChunk, string $phpArr): string
@@ -247,21 +266,21 @@ CONFIG;
             ->replace('array (', '[')
             ->replace(')', ']')
             ->replace('NULL', 'null')
-            ->toString();
+            ->explode(PHP_EOL)
+            ->map(fn ($l) => trim($l))
+            ->implode(PHP_EOL);
 
-        $result = collect(explode(PHP_EOL, $result))
-            ->map(fn ($l) => trim($l), $result);
+        $result = Str::replace("\n[", ' [', $result);
+        $result = collect(explode(PHP_EOL, $result));
 
         $midpoint = floor($result->count() / 2);
 
         // Re-indent the array
-        $result = $result->map(
+        return $result->map(
             fn ($l, $i) => Str::repeat(
                 ' ',
                 ($i < $midpoint ? $i : $result->count() - $i - 1) * 4
             ) . $l
         )->implode(PHP_EOL);
-
-        return str_replace("\n[", ' [', $result);
     }
 }

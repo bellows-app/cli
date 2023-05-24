@@ -22,8 +22,6 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
     public function install(): void
     {
         // TODO: Offer to handle account setup now if they want
-        // Disable local error reporting
-        // 'BUGSNAG_NOTIFY_RELEASE_STAGES' => 'production',
     }
 
     public function launch(): void
@@ -59,6 +57,29 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
         return true;
     }
 
+    public function providersToRegister(): array
+    {
+        return [
+            'Bugsnag\BugsnagLaravel\BugsnagServiceProvider::class',
+        ];
+    }
+
+    public function aliasesToRegister(): array
+    {
+        return [
+            'Bugsnag' => 'Bugsnag\BugsnagLaravel\Facades\Bugsnag::class',
+        ];
+    }
+
+    public function updateConfig(): array
+    {
+        return [
+            'logging.channels.stack.driver'   => 'stack',
+            'logging.channels.stack.channels' => "['single', 'bugsnag']",
+            'logging.channels.bugsnag.driver' => 'bugsnag',
+        ];
+    }
+
     public function canDeploy(): bool
     {
         return !$this->site->getEnv()->has('BUGSNAG_API_KEY');
@@ -70,6 +91,9 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
             return [];
         }
 
-        return ['BUGSNAG_API_KEY' => $this->bugsnagKey];
+        return [
+            'BUGSNAG_API_KEY'               => $this->bugsnagKey,
+            'BUGSNAG_NOTIFY_RELEASE_STAGES' => 'production,development,staging',
+        ];
     }
 }

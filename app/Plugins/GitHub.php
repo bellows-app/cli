@@ -16,6 +16,11 @@ class GitHub extends Plugin implements Installable
 {
     use CanBeInstalled;
 
+    public function getName(): string
+    {
+        return 'GitHub';
+    }
+
     public function installWrapUp(): void
     {
         if (!Console::confirm('Initialize a GitHub repo?', true)) {

@@ -64,4 +64,14 @@ trait CanBeInstalled
     {
         return [];
     }
+
+    public function providersToRegister(): array
+    {
+        return [];
+    }
+
+    public function aliasesToRegister(): array
+    {
+        return [];
+    }
 }
