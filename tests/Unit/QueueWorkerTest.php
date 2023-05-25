@@ -2,7 +2,7 @@
 
 use Bellows\Data\PluginWorker;
 use Bellows\DeployScript;
-use Bellows\Plugins\QueueWorker;
+use Bellows\Plugins\Queue;
 
 uses(Tests\PluginTestCase::class)->group('plugin');
 
@@ -14,7 +14,7 @@ it('can create a single queue worker', function () {
         ->expectsConfirmation('Do you want to add another queue worker?', 'no')
         ->setup();
 
-    $plugin = app(QueueWorker::class);
+    $plugin = app(Queue::class);
 
     $plugin->launch();
 
@@ -57,7 +57,7 @@ it('can create multiple queue workers', function () {
         ->expectsConfirmation('Do you want to add another queue worker?', 'no')
         ->setup();
 
-    $plugin = app(QueueWorker::class);
+    $plugin = app(Queue::class);
 
     $plugin->launch();
 
@@ -116,7 +116,7 @@ it('can create a custom queue worker', function () {
         ->expectsConfirmation('Do you want to add another queue worker?', 'no')
         ->setup();
 
-    $plugin = app(QueueWorker::class);
+    $plugin = app(Queue::class);
 
     $plugin->launch();
 

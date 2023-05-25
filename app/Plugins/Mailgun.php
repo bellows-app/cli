@@ -9,15 +9,19 @@ use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\DeployHelper;
 use Bellows\Util\Domain;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class Mailgun extends Plugin implements Launchable, Deployable
+class Mailgun extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected const MAILER = 'mailgun';
 
     protected string $domain;
@@ -99,6 +103,10 @@ class Mailgun extends Plugin implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
+        if (!isset($this->domain)) {
+            return [];
+        }
+
         return [
             'MAIL_MAILER'      => self::MAILER,
             'MAILGUN_DOMAIN'   => $this->domain,

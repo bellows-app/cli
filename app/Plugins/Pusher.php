@@ -7,12 +7,16 @@ use Bellows\Facades\Console;
 use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\DeployHelper;
 use Illuminate\Http\Client\PendingRequest;
 
-class Pusher extends Plugin implements Launchable, Deployable
+class Pusher extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected const BROADCAST_DRIVER = 'pusher';
 
     protected array $appConfig;
@@ -77,6 +81,10 @@ class Pusher extends Plugin implements Launchable, Deployable
 
     public function environmentVariables(): array
     {
+        if (!isset($this->appConfig)) {
+            return [];
+        }
+
         return [
             'BROADCAST_DRIVER'   => self::BROADCAST_DRIVER,
             'PUSHER_APP_ID'      => $this->appConfig['app_id'],

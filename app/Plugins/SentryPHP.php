@@ -5,13 +5,26 @@ namespace Bellows\Plugins;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class SentryPHP extends Sentry implements Launchable, Deployable
+class SentryPHP extends Sentry implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected array $anyRequiredComposerPackages = [
         'sentry/sentry-laravel',
     ];
+
+    public function install(): void
+    {
+        if (Console::confirm('Setup Sentry PHP project now?', false)) {
+            $this->launch();
+        }
+
+        // TODO: https://joe-codes.sentry.io/getting-started/php-laravelaaa/php-laravel/
+    }
 
     public function launch(): void
     {

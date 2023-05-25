@@ -13,7 +13,7 @@ use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class QueueWorker extends Plugin implements Launchable, Deployable, Installable
+class Queue extends Plugin implements Launchable, Deployable, Installable
 {
     use CanBeInstalled;
 
@@ -23,7 +23,7 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
 
     public function enabled(): bool
     {
-        return Console::confirm('Do you want to set up any queue workers?');
+        return Console::confirm('Do you want to set up a queue or queue workers?');
     }
 
     public function launch(): void
@@ -37,11 +37,7 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
         }
 
         do {
-            $this->queueConnection = Console::anticipateRequired(
-                'Connection',
-                ['database', 'sqs', 'redis', 'beanstalkd', 'sync'],
-                $localConnection
-            );
+            $this->queueConnection = $this->getQueueConnection($localConnection);
 
             $queue = Console::ask('Queue', 'default');
 
@@ -66,13 +62,7 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
 
     public function install(): void
     {
-        $this->queueConnection = Console::choice('Which queue driver would you like to use?', [
-            'database',
-            'sqs',
-            'redis',
-            'beanstalkd',
-            'sync',
-        ], 'sync');
+        $this->queueConnection = $this->getQueueConnection('sync');
     }
 
     public function installCommands(): array
@@ -119,6 +109,17 @@ class QueueWorker extends Plugin implements Launchable, Deployable, Installable
         return DeployScript::addBeforePHPReload($deployScript, [
             Artisan::inDeployScript('queue:restart'),
         ]);
+    }
+
+    protected function getQueueConnection($default): string
+    {
+        return Console::choice('Which queue driver would you like to use?', [
+            'beanstalkd',
+            'database',
+            'redis',
+            'sqs',
+            'sync',
+        ], $default);
     }
 
     protected function getParams(): array

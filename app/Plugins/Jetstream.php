@@ -23,7 +23,12 @@ class Jetstream extends Plugin implements Installable
 
     public function install(): void
     {
-        $this->stack = strtolower(Console::choice('Which stack would you like to use for Jetstream?', ['Inertia', 'Livewire']));
+        $this->stack = strtolower(
+            Console::choice(
+                'Which stack would you like to use for Jetstream?',
+                ['Inertia', 'Livewire'],
+            ),
+        );
 
         if ($this->stack === 'inertia') {
             // TODO: Do we have to deal with this: https://github.com/inertiajs/server/issues/10

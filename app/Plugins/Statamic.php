@@ -6,10 +6,14 @@ use Bellows\DeployScript;
 use Bellows\Facades\Console;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 
-class Statamic extends Plugin implements Launchable, Deployable
+class Statamic extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected bool $gitEnabled = false;
 
     protected bool $gitAutoCommit = false;
