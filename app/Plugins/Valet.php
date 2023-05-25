@@ -15,20 +15,16 @@ class Valet extends Plugin implements Installable
 
     protected bool $secure = false;
 
-    public function installWrapUp(): void
+    public function install(): void
     {
         $urlBase = collect(explode('.', Project::config()->domain))->slice(0, -1)->implode('.');
 
         if (Console::confirm('Link this directory in Valet?', true)) {
-            Process::run('valet link ' . $urlBase, function ($type, $line) {
-                echo $line;
-            });
+            Process::runWithOutput('valet link ' . $urlBase);
         }
 
         if (Console::confirm('Secure this domain with Valet?', true)) {
-            Process::run('valet secure ' . $urlBase, function ($type, $line) {
-                echo $line;
-            });
+            Process::runWithOutput('valet secure ' . $urlBase);
 
             $this->secure = true;
         }
@@ -46,18 +42,12 @@ class Valet extends Plugin implements Installable
                 $phpVersionsInstalled->last()
             );
 
-            Process::run(
-                sprintf('valet isolate %s --site="%s"', $phpVersion, $urlBase),
-                function ($type, $line) {
-                    echo $line;
-                }
-            );
+            Process::runWithOutput(sprintf('valet isolate %s --site="%s"', $phpVersion, $urlBase));
         }
     }
 
     public function environmentVariables(): array
     {
-        // TODO: Yes... but the wrap up runs after the environment variables are set. Hm.
         if ($this->secure) {
             return [
                 'APP_URL' => 'https://' . Project::config()->domain,

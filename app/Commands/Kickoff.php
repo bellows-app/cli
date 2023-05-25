@@ -86,7 +86,6 @@ class Kickoff extends Command
 
         $this->step('Installing Laravel');
 
-        // TODO: This is also probably a plugin? Maybe not, it always has to be done.
         Process::runWithOutput('composer create-project laravel/laravel .');
 
         file_put_contents($dir . '/README.md', "# {$name}");

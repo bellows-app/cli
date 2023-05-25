@@ -45,7 +45,6 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
             return;
         }
 
-        // TODO: Provide a way to bail if need be
         $project = $this->selectFromExistingProjects($type);
         $this->bugsnagKey = $project['api_key'];
     }

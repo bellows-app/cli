@@ -51,7 +51,6 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
 
         Git::ignore('resources/js/routes.json');
 
-        // TODO: Also update entry point file (app.js)
         Vite::addImport("import { watch } from 'vite-plugin-watch'");
         Vite::addPlugin(<<<'PLUGIN'
 watch({
