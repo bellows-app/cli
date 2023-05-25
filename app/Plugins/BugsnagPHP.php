@@ -21,7 +21,7 @@ class BugsnagPHP extends Bugsnag implements Launchable, Deployable, Installable
 
     public function install(): void
     {
-        if (Console::confirm('Setup Bugsnag PHP now?', false)) {
+        if (Console::confirm('Setup Bugsnag PHP project now?', false)) {
             $this->launch();
         }
     }

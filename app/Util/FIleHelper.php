@@ -30,7 +30,7 @@ class FileHelper
     public function addJsImport(string|array $content): static
     {
         $content = collect(is_array($content) ? $content : [$content])->map(
-            fn ($line) => Str::finish($line, ';')
+            fn ($line) => strlen(trim($line)) ? Str::finish($line, ';') : $line
         )->implode(PHP_EOL);
 
         $fileContents = $this->getFile();

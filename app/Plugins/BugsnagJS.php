@@ -30,7 +30,7 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
             default => 'js',
         };
 
-        if (Console::confirm('Setup Bugsnag JS now?', false)) {
+        if (Console::confirm('Setup Bugsnag JS project now?', false)) {
             $this->launch();
         }
     }
