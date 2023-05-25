@@ -27,6 +27,20 @@ class GitHub extends Plugin implements Installable
             return;
         }
 
+        Process::runWithOutput('git init');
+        Process::runWithOutput('git add .');
+        Process::runWithOutput('git commit -m "kickoff"');
+        Process::runWithOutput('git branch -M main');
+
+        $ghInstalled = trim(Process::run('which gh')->output()) !== '';
+
+        if (!$ghInstalled) {
+            Console::warn('GitHub CLI is not installed. Cannot create remote repository on GitHub.');
+            Console::info('Install here: https://cli.github.com/');
+
+            return;
+        }
+
         $username = $this->getUsername();
 
         if ($username) {
@@ -39,14 +53,6 @@ class GitHub extends Plugin implements Installable
             Project::config()->repository = new Repository($githubRepo, 'main');
         }
 
-        $ghInstalled = trim(Process::run('which gh')->output()) !== '';
-
-        if (!$ghInstalled) {
-            Console::warn('GitHub CLI is not installed. Cannot create remote repository.');
-
-            return;
-        }
-
         $repoVisiblitity = Console::choice(
             'Repo visibility',
             ['public', 'private'],
@@ -54,10 +60,6 @@ class GitHub extends Plugin implements Installable
         );
 
         Process::runWithOutput("gh repo create {$githubRepo} --{$repoVisiblitity}");
-        Process::runWithOutput('git init');
-        Process::runWithOutput('git add .');
-        Process::runWithOutput('git commit -m "kickoff"');
-        Process::runWithOutput('git branch -M main');
         Process::runWithOutput("git remote add origin git@github.com:{$githubRepo}.git");
         Process::runWithOutput('git push -u origin main');
     }
