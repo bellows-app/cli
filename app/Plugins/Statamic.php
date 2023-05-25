@@ -12,6 +12,7 @@ use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\ConfigHelper;
+use Symfony\Component\Yaml\Yaml;
 
 class Statamic extends Plugin implements Launchable, Deployable, Installable
 {
@@ -41,6 +42,7 @@ class Statamic extends Plugin implements Launchable, Deployable, Installable
         Composer::allowPlugin('pixelfear/composer-dist-plugin');
         Composer::require('statamic/cms', false, '--with-dependencies');
 
+        // TODO: Offer as option?
         (new ConfigHelper)->update('statamic.users.repository', 'file');
 
         if (!Console::confirm('Create Statamic user?', true)) {
@@ -51,11 +53,12 @@ class Statamic extends Plugin implements Launchable, Deployable, Installable
         $name = Console::ask('Name');
         $password = Console::secret('Password');
 
-        Project::writeFile("users/{$email}.yaml", <<<YAML
-        name: {$name}
-        super: true
-        password: {$password}
-        YAML);
+        // TODO: This isn't working, hm.
+        Project::writeFile("users/{$email}.yaml", Yaml::dump([
+            'name' => $name,
+            'super' => true,
+            'password' => $password,
+        ]));
     }
 
     public function launch(): void
