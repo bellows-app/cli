@@ -53,6 +53,7 @@ class Project
 
     public function writeFile(string $path, string $contents): void
     {
+        File::ensureDirectoryExists(dirname($this->path($path)));
         File::put($this->path($path), $contents);
     }
 

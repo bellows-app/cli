@@ -92,17 +92,17 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
                 "import BugsnagPlugin{$pluginName} from '@bugsnag/plugin-{$this->jsFramework}'",
             ])
             ->addAfterJsImports(<<<JS
-if (import.meta.env.VITE_BUGSNAG_JS_API_KEY) {
-    Bugsnag.start({
-        apiKey: import.meta.env.VITE_BUGSNAG_JS_API_KEY,
-        plugins: [new BugsnagPlugin$pluginName()],
-        releaseStage: import.meta.env.VITE_APP_ENV,
-        enabledReleaseStages: ['development', 'production'],
-    });
-}
+            if (import.meta.env.VITE_BUGSNAG_JS_API_KEY) {
+                Bugsnag.start({
+                    apiKey: import.meta.env.VITE_BUGSNAG_JS_API_KEY,
+                    plugins: [new BugsnagPlugin$pluginName()],
+                    releaseStage: import.meta.env.VITE_APP_ENV,
+                    enabledReleaseStages: ['development', 'production'],
+                });
+            }
 
-const bugsnagVue = import.meta.env.VITE_BUGSNAG_VUE_PLUGIN ? Bugsnag.getPlugin('$this->jsFramework') : undefined;
-JS);
+            const bugsnagVue = import.meta.env.VITE_BUGSNAG_VUE_PLUGIN ? Bugsnag.getPlugin('$this->jsFramework') : undefined;
+            JS);
 
         // TODO: What does react need as far as setup? Check out a bare Jetstream project
         // Also is this all too specific to me? To Jetstream?

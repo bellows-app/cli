@@ -8,11 +8,15 @@ use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Illuminate\Http\Client\PendingRequest;
 
-class FathomAnalytics extends Plugin implements Launchable, Deployable
+class FathomAnalytics extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected $siteId;
 
     public function __construct(
@@ -71,13 +75,51 @@ class FathomAnalytics extends Plugin implements Launchable, Deployable
         return true;
     }
 
+    public function install(): void
+    {
+        if (Console::confirm('Setup Fathom Analytics now?', false)) {
+            $this->launch();
+        }
+    }
+
     public function canDeploy(): bool
     {
         return !$this->site->getEnv()->has('FATHOM_SITE_ID');
     }
 
+    public function updateConfig(): array
+    {
+        // TODO: Also add chunk into main app layout file to check for this
+        // (maybe it's a separate blade component that we can just include?)
+        return [
+            'services.fathom_analytics.site_id' => "env('FATHOM_SITE_ID')",
+        ];
+    }
+
+    public function installWrapUp(): void
+    {
+        // TODO: What does a non-Jetstream install look like? Are these files at all correct?
+        Project::file('resources/views/app.blade.php')->replace(
+            '</head>',
+            "    @include('partials.fathom_analytics')\n</head>",
+        );
+
+        Project::writeFile(
+            'resources/views/partials/fathom_analytics.blade.php',
+            <<<'HTML'
+            @if (config('services.fathom_analytics.site_id'))
+                <script src="https://cdn.usefathom.com/script.js" data-site="{{ config('services.fathom_analytics.site_id') }}" defer></script>
+            @endif
+            HTML
+        );
+    }
+
     public function environmentVariables(): array
     {
+        if (!isset($this->siteId)) {
+            return [];
+        }
+
         return [
             'FATHOM_SITE_ID' => $this->siteId,
         ];

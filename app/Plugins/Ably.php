@@ -8,12 +8,16 @@ use Bellows\Facades\Project;
 use Bellows\Http;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
+use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\DeployHelper;
 use Illuminate\Http\Client\PendingRequest;
 
-class Ably extends Plugin implements Launchable, Deployable
+class Ably extends Plugin implements Launchable, Deployable, Installable
 {
+    use CanBeInstalled;
+
     protected const BROADCAST_DRIVER = 'ably';
 
     protected string $key;

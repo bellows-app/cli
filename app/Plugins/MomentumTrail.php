@@ -53,11 +53,11 @@ class MomentumTrail extends Plugin implements Launchable, Deployable, Installabl
 
         Vite::addImport("import { watch } from 'vite-plugin-watch'");
         Vite::addPlugin(<<<'PLUGIN'
-watch({
-    pattern: 'routes/*.php',
-    command: 'php artisan trail:generate',
-})
-PLUGIN);
+        watch({
+            pattern: 'routes/*.php',
+            command: 'php artisan trail:generate',
+        })
+        PLUGIN);
 
         Project::file('resources/js/app.ts')
             ->addJsImport([
@@ -86,11 +86,11 @@ PLUGIN);
             $deployScript,
             [
                 <<<'SCRIPT'
-if [ ! -f resources/js/routes.json ]; then
-    echo "Creating resources/js/routes.json"
-    echo "{}" > resources/js/routes.json
-fi
-SCRIPT,
+                if [ ! -f resources/js/routes.json ]; then
+                    echo "Creating resources/js/routes.json"
+                    echo "{}" > resources/js/routes.json
+                fi
+                SCRIPT,
                 Artisan::inDeployScript('trail:generate'),
             ],
         );
