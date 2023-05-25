@@ -15,55 +15,108 @@ class ConfigHelper
 
     protected Collection $keys;
 
-    public function update($key, $value)
+    protected string $value;
+
+    protected string $path;
+
+    public function update(string $key, mixed $value)
+    {
+        $this->setup($key, $value);
+
+        File::put(
+            $this->path,
+            $this->replace(),
+        );
+    }
+
+    public function append(string $key, mixed $value)
+    {
+        $this->setup($key, $value);
+
+        File::put(
+            $this->path,
+            $this->appendValue(),
+        );
+    }
+
+    protected function appendValue()
+    {
+        $chunk = $this->findChunk(clone $this->keys, $this->lines);
+
+        $indentedValue = Str::of($this->value)->start(
+            Str::repeat(
+                ' ',
+                ($this->keys->count() + 1) * 4
+            ),
+        )->finish(',');
+
+        if (Str::endsWith(trim($chunk->last()), '[],')) {
+            // It's an empty array, just replace it
+            $this->lines->splice(
+                $chunk->keys()->first(),
+                1,
+                Str::replace(
+                    '[]',
+                    '[' . PHP_EOL
+                        . $indentedValue . PHP_EOL
+                        . Str::repeat(
+                            ' ',
+                            $this->keys->count() * 4
+                        ) . ']',
+                    $chunk->first()
+                ),
+            );
+
+            return $this->lines->implode(PHP_EOL);
+        }
+
+        $lastElement = $chunk->pop();
+        $chunk->push($indentedValue);
+        $chunk->push($lastElement);
+
+        $this->lines->splice(
+            $chunk->keys()->first(),
+            $chunk->count() - 1,
+            $chunk,
+        );
+
+        return $this->lines->implode(PHP_EOL);
+    }
+
+    protected function setup(string $key, mixed $value)
     {
         $this->keys = collect(explode('.', $key));
 
         $filename = $this->keys->shift();
 
-        $path = Project::config()->directory . '/config/' . $filename . '.php';
+        $this->path = Project::config()->directory . '/config/' . $filename . '.php';
 
-        if (File::missing($path)) {
+        if (File::missing($this->path)) {
             Console::warn('Config file ' . $filename . ' does not exist! Creating now.');
 
-            $content = <<<'CONFIG'
-<?php
-
-return [];
-CONFIG;
-
-            File::put($path, $content);
+            File::put(
+                $this->path,
+                collect([
+                    '<?php', '', 'return [];',
+                ])->implode(PHP_EOL),
+            );
         }
 
-        $value = Value::quoted(
+        $this->value = Value::quoted(
             $value,
             Value::SINGLE,
             // If it's an array or a function, leave it alone
             fn ($value) => !Str::startsWith($value, '[') && !Str::match('/^[a-zA-Z0-9_]+\(/', $value),
         );
 
-        File::put(
-            $path,
-            $this->replace(
-                File::get($path),
-                $value,
-            ),
-        );
+        $this->lines = collect(explode(PHP_EOL, trim(File::get($this->path))));
     }
 
-    public function append(string $key, mixed $value)
+    protected function replace()
     {
-        // TODO: Implement this
-        Console::error('ConfigHelper::append() not yet implemented');
-    }
-
-    protected function replace(string $content, string $value)
-    {
-        $this->lines = collect(explode(PHP_EOL, trim($content)));
-
         $chunk = $this->findChunk(clone $this->keys, $this->lines);
 
-        $replacement = $chunk->map(function ($line) use ($value) {
+        $replacement = $chunk->map(function ($line) {
             // TODO: Account for double quotes
             preg_match(
                 '/\s*\'' . $this->keys->last() . '\'\s*=>\s*(.*)/',
@@ -77,7 +130,7 @@ CONFIG;
 
             return str_replace(
                 $matches[1],
-                Str::finish($value, ','),
+                Str::finish($this->value, ','),
                 $line,
             );
         })->filter();

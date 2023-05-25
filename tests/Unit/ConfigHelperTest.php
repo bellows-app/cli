@@ -436,7 +436,6 @@ return [
 CONFIG);
 })->group('newvalue');
 
-
 it('can append a value to an existing config array', function () {
     writeToConfig(
         <<<'CONFIG'
@@ -450,14 +449,39 @@ return [
 CONFIG
     );
 
-    (new ConfigHelper())->append('test.app.providers', 'MyNewProvider::class');
+    (new ConfigHelper())->append('test.providers', 'MyNewProvider::class');
 
-    expect(getConfigContents('nada'))->toBe(<<<'CONFIG'
+    expect(getConfigContents())->toBe(<<<'CONFIG'
 <?php
 
 return [
     'providers' => [
         MyProvider::class,
+        MyNewProvider::class,
+    ],
+];
+CONFIG);
+})->group('newvalue');
+
+
+it('can append a value to an empty config array', function () {
+    writeToConfig(
+        <<<'CONFIG'
+<?php
+
+return [
+    'providers' => [],
+];
+CONFIG
+    );
+
+    (new ConfigHelper())->append('test.providers', 'MyNewProvider::class');
+
+    expect(getConfigContents())->toBe(<<<'CONFIG'
+<?php
+
+return [
+    'providers' => [
         MyNewProvider::class,
     ],
 ];
