@@ -104,6 +104,9 @@ if (import.meta.env.VITE_BUGSNAG_JS_API_KEY) {
 const bugsnagVue = import.meta.env.VITE_BUGSNAG_VUE_PLUGIN ? Bugsnag.getPlugin('$this->jsFramework') : undefined;
 JS);
 
+        // TODO: What does react need as far as setup? Check out a bare Jetstream project
+        // Also is this all too specific to me? To Jetstream?
+        // https://docs.bugsnag.com/platforms/javascript/react/
         if ($this->jsFramework === 'vue') {
             $appJs->replace(
                 '.use(plugin)',
