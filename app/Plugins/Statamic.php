@@ -4,11 +4,15 @@ namespace Bellows\Plugins;
 
 use Bellows\DeployScript;
 use Bellows\Facades\Console;
+use Bellows\Facades\Project;
+use Bellows\PackageManagers\Composer;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
+use Bellows\Util\ConfigHelper;
+use Illuminate\Support\Facades\Process;
 
 class Statamic extends Plugin implements Launchable, Deployable, Installable
 {
@@ -32,6 +36,29 @@ class Statamic extends Plugin implements Launchable, Deployable, Installable
     {
     }
 
+    public function installWrapUp(): void
+    {
+        Composer::addScript('post-autoload-dump', '@php artisan statamic:install --ansi');
+        Composer::allowPlugin('pixelfear/composer-dist-plugin');
+        Composer::require('statamic/cms', false, '--with-dependencies');
+
+        (new ConfigHelper)->update('statamic.users.repository', 'file');
+
+        if (!Console::confirm('Create Statamic user?', true)) {
+            return;
+        }
+
+        $email = Console::ask('Email');
+        $name = Console::ask('Name');
+        $password = Console::secret('Password');
+
+        Project::writeFile("users/{$email}.yaml", <<<YAML
+        name: {$name}
+        super: true
+        password: {$password}
+        YAML);
+    }
+
     public function launch(): void
     {
         $this->gitEnabled = Console::confirm('Enable git?', true);
@@ -51,6 +78,7 @@ class Statamic extends Plugin implements Launchable, Deployable, Installable
         $this->gitAutoPush = Console::confirm('Automatically push changes?', true);
 
         Console::info('To prevent circular deployments, customize your commit message as described here:');
+        // TODO: We could do this for them?
         Console::comment('https://statamic.dev/git-automation#customizing-commits');
     }
 
