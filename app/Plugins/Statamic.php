@@ -52,7 +52,7 @@ class Statamic extends Plugin implements Launchable, Deployable
 
     public function deploy(): bool
     {
-        // Nothing to do here
+        return true;
     }
 
     public function canDeploy(): bool

@@ -13,7 +13,6 @@ use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Plugins\Helpers\CanBeLaunched;
 use Bellows\Util\Vite;
-use Illuminate\Support\Facades\File;
 
 class MomentumTrail extends Plugin implements Launchable, Deployable, Installable
 {

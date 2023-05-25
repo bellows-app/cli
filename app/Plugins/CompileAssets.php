@@ -8,9 +8,12 @@ use Bellows\PackageManagers\Npm;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeLaunched;
 
 class CompileAssets extends Plugin implements Launchable, Deployable
 {
+    use CanBeLaunched;
+
     protected $yarnLines = [
         'yarn',
         'yarn build',
@@ -36,11 +39,6 @@ class CompileAssets extends Plugin implements Launchable, Deployable
         }
 
         return $this->enabledByDefault('You probably want to compile your assets');
-    }
-
-    public function launch(): void
-    {
-        // Nothing to do here
     }
 
     public function deploy(): bool

@@ -8,17 +8,15 @@ use Bellows\DeployScript;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeLaunched;
 
 class Optimize extends Plugin implements Launchable, Deployable
 {
+    use CanBeLaunched;
+
     public function isEnabledByDefault(): DefaultEnabledDecision
     {
         return $this->enabledByDefault('You probably want to optimize your application');
-    }
-
-    public function launch(): void
-    {
-        // Nothing to do here
     }
 
     public function deploy(): bool

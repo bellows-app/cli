@@ -5,20 +5,18 @@ namespace Bellows\Plugins;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeLaunched;
 use Bellows\Util\DeployHelper;
 
 class LaravelWebsockets extends Plugin implements Launchable, Deployable
 {
+    use CanBeLaunched;
+
     protected const BROADCAST_DRIVER = 'pusher';
 
     protected array $requiredComposerPackages = [
         'beyondcode/laravel-websockets',
     ];
-
-    public function launch(): void
-    {
-        // Nothing to do here
-    }
 
     public function deploy(): bool
     {

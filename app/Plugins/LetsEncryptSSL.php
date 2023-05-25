@@ -7,10 +7,13 @@ use Bellows\Facades\Project;
 use Bellows\Plugin;
 use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Launchable;
+use Bellows\Plugins\Helpers\CanBeLaunched;
 use Bellows\Util\Domain;
 
 class LetsEncryptSSL extends Plugin implements Launchable, Deployable
 {
+    use CanBeLaunched;
+
     public function getName(): string
     {
         return "Let's Encrypt SSL";
@@ -25,14 +28,8 @@ class LetsEncryptSSL extends Plugin implements Launchable, Deployable
         return $this->disabledByDefault('You opted out of securing your site');
     }
 
-    public function launch(): void
-    {
-        // Nothing to do here
-    }
-
     public function deploy(): bool
     {
-        // Nothing to do here
         return true;
     }
 

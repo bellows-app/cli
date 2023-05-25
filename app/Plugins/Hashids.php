@@ -7,21 +7,17 @@ use Bellows\Plugins\Contracts\Deployable;
 use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
+use Bellows\Plugins\Helpers\CanBeLaunched;
 use Illuminate\Support\Str;
 
 class Hashids extends Plugin implements Launchable, Deployable, Installable
 {
-    use CanBeInstalled;
+    use CanBeInstalled, CanBeLaunched;
 
     protected array $anyRequiredComposerPackages = [
         'mtvs/eloquent-hashids',
         'vinkla/hashids',
     ];
-
-    public function launch(): void
-    {
-        // Nothing to do here
-    }
 
     public function deploy(): bool
     {

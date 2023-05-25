@@ -25,7 +25,7 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
         $jsFramework = Console::choice('Which JS framework are you using?', ['Vue', 'React', 'Neither']);
 
         $this->jsFramework = match ($jsFramework) {
-            'Vue' => 'vue',
+            'Vue'   => 'vue',
             'React' => 'react',
             default => 'js',
         };
@@ -82,7 +82,6 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
         if ($this->jsFramework === 'js') {
             return;
         }
-
 
         $pluginName = ucwords($this->jsFramework);
 
