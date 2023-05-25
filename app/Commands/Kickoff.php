@@ -58,10 +58,7 @@ class Kickoff extends Command
 
         $this->comment("Creating project in {$dir}");
 
-        [$configFile, $config] = $this->getConfig();
-
-        // TODO: Also check for a "default" or "common" config for all projects?
-        // Or is it better to have an "extend" property? Or both?
+        [$configFiles, $config] = $this->getConfig();
 
         $topDirectory = trim(basename($dir));
 
@@ -211,10 +208,6 @@ class Kickoff extends Command
             ->merge($config['config'] ?? [])
             ->each(fn ($value, $key) => (new ConfigHelper)->update($key, $value));
 
-        // TODO: Stop littering this config directory everywhere,
-        // centralize it and allow it to be overriden for tests
-        $copySourceDirectory = env('HOME') . '/.bellows/kickoff/' . $configFile;
-
         $filesToRename = collect($config['rename-files'] ?? []);
 
         if ($filesToRename->isNotEmpty()) {
@@ -232,12 +225,19 @@ class Kickoff extends Command
             });
         }
 
-        if (is_dir($copySourceDirectory)) {
+        // TODO: Stop littering this config directory everywhere,
+        // centralize it and allow it to be overriden for tests
+        $toCopy = collect($configFiles)->map(
+            fn ($file) => env('HOME') . '/.bellows/kickoff/' . $file
+        )->filter(fn ($dir) => is_dir($dir));
+
+        if ($toCopy->isNotEmpty()) {
             $this->step('Copying Files');
 
-            Process::run("cp -R {$copySourceDirectory}/* " . Project::config()->directory);
-
-            $this->info('Copied files from ' . $copySourceDirectory);
+            $toCopy->each(function ($src) {
+                Process::run("cp -R {$src}/* " . Project::config()->directory);
+                $this->info('Copied files from ' . $src);
+            });
         }
 
         $filesToRemove = collect($config['remove-files'] ?? []);
@@ -299,6 +299,12 @@ class Kickoff extends Command
                     'name' => $item['config']['name'] ?? $item['file'],
                 ],
             ))
+            ->map(fn ($item) => array_merge(
+                $item,
+                [
+                    'label' => $item['name'] . ' (' . $item['file'] . ')',
+                ],
+            ))
             ->sortBy('name');
 
         // TODO: Offer to init a config if none exist
@@ -310,11 +316,55 @@ class Kickoff extends Command
 
         $name = $this->choice(
             'What kind of project are we kicking off today?',
-            $configs->pluck('name')->toArray(),
+            $configs->pluck('label')->toArray(),
         );
 
-        $config = $configs->firstWhere('name', $name);
+        $config = $configs->firstWhere('label', $name);
 
-        return [$config['file'], $config['config']];
+        // We need to make sure we're not recursively extending configs
+        $usedConfigs = [$config['file']];
+
+        $configExtends = $config['config']['extends'] ?? false;
+
+        while ($configExtends !== false) {
+            if (in_array($configExtends, $usedConfigs)) {
+                $this->error('Recursive config extending detected!');
+                exit;
+            }
+
+            $usedConfigs[] = $configExtends;
+
+            $configExtension = $configs->firstWhere('file', $configExtends);
+
+            if (!$configExtension) {
+                $this->error("Config {$configExtends} does not exist!");
+                exit;
+            }
+
+            $config['config'] = $this->mergeConfigs($config['config'], $configExtension['config']);
+
+            $configExtends = $configExtension['config']['extends'] ?? false;
+        }
+
+        return [$usedConfigs, $config['config']];
+    }
+
+    protected function mergeConfigs(array $base, array $toMerge)
+    {
+        $base = collect($base);
+        $toMerge = collect($toMerge);
+
+        $toMerge->each(function ($value, $key) use ($base) {
+            if ($base->has($key)) {
+                if (is_array($value)) {
+                    // We're only interested in merge array values, keep the base config non-array values the same
+                    $base->put($key, array_merge($base->get($key), $value));
+                }
+            } else {
+                $base->put($key, $value);
+            }
+        });
+
+        return $base->toArray();
     }
 }

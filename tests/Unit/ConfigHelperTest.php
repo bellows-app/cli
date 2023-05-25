@@ -463,7 +463,6 @@ return [
 CONFIG);
 })->group('newvalue');
 
-
 it('can append a value to an empty config array', function () {
     writeToConfig(
         <<<'CONFIG'
