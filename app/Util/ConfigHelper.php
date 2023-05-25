@@ -87,9 +87,23 @@ class ConfigHelper
     {
         $this->keys = collect(explode('.', $key));
 
-        $filename = $this->keys->shift();
+        $path = Project::config()->directory . '/config/';
 
-        $this->path = Project::config()->directory . '/config/' . $filename . '.php';
+        do {
+            $filename = $this->keys->shift();
+
+            if (is_dir($path . $filename)) {
+                // See if it's in a subdirectory
+                $path .= $filename . '/';
+                $keepSearching = true;
+            } else {
+                $path .= $filename . '.php';
+                // At this point we either found the file or we didn't, result is the same
+                $keepSearching = false;
+            }
+        } while ($keepSearching && $this->keys->count() > 0);
+
+        $this->path = $path;
 
         if (File::missing($this->path)) {
             Console::warn('Config file ' . $filename . ' does not exist! Creating now.');
@@ -286,7 +300,7 @@ class ConfigHelper
 
         $usedKeys = $this->keys->count() - $keys->count();
 
-        $indent = Str::repeat(' ', ($usedKeys + $keys->count() - 1) * 4);
+        $indent = Str::repeat(' ', max($usedKeys + $keys->count() - 1, 0) * 4);
 
         return $lines->map(fn ($l) => $indent . $l)->implode(PHP_EOL);
     }

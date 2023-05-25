@@ -12,7 +12,6 @@ use Bellows\Plugins\Contracts\Installable;
 use Bellows\Plugins\Contracts\Launchable;
 use Bellows\Plugins\Helpers\CanBeInstalled;
 use Bellows\Util\ConfigHelper;
-use Illuminate\Support\Facades\Process;
 
 class Statamic extends Plugin implements Launchable, Deployable, Installable
 {
