@@ -16,6 +16,7 @@ class Tailwind extends Plugin implements Installable
 
     public function npmPackagesToInstall(): array
     {
+        // TODO: More here probably. Or maybe this is just a file they copy?
         return [
             '@tailwindcss/forms',
             '@tailwindcss/typography',
