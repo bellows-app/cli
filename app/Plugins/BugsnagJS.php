@@ -18,6 +18,23 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
         '@bugsnag/js',
     ];
 
+    protected string $jsFramework = 'js';
+
+    public function install(): void
+    {
+        $jsFramework = Console::choice('Which JS framework are you using?', ['Vue', 'React', 'Neither']);
+
+        $this->jsFramework = match ($jsFramework) {
+            'Vue' => 'vue',
+            'React' => 'react',
+            default => 'js',
+        };
+
+        if (Console::confirm('Setup Bugsnag JS now?', false)) {
+            $this->launch();
+        }
+    }
+
     public function launch(): void
     {
         $this->bugsnagKey = Project::env()->get('BUGSNAG_JS_API_KEY');
@@ -46,31 +63,54 @@ class BugsnagJS extends Bugsnag implements Launchable, Deployable, Installable
 
     public function npmPackagesToInstall(): array
     {
-        return [
-            // TODO: Can we determine if this is correct?
-            '@bugsnag/plugin-vue',
-        ];
+        return array_merge(
+            $this->requiredNpmPackages,
+            match ($this->jsFramework) {
+                'vue' => [
+                    '@bugsnag/plugin-vue',
+                ],
+                'react' => [
+                    '@bugsnag/plugin-react',
+                ],
+                default => [],
+            }
+        );
     }
 
     public function installWrapUp(): void
     {
-        Project::file('app.ts')
+        if ($this->jsFramework === 'js') {
+            return;
+        }
+
+
+        $pluginName = ucwords($this->jsFramework);
+
+        $appJs = Project::file('resources/js/app.ts')
             ->addJsImport([
                 "import Bugsnag from '@bugsnag/js'",
-                "import BugsnagPluginVue from '@bugsnag/plugin-vue'",
+                "import BugsnagPlugin{$pluginName} from '@bugsnag/plugin-{$this->jsFramework}'",
             ])
-            ->addAfterJsImports(<<<'JS'
+            ->addAfterJsImports(<<<JS
 if (import.meta.env.VITE_BUGSNAG_JS_API_KEY) {
     Bugsnag.start({
         apiKey: import.meta.env.VITE_BUGSNAG_JS_API_KEY,
-        plugins: [new BugsnagPluginVue()],
+        plugins: [new BugsnagPlugin$pluginName()],
         releaseStage: import.meta.env.VITE_APP_ENV,
         enabledReleaseStages: ['development', 'production'],
     });
-
-    const bugsnagVue = Bugsnag.getPlugin('vue');
 }
+
+const bugsnagVue = import.meta.env.VITE_BUGSNAG_VUE_PLUGIN ? Bugsnag.getPlugin('$this->jsFramework') : undefined;
 JS);
+
+        if ($this->jsFramework === 'vue') {
+            $appJs->replace(
+                '.use(plugin)',
+                // TODO: Double check that this is an ok fallback
+                ".use(plugin)\n.use(typeof bugsnagVue !== 'undefined' ? bugsnagVue : () => {})"
+            );
+        }
     }
 
     public function deploy(): bool

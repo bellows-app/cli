@@ -68,6 +68,7 @@ class FileHelper
 
     public function replace(string $search, string $replace): static
     {
+        // TODO: Handle missing files more gracefully
         $this->writeFile(str_replace($search, $replace, $this->getFile()));
 
         return $this;
