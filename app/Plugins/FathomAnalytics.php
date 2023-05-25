@@ -89,8 +89,6 @@ class FathomAnalytics extends Plugin implements Launchable, Deployable, Installa
 
     public function updateConfig(): array
     {
-        // TODO: Also add chunk into main app layout file to check for this
-        // (maybe it's a separate blade component that we can just include?)
         return [
             'services.fathom_analytics.site_id' => "env('FATHOM_SITE_ID')",
         ];
