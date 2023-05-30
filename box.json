@@ -7,6 +7,7 @@
     "compression": "GZ",
     "compactors": [
         "KevinGH\\Box\\Compactor\\Php",
-        "KevinGH\\Box\\Compactor\\Json"
+        "KevinGH\\Box\\Compactor\\Json",
+        "KevinGH\\Box\\Compactor\\PhpScoper"
     ]
 }
