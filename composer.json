@@ -20,8 +20,8 @@
     ],
     "require": {
         "php": "^8.0",
+        "bellows-app/plugin-sdk": "*",
         "illuminate/database": "^10.0",
-        "spatie/once": "^3.1",
         "symfony/yaml": "^6.2"
     },
     "require-dev": {
@@ -68,5 +68,14 @@
     "prefer-stable": true,
     "bin": [
         "builds/bellows"
-    ]
+    ],
+    "repositories": {
+        "bellows-app/plugin-sdk": {
+            "type": "path",
+            "url": "../sdk/",
+            "options": {
+                "symlink": true
+            }
+        }
+    }
 }
