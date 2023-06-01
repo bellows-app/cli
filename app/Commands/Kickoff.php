@@ -3,13 +3,14 @@
 namespace Bellows\Commands;
 
 use Bellows\Artisan;
+use Bellows\Config\BellowsConfig;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
 use Bellows\Facades\Project;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
-use Bellows\PluginManagerInterface;
+use Bellows\PluginManagers\InstallationManager;
 use Bellows\Util\ConfigHelper;
 use Bellows\Util\RawValue;
 use Illuminate\Support\Facades\File;
@@ -19,26 +20,11 @@ use LaravelZero\Framework\Commands\Command;
 
 class Kickoff extends Command
 {
-    /**
-     * The signature of the command.
-     *
-     * @var string
-     */
     protected $signature = 'kickoff';
 
-    /**
-     * The description of the command.
-     *
-     * @var string
-     */
     protected $description = 'Start a new Laravel project according to your specifications';
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle(PluginManagerInterface $pluginManager)
+    public function handle(InstallationManager $pluginManager)
     {
         if (Process::run('ls -A .')->output() !== '') {
             $this->newLine();
@@ -66,10 +52,10 @@ class Kickoff extends Command
             'Project name',
             Str::of($topDirectory)->replace(['-', '_'], ' ')->title()->toString(),
         );
-        // TODO: See if they have Valet? Maybe they don't want vanity urls?
+
         $url = $this->ask('URL', Str::of($name)->replace(' ', '')->slug() . '.test');
 
-        // TODO: This is bad. This should not be done. But for now, ok.
+        // TODO: This is bad. This should not be done. But for now, ok. Maybe NewProject? Not sure.
         Project::setConfig(
             new ProjectConfig(
                 isolatedUser: '',
@@ -82,137 +68,94 @@ class Kickoff extends Command
             )
         );
 
-        $pluginManager->setActiveForInstall($config['plugins'] ?? []);
+        $pluginManager->setActive($config['plugins'] ?? []);
 
         $this->step('Installing Laravel');
 
         Process::runWithOutput('composer create-project laravel/laravel .');
 
-        file_put_contents($dir . '/README.md', "# {$name}");
+        File::put($dir . '/README.md', "# {$name}");
 
         $this->step('Environment Variables');
 
-        $updatedEnvValues = collect(array_merge(
-            [
-                'APP_NAME'     => Project::config()->appName,
-                'APP_URL'      => 'http://' . Project::config()->domain,
-                'VITE_APP_ENV' => '${APP_ENV}',
-            ],
-            $pluginManager->environmentVariables(),
-            $config['env'] ?? [],
-        ));
-
-        $updatedEnvValues->each(
-            fn ($v, $k) => Project::env()->update(
-                $k,
-                is_array($v) ? $v[0] : $v,
-                is_array($v),
+        collect(
+            array_merge(
+                $pluginManager->environmentVariables([
+                    'APP_NAME'      => Project::config()->appName,
+                    'APP_URL'       => 'http://' . Project::config()->domain,
+                    'VITE_APP_ENV'  => '${APP_ENV}',
+                    'VITE_APP_NAME' => '${APP_NAME}',
+                ]),
+                $config['env'] ?? [],
             )
-        );
+        )->each(fn ($value, $key) => Project::env()->update($key, $value));
 
-        file_put_contents($dir . '/.env', Project::env()->toString());
+        File::put($dir . '/.env', Project::env()->toString());
 
         $this->step('Composer Packages');
 
-        collect($pluginManager->composerPackagesToInstall())
-            ->concat($config['composer'] ?? [])
-            ->unique()
-            ->values()
-            ->tap(
-                function ($packages) {
-                    if ($packages->isNotEmpty()) {
-                        Composer::require($packages->toArray());
-                    }
-                }
-            );
+        $pluginManager->composerPackages($config['composer'] ?? [])->whenNotEmpty(
+            fn ($packages) =>  Composer::require($packages->toArray()),
+        );
 
-        collect($pluginManager->composerDevPackagesToInstall())
-            ->concat($config['composer-dev'] ?? [])
-            ->unique()
-            ->values()
-            ->tap(
-                function ($packages) {
-                    if ($packages->isNotEmpty()) {
-                        Composer::require($packages->toArray(), true);
-                    }
-                }
-            );
+        $pluginManager->composerDevPackages($config['composer-dev'] ?? [])->whenNotEmpty(
+            fn ($packages) => Composer::require($packages->toArray(), true),
+        );
 
         $this->step('NPM Packages');
 
-        collect($pluginManager->npmPackagesToInstall())
-            ->concat($config['npm'] ?? [])
-            ->unique()
-            ->values()
-            ->tap(
-                function ($packages) {
-                    if ($packages->isNotEmpty()) {
-                        Npm::install($packages->toArray());
-                    }
-                }
-            );
+        $pluginManager->npmPackages($config['npm'] ?? [])->whenNotEmpty(
+            fn ($packages) => Npm::install($packages->toArray())
+        );
 
-        collect($pluginManager->npmDevPackagesToInstall())
-            ->concat($config['npm-dev'] ?? [])
-            ->unique()
-            ->values()
-            ->tap(
-                function ($packages) {
-                    if ($packages->isNotEmpty()) {
-                        Npm::install($packages->toArray(), true);
-                    }
-                }
-            );
+        $pluginManager->npmDevPackages($config['npm-dev'] ?? [])->whenNotEmpty(
+            fn ($packages) => Npm::install($packages->toArray(), true),
+        );
 
-        collect($pluginManager->installCommands())
-            ->unique()
-            ->values()
-            ->map(function ($command) {
-                if ($command instanceof RawValue) {
-                    return (string) $command;
-                }
+        collect($pluginManager->commands())->map(function ($command) {
+            if ($command instanceof RawValue) {
+                return (string) $command;
+            }
 
-                if (Str::startsWith($command, 'php')) {
-                    return $command;
-                }
+            if (Str::startsWith($command, 'php')) {
+                return $command;
+            }
 
-                return Artisan::local($command);
-            })->each(
-                fn ($command) => Process::runWithOutput($command),
-            );
+            return Artisan::local($command);
+        })->each(fn ($command) => Process::runWithOutput($command));
 
         $this->step('Publish Tags');
 
-        collect($pluginManager->publishTags())
-            ->concat($config['publish-tags'] ?? [])
-            ->unique()
-            ->values()
-            ->each(
-                fn ($t) => Process::runWithOutput(
-                    Artisan::local("vendor:publish --tag={$t}"),
-                ),
-            );
-
-        collect($pluginManager->aliasesToRegister())->each(
-            fn ($value, $key) => (new ConfigHelper)->update("app.aliases.{$key}", $value)
-        );
-
-        collect($pluginManager->providersToRegister())->unique()->values()->each(
-            fn ($provider) => (new ConfigHelper)->append('app.providers', $provider),
+        collect($pluginManager->publishTags($config['publish-tags'] ?? []))->each(
+            fn ($t) => Process::runWithOutput(
+                Artisan::local("vendor:publish --tag={$t}"),
+            ),
         );
 
         $this->step('Update Config Files');
 
-        collect($pluginManager->updateConfig())
-            ->merge($config['config'] ?? [])
-            ->each(fn ($value, $key) => (new ConfigHelper)->update($key, $value));
+        collect($pluginManager->aliasesToRegister())->each(
+            fn ($value, $key) => (new ConfigHelper)->update(
+                "app.aliases.{$key}",
+                Str::finish($value, '::class'),
+            )
+        );
 
-        $filesToRename = collect($config['rename-files'] ?? []);
+        collect($pluginManager->serviceProvidersToRegister())->each(
+            fn ($provider) => (new ConfigHelper)->append(
+                'app.providers',
+                Str::finish($provider, '::class'),
+            ),
+        );
 
-        if ($filesToRename->isNotEmpty()) {
+        collect($pluginManager->updateConfig($config['config'] ?? []))->each(
+            fn ($value, $key) => (new ConfigHelper)->update($key, $value)
+        );
+
+        collect($config['rename-files'] ?? [])->whenNotEmpty(function ($toRename) {
             $this->step('Renaming Files');
 
-            $filesToRename->each(function ($newFile, $oldFile) {
+            $toRename->each(function ($newFile, $oldFile) {
                 if (File::missing(Project::path($oldFile))) {
                     $this->warn("File {$oldFile} does not exist, skipping.");
 
@@ -222,29 +165,23 @@ class Kickoff extends Command
                 $this->info("{$oldFile} -> {$newFile}");
                 File::move(Project::path($oldFile), Project::path($newFile));
             });
-        }
+        });
 
-        // TODO: Stop littering this config directory everywhere,
-        // centralize it and allow it to be overriden for tests
-        $toCopy = collect($configFiles)->map(
-            fn ($file) => env('HOME') . '/.bellows/kickoff/' . $file
-        )->filter(fn ($dir) => is_dir($dir));
-
-        if ($toCopy->isNotEmpty()) {
+        collect($configFiles)->map(
+            fn ($file) => BellowsConfig::getInstance()->path('kickoff/' . $file),
+        )->filter(fn ($dir) => is_dir($dir))->whenNotEmpty(function ($toCopy) {
             $this->step('Copying Files');
 
             $toCopy->each(function ($src) {
                 Process::run("cp -R {$src}/* " . Project::config()->directory);
                 $this->info('Copied files from ' . $src);
             });
-        }
+        });
 
-        $filesToRemove = collect($config['remove-files'] ?? []);
-
-        if ($filesToRemove->isNotEmpty()) {
+        collect($config['remove-files'] ?? [])->whenNotEmpty(function ($toRemove) {
             $this->step('Removing Files');
 
-            $filesToRemove
+            $toRemove
                 ->map(fn ($file) => Project::config()->directory . '/' . $file)
                 ->filter(function ($file) {
                     if (File::exists($file)) {
@@ -259,13 +196,9 @@ class Kickoff extends Command
                     $this->info($file);
                     File::delete($file);
                 });
-        }
+        });
 
-        $pluginManager->installWrapUp();
-
-        $this->step('Running Migrations');
-
-        Process::runWithOutput(Artisan::local('migrate'));
+        $pluginManager->wrapUp();
 
         $this->step('Consider yourself kicked off!');
 
@@ -287,7 +220,7 @@ class Kickoff extends Command
 
     protected function getConfig(): array
     {
-        $configs = collect(glob(env('HOME') . '/.bellows/kickoff/*.json'))
+        $configs = collect(glob(BellowsConfig::getInstance()->path('kickoff/*.json')))
             ->map(fn ($path) => [
                 'file'   => Str::replace('.json', '', basename($path)),
                 'config' => File::json($path),
