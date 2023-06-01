@@ -5,11 +5,9 @@ namespace Bellows\PluginManagers;
 use Bellows\Config;
 use Bellows\Facades\Console;
 use Bellows\PluginSdk\Contracts\Installable;
-use Bellows\PluginSdk\Plugin;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use ReflectionClass;
 use Spatie\StructureDiscoverer\Data\DiscoveredClass;
 
 class InstallationManager
