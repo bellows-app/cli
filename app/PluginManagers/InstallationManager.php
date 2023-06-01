@@ -57,9 +57,9 @@ class InstallationManager
         })->filter()->values();
     }
 
-    public function aliasesToRegister(): array
+    public function aliasesToRegister(array $initialValue = []): array
     {
-        return $this->call('getAliases')->reduce([]);
+        return $this->call('getAliases')->reduce($initialValue);
     }
 
     public function directoriesToCopy(): array
@@ -67,10 +67,10 @@ class InstallationManager
         return $this->directoriesToCopy;
     }
 
-    public function serviceProvidersToRegister(): Collection
+    public function serviceProvidersToRegister(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
-            $this->call('getServiceProviders')->reduce([])
+            $this->call('getServiceProviders')->reduce($initialValue)
         );
     }
 
@@ -86,10 +86,10 @@ class InstallationManager
         return $this->call('getUpdateConfig')->reduce($initialValue);
     }
 
-    public function commands(): Collection
+    public function commands(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
-            $this->call('getCommands')->reduce([])
+            $this->call('getCommands')->reduce($initialValue)
         );
     }
 

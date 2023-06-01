@@ -112,7 +112,7 @@ class Kickoff extends Command
             fn ($packages) => Npm::install($packages->toArray(), true),
         );
 
-        collect($pluginManager->commands())->map(function ($command) {
+        collect($pluginManager->commands($config['commands'] ?? []))->map(function ($command) {
             if ($command instanceof RawValue) {
                 return (string) $command;
             }
@@ -134,14 +134,19 @@ class Kickoff extends Command
 
         $this->step('Update Config Files');
 
-        collect($pluginManager->aliasesToRegister())->each(
+        $aliasesFromConfig = array_merge(
+            $config['facades'] ?? [],
+            $config['aliases'] ?? [],
+        );
+
+        collect($pluginManager->aliasesToRegister($aliasesFromConfig))->each(
             fn ($value, $key) => (new ConfigHelper)->update(
                 "app.aliases.{$key}",
                 Str::finish($value, '::class'),
             )
         );
 
-        collect($pluginManager->serviceProvidersToRegister())->each(
+        collect($pluginManager->serviceProvidersToRegister($config['service-providers'] ?? []))->each(
             fn ($provider) => (new ConfigHelper)->append(
                 'app.providers',
                 Str::finish($provider, '::class'),
