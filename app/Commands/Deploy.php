@@ -16,7 +16,7 @@ use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
-use Bellows\PluginManagerInterface;
+use Bellows\PluginManagers\DeploymentManager;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -118,7 +118,7 @@ class Deploy extends Command
 
             Project::setConfig($projectConfig);
 
-            $pluginManager = app(PluginManagerInterface::class);
+            $pluginManager = app(DeploymentManager::class);
             $pluginManager->setPrimaryServer($server);
             $pluginManager->setPrimarySite($siteProvider);
             $pluginManager->setActiveForDeploy($site);
@@ -161,7 +161,7 @@ class Deploy extends Command
 
     protected function deployToSite(
         SiteInterface $site,
-        PluginManagerInterface $pluginManager,
+        DeploymentManager $pluginManager,
     ): string {
         $server = $site->getServerProvider();
 
