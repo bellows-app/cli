@@ -3,10 +3,11 @@
 namespace Bellows\Providers;
 
 use Bellows\Config;
+use Bellows\Config\BellowsConfig;
 use Bellows\Console;
 use Bellows\Mixins\Console as MixinsConsole;
-use Bellows\PluginManager;
-use Bellows\PluginManagerInterface;
+use Bellows\Plugins\PluginManager;
+use Bellows\Plugins\PluginManagerInterface;
 use Bellows\Project;
 use Bellows\ServerProviders\Forge\Forge;
 use Bellows\ServerProviders\ServerProviderInterface;
@@ -27,13 +28,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (Phar::running()) {
-            if (!is_dir(env('HOME') . '/.bellows')) {
-                mkdir(env('HOME') . '/.bellows');
-            }
-
-            if (!is_dir(env('HOME') . '/.bellows/logs')) {
-                mkdir(env('HOME') . '/.bellows/logs');
-            }
+            collect([
+                BellowsConfig::getInstance()->path(''),
+                BellowsConfig::getInstance()->path('logs'),
+            ])->filter(fn ($d) => !is_dir($d))->each(fn ($d) => mkdir($d));
         }
     }
 
