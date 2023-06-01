@@ -54,9 +54,9 @@ class Env
         return $this->parsed;
     }
 
-    public function update($key, $value, $quote = false): string
+    public function update($key, $value): string
     {
-        $this->raw = $this->getUpdatedRaw($key, $value, $quote);
+        $this->raw = $this->getUpdatedRaw($key, $value);
 
         $this->parsed = Dotenv::parse($this->raw);
 
@@ -71,7 +71,7 @@ class Env
         return $this->raw;
     }
 
-    protected function getUpdatedRaw($key, $value, $quote = false): string
+    protected function getUpdatedRaw($key, $value): string
     {
         $value = Value::quoted(
             $value,
