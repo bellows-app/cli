@@ -10,6 +10,7 @@ use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionClass;
+use Spatie\StructureDiscoverer\Data\DiscoveredClass;
 
 class InstallationManager
 {
@@ -17,6 +18,8 @@ class InstallationManager
 
     /** @var Collection<\Bellows\PluginSdk\PluginResults\InstallationResult> */
     protected Collection $pluginResults;
+
+    protected array $directoriesToCopy = [];
 
     public function __construct(
         protected Config $config,
@@ -27,12 +30,26 @@ class InstallationManager
 
     public function setActive(array $pluginsConfig): void
     {
-        $plugins = $this->getAllPlugins()->filter(
-            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Scope::raw(Installable::class))
-        )->filter(
-            // TODO: Probably something more sophisticated than this for matching?
-            fn ($p) => Str::endsWith(get_class($p), $pluginsConfig)
-        )->values();
+        $plugins = $this->getAllPlugins(
+            Scope::raw(Installable::class),
+            function (DiscoveredClass $p) use ($pluginsConfig) {
+                // TODO: Probably something more sophisticated than this for matching?
+                $matches = Str::endsWith($p->namespace . '\\' . $p->name, $pluginsConfig);
+
+                if (!$matches) {
+                    return false;
+                }
+
+                // Directory is src, go up one level and look for a files directory
+                $filesDir = dirname($p->file) . '/../files';
+
+                if (is_dir($filesDir)) {
+                    $this->directoriesToCopy[] = $filesDir;
+                }
+
+                return true;
+            }
+        );
 
         $this->pluginResults = $plugins->map(function (Installable $p) {
             Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
@@ -45,6 +62,11 @@ class InstallationManager
     public function aliasesToRegister(): array
     {
         return $this->call('getAliases')->reduce([]);
+    }
+
+    public function directoriesToCopy(): array
+    {
+        return $this->directoriesToCopy;
     }
 
     public function serviceProvidersToRegister(): Collection

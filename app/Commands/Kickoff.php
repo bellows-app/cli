@@ -44,7 +44,7 @@ class Kickoff extends Command
 
         $this->comment("Creating project in {$dir}");
 
-        [$configFiles, $config] = $this->getConfig();
+        [$configNames, $config] = $this->getConfig();
 
         $topDirectory = trim(basename($dir));
 
@@ -167,16 +167,18 @@ class Kickoff extends Command
             });
         });
 
-        collect($configFiles)->map(
-            fn ($file) => BellowsConfig::getInstance()->path('kickoff/' . $file),
-        )->filter(fn ($dir) => is_dir($dir))->whenNotEmpty(function ($toCopy) {
-            $this->step('Copying Files');
+        collect($configNames)
+            ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/' . $name))
+            ->filter(fn ($dir) => is_dir($dir))
+            ->merge($pluginManager->directoriesToCopy())
+            ->whenNotEmpty(function ($toCopy) {
+                $this->step('Copying Files');
 
-            $toCopy->each(function ($src) {
-                Process::run("cp -R {$src}/* " . Project::config()->directory);
-                $this->info('Copied files from ' . $src);
+                $toCopy->each(function ($src) {
+                    Process::run("cp -R {$src}/* " . Project::config()->directory);
+                    $this->info('Copied files from ' . $src);
+                });
             });
-        });
 
         collect($config['remove-files'] ?? [])->whenNotEmpty(function ($toRemove) {
             $this->step('Removing Files');
