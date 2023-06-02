@@ -5,9 +5,6 @@ namespace Bellows\Commands;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\Job;
-use Bellows\Data\PluginDaemon;
-use Bellows\Data\PluginJob;
-use Bellows\Data\PluginWorker;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
 use Bellows\Data\Worker;
@@ -17,6 +14,9 @@ use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\DeploymentManager;
+use Bellows\PluginSdk\Data\PluginDaemon;
+use Bellows\PluginSdk\Data\PluginJob;
+use Bellows\PluginSdk\Data\PluginWorker;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -121,7 +121,7 @@ class Deploy extends Command
             $pluginManager = app(DeploymentManager::class);
             $pluginManager->setPrimaryServer($server);
             $pluginManager->setPrimarySite($siteProvider);
-            $pluginManager->setActiveForDeploy($site);
+            $pluginManager->setActive($site);
 
             $this->info('💨 Off we go!');
             $url = $this->deployToSite($site, $pluginManager);
@@ -196,12 +196,12 @@ class Deploy extends Command
 
         $this->withSpinner(
             title: 'Updating',
-            task: fn () => $site->updateDeploymentScript($updatedDeployScript),
+            task: fn () => $deployScript === $updatedDeployScript ? true : $site->updateDeploymentScript($updatedDeployScript),
         );
 
         $this->step('Daemons');
 
-        $daemons = $pluginManager->daemons()->map(
+        $daemons = collect($pluginManager->daemons())->map(
             fn (PluginDaemon $daemon) => Daemon::from([
                 'command'   => $daemon->command,
                 'user'      => $daemon->user ?: Project::config()->isolatedUser,
@@ -223,7 +223,7 @@ class Deploy extends Command
 
         $this->step('Workers');
 
-        $workers = $pluginManager->workers()->map(
+        $workers = collect($pluginManager->workers())->map(
             fn (PluginWorker $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
@@ -241,7 +241,7 @@ class Deploy extends Command
 
         $this->step('Scheduled Jobs');
 
-        $jobs = $pluginManager->jobs()->map(
+        $jobs = collect($pluginManager->jobs())->map(
             fn (PluginJob $job) => Job::from(
                 array_merge(
                     $job->toArray(),
