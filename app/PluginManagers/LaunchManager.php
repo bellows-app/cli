@@ -99,13 +99,13 @@ class LaunchManager
         })->filter()->values();
     }
 
-    public function createSiteParams(CreateSiteParams $params): array
+    public function createSiteParams(array $initialValue = []): array
     {
-        return $this->call('getCreateSiteParams')->reduce([]);
+        return $this->call('getCreateSiteParams')->reduce($initialValue);
     }
 
-    public function installRepoParams(InstallRepoParams $baseParams): array
+    public function installRepoParams(array $initialValue = []): array
     {
-        return $this->call('getInstallRepoParams')->reduce([]);
+        return $this->call('getInstallRepoParams')->reduce($initialValue);
     }
 }
