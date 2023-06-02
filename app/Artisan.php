@@ -3,6 +3,7 @@
 namespace Bellows;
 
 use Bellows\Facades\Project;
+use Bellows\PluginSdk\Util\RawValue;
 
 class Artisan
 {
@@ -11,13 +12,21 @@ class Artisan
         return '$FORGE_PHP artisan ' . trim($command);
     }
 
-    public static function forDaemon(string $command): string
+    public static function forDaemon(string|RawValue $command): string
     {
+        if (static::isFineAlready($command)) {
+            return $command;
+        }
+
         return Project::config()->phpVersion->binary . ' artisan ' . trim($command);
     }
 
-    public static function forJob(string $command): string
+    public static function forJob(string|RawValue $command): string
     {
+        if (static::isFineAlready($command)) {
+            return $command;
+        }
+
         $artisanPath = '/' . collect([
             'home',
             Project::config()->isolatedUser,
@@ -35,5 +44,10 @@ class Artisan
     public static function local(string $command): string
     {
         return 'php artisan ' . trim($command);
+    }
+
+    protected static function isFineAlready(string|RawValue $command): bool
+    {
+        return $command instanceof RawValue || str_contains($command, 'artisan');
     }
 }
