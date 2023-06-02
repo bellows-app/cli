@@ -2,6 +2,7 @@
 
 namespace Bellows\ServerProviders\Forge;
 
+use Bellows\Artisan;
 use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\ForgeServer;
@@ -11,6 +12,7 @@ use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
 use Bellows\Facades\Project;
 use Bellows\ServerProviders\ServerInterface;
+use Bellows\Util\RawValue;
 use Composer\Semver\Semver;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
@@ -165,8 +167,10 @@ class Server implements ServerInterface
         return $this->daemons;
     }
 
-    public function hasDaemon(string $command): bool
+    public function hasDaemon(string|RawValue $command): bool
     {
+        $command = Artisan::forDaemon($command);
+
         return $this->getDaemons()->contains(
             fn ($daemon) => $daemon['command'] === $command
         );
@@ -174,7 +178,10 @@ class Server implements ServerInterface
 
     public function createDaemon(Daemon $daemon): array
     {
-        return $this->client->post('daemons', $daemon->toArray())->json();
+        return $this->client->post('daemons', array_merge(
+            $daemon->toArray(),
+            ['command' => Artisan::forDaemon($daemon->command)],
+        ))->json();
     }
 
     public function getJobs(): Collection
@@ -184,8 +191,10 @@ class Server implements ServerInterface
         return $this->jobs;
     }
 
-    public function hasJob(string $command): bool
+    public function hasJob(string|RawValue $command): bool
     {
+        $command = Artisan::forJob($command);
+
         return $this->getJobs()->contains(
             fn ($job) => $job['command'] === $command
         );
@@ -193,7 +202,10 @@ class Server implements ServerInterface
 
     public function createJob(Job $job): array
     {
-        return $this->client->post('jobs', $job->toArray())->json();
+        return $this->client->post('jobs', array_merge(
+            $job->toArray(),
+            ['command' => Artisan::forJob($job->command)],
+        ))->json();
     }
 
     // I don't love this method, but we have times when we need
