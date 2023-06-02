@@ -9,6 +9,7 @@ use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\LoadsPlugins;
 use Bellows\PluginManagers\Abilities\WrapsUp;
 use Bellows\PluginSdk\Contracts\Installable;
+use Bellows\PluginSdk\PluginResults\InstallationResult;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -57,8 +58,53 @@ class InstallationManager
             Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
             Console::newLine();
 
-            return $p->install();
+            $result = $p->install();
+
+            if ($result === null) {
+                return null;
+            }
+
+            $result->composerPackages($this->getComposerPackagesFromPlugin($result, $p));
+            $result->npmPackages($this->getNpmPackagesFromPlugin($result, $p));
+
+            return $result;
         })->filter()->values();
+    }
+
+    protected function getComposerPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
+    {
+        if (count($plugin->requiredComposerPackages)) {
+            return $plugin->requiredComposerPackages;
+        }
+
+        if (
+            count($plugin->anyRequiredComposerPackages)
+            && count(
+                array_intersect($plugin->anyRequiredComposerPackages, $result->getComposerPackages())
+            ) === 0
+        ) {
+            return [$plugin->anyRequiredComposerPackages[0]];
+        }
+
+        return [];
+    }
+
+    protected function getNpmPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
+    {
+        if (count($plugin->requiredNpmPackages)) {
+            return $plugin->requiredNpmPackages;
+        }
+
+        if (
+            count($plugin->anyRequiredNpmPackages)
+            && count(
+                array_intersect($plugin->anyRequiredNpmPackages, $result->getNpmPackages())
+            ) === 0
+        ) {
+            return [$plugin->anyRequiredNpmPackages[0]];
+        }
+
+        return [];
     }
 
     public function aliasesToRegister(array $initialValue = []): array
