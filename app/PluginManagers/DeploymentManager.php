@@ -4,12 +4,23 @@ namespace Bellows\PluginManagers;
 
 use Bellows\Config;
 use Bellows\Facades\Console;
+use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
+use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
+use Bellows\PluginManagers\Abilities\DealsWithServers;
+use Bellows\PluginManagers\Abilities\HasDaemons;
+use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
+use Bellows\PluginManagers\Abilities\HasJobs;
+use Bellows\PluginManagers\Abilities\HasWorkers;
+use Bellows\PluginManagers\Abilities\LoadsPlugins;
+use Bellows\PluginManagers\Abilities\UpdatesDeploymentScripts;
+use Bellows\PluginManagers\Abilities\WrapsUp;
+use Bellows\PluginManagers\Helpers\EnabledForDeployment;
 use Bellows\PluginSdk\Contracts\Deployable;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Plugin;
 use Bellows\ServerProviders\SiteInterface;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
-use ReflectionClass;
 
 class DeploymentManager
 {
@@ -36,15 +47,17 @@ class DeploymentManager
 
     public function setActive(SiteInterface $site)
     {
-        $plugins = $this->getAllPluginsWithSiteAndServer()->filter(
-            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Scope::raw(Deployable::class))
-        )->values();
+        $plugins = $this->getAllPlugins(Scope::raw(Deployable::class));
 
-        // TODO: This is no longer clear, is this the right verbiage?
-        // Installable completely ignores this, so it's not enabled or disabled, really.
-        [$enabledBasedOnProject, $noAutoDecision] = $plugins->partition(fn (Plugin $plugin) => $plugin->hasADefaultEnabledDecision());
+        $decisionMaker = new EnabledForDeployment();
 
-        $enabledBasedOnProject = $enabledBasedOnProject->filter(fn (Plugin $plugin) => $plugin->getDefaultEnabled()->enabled);
+        [$enabledBasedOnProject, $noAutoDecision] = $plugins->partition(
+            fn (Plugin $plugin) => $decisionMaker->hasADefaultDecision($plugin)
+        );
+
+        $enabledBasedOnProject = $enabledBasedOnProject->filter(
+            fn (Plugin $plugin) => $decisionMaker->getDecision($plugin)->enabled
+        );
 
         // Loop through each site, and check if the plugin is deployable for the site
         $enabled = $this->getPluginsThatShouldBeDeployed($enabledBasedOnProject, $site);
@@ -73,17 +86,22 @@ class DeploymentManager
             false, // Set "required" to false so that it doesn't auto-select if there is only one (usually the desired behavior)
         );
 
-        $this->pluginResults = $allPlugins->filter(
-            fn ($p) => in_array($p->getName(), $response)
-        )->filter(
-            fn ($p) => $this->configure($p, 'deploy', true)
-        );
+        $this->pluginResults = $allPlugins
+            ->filter(fn ($p) => in_array($p->getName(), $response))
+            ->filter(fn ($p) => $p->confirmDeploy())
+            ->map(function ($p) {
+                Console::info("Configuring <comment>{$p->getName()}</comment> plugin...");
+                Console::newLine();
+
+                return $p->deploy();
+            })
+            ->filter();
     }
 
     protected function getPluginsThatShouldBeDeployed(Collection $plugins, SiteInterface $site)
     {
-        return $plugins->map(fn (Plugin $p) => $p->setSite($site))
-            ->map(fn (Plugin $p) => $p->setServer($site->getServerProvider()))
-            ->filter(fn ($p) => $p->shouldDeploy())->values();
+        Deployment::setSite($site)->setServer($site->getServerProvider());
+
+        return $plugins->filter(fn ($p) => $p->shouldDeploy())->values();
     }
 }
