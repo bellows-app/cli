@@ -1,7 +1,9 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\PluginManagers\Abilities;
 
+use Bellows\Commands\Deploy;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Plugin;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -18,29 +20,23 @@ trait DealsWithServers
     public function setPrimarySite(?SiteInterface $site): void
     {
         if ($site) {
-            $this->primarySite = $site;
+            Deployment::setPrimarySite($site);
         }
     }
 
     public function setPrimaryServer(ServerInterface $server): void
     {
-        $this->primaryServer = $server;
+        Deployment::setPrimaryServer($server);
     }
 
     public function setSite(SiteInterface $site): void
     {
-        $this->call('setSite')->withArgs($site)->run();
+        Deployment::setSite($site);
     }
 
     public function setServer(ServerInterface $server): void
     {
-        $this->call('setServer')->withArgs($server)->run();
-    }
-
-    protected function getAllPluginsWithSiteAndServer(): Collection
-    {
-        return $this->getAllPlugins()
-            ->each(fn (Plugin $p) => isset($this->primarySite) ? $p->setPrimarySite($this->primarySite) : null)
-            ->each(fn (Plugin $p) => $p->setPrimaryServer($this->primaryServer));
+        // TODO: Does this belong here? Or should be in the Deploy/Launch command?
+        Deployment::setServer($server);
     }
 }

@@ -4,6 +4,10 @@ namespace Bellows\PluginManagers;
 
 use Bellows\Config;
 use Bellows\Facades\Console;
+use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
+use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
+use Bellows\PluginManagers\Abilities\LoadsPlugins;
+use Bellows\PluginManagers\Abilities\WrapsUp;
 use Bellows\PluginSdk\Contracts\Installable;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;

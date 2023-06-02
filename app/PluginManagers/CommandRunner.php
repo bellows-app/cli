@@ -2,6 +2,7 @@
 
 namespace Bellows\PluginManagers;
 
+use Closure;
 use Illuminate\Support\Collection;
 
 class CommandRunner
@@ -29,7 +30,15 @@ class CommandRunner
             function ($carry, $plugin) use ($reduceArgs) {
                 $result = $plugin->{$this->methodToRun}($carry, ...$reduceArgs);
 
-                return (is_array($result)) ? array_merge($carry, $result) : $result;
+                if ($result instanceof Closure) {
+                    return $result($carry, ...$reduceArgs);
+                }
+
+                if (is_array($result)) {
+                    return array_merge($carry, $result);
+                }
+
+                return $result;
             },
             $args[0]
         );

@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\PluginManagers\Abilities;
 
 use Bellows\Config\BellowsConfig;
 use Bellows\PluginSdk\Plugin;

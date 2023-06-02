@@ -1,7 +1,8 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\PluginManagers\Abilities;
 
+use Bellows\PluginManagers\CommandRunner;
 use Bellows\PluginSdk\Plugin;
 
 trait CallsMethodsOnPlugins
