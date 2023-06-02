@@ -93,7 +93,13 @@ class Console
             $result = app(Fork::class)
                 ->run(
                     function () use ($task, $message, $success, $title, $socketToSpinner) {
-                        $output = $task();
+                        try {
+                            $output = $task();
+                        } catch (\Exception $e) {
+                            $socketToSpinner->write(1);
+
+                            throw $e;
+                        }
 
                         $socketToSpinner->write(1);
 
