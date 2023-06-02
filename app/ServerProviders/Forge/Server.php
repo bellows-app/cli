@@ -129,7 +129,6 @@ class Server implements ServerInterface
         $params = $params->toArray();
 
         if ($params['username'] === 'forge') {
-            $params['username'] = null;
             $params['isolated'] = false;
         }
 
