@@ -6,9 +6,6 @@ use Bellows\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
 use Bellows\Data\InstallRepoParams;
 use Bellows\Data\Job;
-use Bellows\Data\PluginDaemon;
-use Bellows\Data\PluginJob;
-use Bellows\Data\PluginWorker;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
 use Bellows\Data\Worker;
@@ -17,7 +14,10 @@ use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
-use Bellows\PluginManagerInterface;
+use Bellows\PluginManagers\LaunchManager;
+use Bellows\PluginSdk\Data\PluginDaemon;
+use Bellows\PluginSdk\Data\PluginJob;
+use Bellows\PluginSdk\Data\PluginWorker;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Bellows\ServerProviders\SiteInterface;
@@ -33,7 +33,7 @@ class Launch extends Command
 
     protected $description = 'Launch the current repository as a site on a Forge server.';
 
-    public function handle(PluginManagerInterface $pluginManager, ServerProviderInterface $serverProvider)
+    public function handle(LaunchManager $pluginManager, ServerProviderInterface $serverProvider)
     {
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
@@ -127,7 +127,7 @@ class Launch extends Command
         $pluginManager->setPrimaryServer($server);
         $pluginManager->setPrimarySite($serverDeployTarget->getPrimarySite());
 
-        $pluginManager->setActiveForLaunch();
+        $pluginManager->setActive();
 
         $this->info('💨 Off we go!');
 
@@ -174,7 +174,7 @@ class Launch extends Command
 
     protected function createSite(
         ServerInterface $server,
-        PluginManagerInterface $pluginManager,
+        LaunchManager $pluginManager,
     ): string {
         $pluginManager->setServer($server);
 
@@ -193,7 +193,7 @@ class Launch extends Command
 
         $createSiteParams = array_merge(
             $baseParams->toArray(),
-            ...$pluginManager->createSiteParams($baseParams),
+            $pluginManager->createSiteParams($baseParams),
         );
 
         /** @var SiteInterface $site */
@@ -213,7 +213,7 @@ class Launch extends Command
 
         $installRepoParams = array_merge(
             $baseRepoParams->toArray(),
-            ...$pluginManager->installRepoParams($baseRepoParams),
+            $pluginManager->installRepoParams($baseRepoParams),
         );
 
         $this->step('Repository');
@@ -227,17 +227,14 @@ class Launch extends Command
 
         $siteEnv = $site->getEnv();
 
-        $updatedEnvValues = collect(array_merge(
-            [
-                'APP_NAME'     => Project::config()->appName,
-                'APP_URL'      => 'http://' . Project::config()->domain,
-                'VITE_APP_ENV' => '${APP_ENV}',
-            ],
-            $pluginManager->environmentVariables(),
-        ));
+        $updatedEnvValues = collect($pluginManager->environmentVariables([
+            'APP_NAME'      => Project::config()->appName,
+            'APP_URL'       => 'http://' . Project::config()->domain,
+            'VITE_APP_ENV'  => '${APP_ENV}',
+            'VITE_APP_NAME' => '${APP_NAME}',
+        ]));
 
-        // TODO: Should be each? Not map?
-        $updatedEnvValues->map(
+        $updatedEnvValues->each(
             fn ($v, $k) => $siteEnv->update(
                 $k,
                 is_array($v) ? $v[0] : $v,
@@ -281,16 +278,17 @@ class Launch extends Command
         $this->step('Deploy Script');
 
         $deployScript = $site->getDeploymentScript();
-        $deployScript = $pluginManager->updateDeployScript($deployScript);
+        ray($deployScript);
+        $updatedDeployScript = $pluginManager->updateDeployScript($deployScript);
 
         $this->withSpinner(
             title: 'Updating',
-            task: fn () => $site->updateDeploymentScript($deployScript),
+            task: fn () => $deployScript === $updatedDeployScript ? true : $site->updateDeploymentScript($updatedDeployScript),
         );
 
         $this->step('Daemons');
 
-        $daemons = $pluginManager->daemons()->map(
+        $daemons = collect($pluginManager->daemons())->map(
             fn (PluginDaemon $daemon) => Daemon::from([
                 'command'   => $daemon->command,
                 'user'      => $daemon->user ?: Project::config()->isolatedUser,
@@ -312,7 +310,7 @@ class Launch extends Command
 
         $this->step('Workers');
 
-        $workers = $pluginManager->workers()->map(
+        $workers = collect($pluginManager->workers())->map(
             fn (PluginWorker $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
@@ -330,7 +328,7 @@ class Launch extends Command
 
         $this->step('Scheduled Jobs');
 
-        $jobs = $pluginManager->jobs()->map(
+        $jobs = collect($pluginManager->jobs())->map(
             fn (PluginJob $job) => Job::from(
                 array_merge(
                     $job->toArray(),

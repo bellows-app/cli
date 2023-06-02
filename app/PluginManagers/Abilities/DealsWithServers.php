@@ -4,10 +4,8 @@ namespace Bellows\PluginManagers\Abilities;
 
 use Bellows\Commands\Deploy;
 use Bellows\PluginSdk\Facades\Deployment;
-use Bellows\PluginSdk\Plugin;
 use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\SiteInterface;
-use Illuminate\Support\Collection;
 
 trait DealsWithServers
 {

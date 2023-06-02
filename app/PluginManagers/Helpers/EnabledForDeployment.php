@@ -80,6 +80,12 @@ class EnabledForDeployment
         return $this->cachedDecisions[$plugin->getName()];
     }
 
+    public function getDefaultForConfirmation(Plugin $p): bool
+    {
+        // TODO: This is a bad name?
+        return $p->defaultForDeployConfirmation();
+    }
+
     protected function hasRequiredPackages($plugin): bool
     {
         return collect(

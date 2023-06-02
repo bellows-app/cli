@@ -9,7 +9,6 @@ use Bellows\ServerProviders\SiteInterface;
 
 class CurrentDeployment
 {
-
     // The site we're currently deploying to
     protected SiteInterface $site;
 
@@ -44,8 +43,6 @@ class CurrentDeployment
 
     public function primaryServer(): ServerInterface
     {
-        $this->assertNotCalledFromPlugin(__METHOD__);
-
         return $this->primaryServer;
     }
 

@@ -27,8 +27,13 @@ class CommandRunner
         $reduceArgs = array_splice($args, 1);
 
         return $this->pluginResults->reduce(
-            function ($carry, $plugin) use ($reduceArgs) {
-                $result = $plugin->{$this->methodToRun}($carry, ...$reduceArgs);
+            function ($carry, $pluginResult) use ($reduceArgs) {
+                $result = $pluginResult->{$this->methodToRun}($carry, ...$reduceArgs);
+
+                if ($result === null) {
+                    // We're never interested in a null result, return the carry
+                    return $carry;
+                }
 
                 if ($result instanceof Closure) {
                     return $result($carry, ...$reduceArgs);
