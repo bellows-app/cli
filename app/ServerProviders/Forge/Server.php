@@ -126,7 +126,14 @@ class Server implements ServerInterface
 
     public function createSite(CreateSiteParams $params): Site
     {
-        $siteResponse = $this->client->post('sites', $params->toArray())->json();
+        $params = $params->toArray();
+
+        if ($params['username'] === 'forge') {
+            $params['username'] = null;
+            $params['isolated'] = false;
+        }
+
+        $siteResponse = $this->client->post('sites', $params)->json();
 
         $site = $siteResponse['site'];
 
