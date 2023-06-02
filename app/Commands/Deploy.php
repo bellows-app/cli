@@ -14,12 +14,12 @@ use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\DeploymentManager;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\PluginDaemon;
 use Bellows\PluginSdk\Data\PluginJob;
 use Bellows\PluginSdk\Data\PluginWorker;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Exception;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -104,7 +104,7 @@ class Deploy extends Command
         $this->newLine();
 
         $siteUrls = $sites->map(function (SiteInterface $site) use ($server, $siteProvider, $phpVersion, $dir) {
-            $siteEnv = $site->getEnv();
+            $siteEnv = $site->env();
 
             $projectConfig = new ProjectConfig(
                 isolatedUser: $site->username,

@@ -3,6 +3,7 @@
 namespace Bellows\ServerProviders;
 
 use Illuminate\Support\Collection;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 
 interface ServerProviderInterface
 {

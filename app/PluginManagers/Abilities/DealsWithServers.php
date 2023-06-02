@@ -2,10 +2,9 @@
 
 namespace Bellows\PluginManagers\Abilities;
 
-use Bellows\Commands\Deploy;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Facades\Deployment;
-use Bellows\ServerProviders\ServerInterface;
-use Bellows\ServerProviders\SiteInterface;
 
 trait DealsWithServers
 {

@@ -4,13 +4,14 @@ namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
-use Bellows\Data\InstallRepoParams;
 use Bellows\Data\PhpVersion;
-use Bellows\Data\SecurityRule;
-use Bellows\Data\Worker;
 use Bellows\Env;
-use Bellows\ServerProviders\ServerInterface;
-use Bellows\ServerProviders\SiteInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
+use Bellows\PluginSdk\Data\InstallRepoParams;
+use Bellows\PluginSdk\Data\SecurityRule;
+// TODO: Should this data come from the plugin sdk?
+use Bellows\PluginSdk\Data\Worker;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Sleep;

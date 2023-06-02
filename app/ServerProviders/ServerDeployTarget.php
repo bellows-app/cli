@@ -4,6 +4,8 @@ namespace Bellows\ServerProviders;
 
 use Bellows\Data\PhpVersion;
 use Illuminate\Support\Collection;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 
 interface ServerDeployTarget
 {

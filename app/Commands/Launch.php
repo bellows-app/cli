@@ -2,9 +2,9 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Data\CreateSiteParams;
+use Bellows\PluginSdk\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
-use Bellows\Data\InstallRepoParams;
+use Bellows\PluginSdk\Data\InstallRepoParams;
 use Bellows\Data\Job;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
@@ -15,12 +15,12 @@ use Bellows\Exceptions\EnvMissing;
 use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\LaunchManager;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\PluginDaemon;
 use Bellows\PluginSdk\Data\PluginJob;
 use Bellows\PluginSdk\Data\PluginWorker;
-use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Process;
@@ -191,10 +191,7 @@ class Launch extends Command
             phpVersion: Project::config()->phpVersion->version,
         );
 
-        $createSiteParams = array_merge(
-            $baseParams->toArray(),
-            $pluginManager->createSiteParams($baseParams),
-        );
+        $createSiteParams = $pluginManager->createSiteParams($baseParams->toArray());
 
         /** @var SiteInterface $site */
         $site = $this->withSpinner(
@@ -211,10 +208,7 @@ class Launch extends Command
             composer: true,
         );
 
-        $installRepoParams = array_merge(
-            $baseRepoParams->toArray(),
-            $pluginManager->installRepoParams($baseRepoParams),
-        );
+        $installRepoParams =  $pluginManager->installRepoParams($baseRepoParams->toArray());
 
         $this->step('Repository');
 
@@ -225,7 +219,7 @@ class Launch extends Command
 
         $this->step('Environment Variables');
 
-        $siteEnv = $site->getEnv();
+        $siteEnv = $site->env();
 
         $updatedEnvValues = collect($pluginManager->environmentVariables([
             'APP_NAME'      => Project::config()->appName,

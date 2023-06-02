@@ -3,9 +3,9 @@
 namespace Bellows\Deploy;
 
 use Bellows\Facades\Console;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Plugin;
-use Bellows\ServerProviders\ServerInterface;
-use Bellows\ServerProviders\SiteInterface;
 
 class CurrentDeployment
 {
