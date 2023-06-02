@@ -5,6 +5,7 @@ namespace Bellows\Providers;
 use Bellows\Config;
 use Bellows\Config\BellowsConfig;
 use Bellows\Console;
+use Bellows\Deploy\CurrentDeployment;
 use Bellows\Mixins\Console as MixinsConsole;
 use Bellows\Plugins\PluginManager;
 use Bellows\Plugins\PluginManagerInterface;
@@ -68,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
         Command::mixin(new MixinsConsole);
 
         $this->app->singleton('project', fn () => new Project);
+        $this->app->singleton('current_deployment', fn () => new CurrentDeployment);
         $this->app->bind('console', fn () => app(Console::class));
         $this->app->bind(PluginManagerInterface::class, fn () => app(PluginManager::class));
         $this->app->bind(ServerProviderInterface::class, fn () => app(Forge::class));
