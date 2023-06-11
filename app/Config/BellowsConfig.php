@@ -24,6 +24,11 @@ class BellowsConfig
         return env('HOME') . '/.bellows/' . ltrim($path, '/');
     }
 
+    public function localPluginPath(string $path)
+    {
+        return env('HOME') . '/.bellows/local-plugins/' . ltrim($path, '/');
+    }
+
     private function __clone()
     {
     }
