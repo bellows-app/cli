@@ -3,12 +3,14 @@
 namespace Bellows;
 
 use Bellows\Exceptions\EnvMissing;
+use Bellows\PluginSdk\Contracts\Env as EnvContract;
 use Bellows\Util\Value;
 use Dotenv\Dotenv;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
-class Env
+class Env implements EnvContract
 {
     protected array $parsed;
 
@@ -20,18 +22,25 @@ class Env
 
     public static function fromDir(string $dir): static
     {
-        if (!file_exists($dir . '/.env')) {
+        if (File::missing($dir . '/.env')) {
             throw new EnvMissing('No .env file found in ' . $dir);
         }
 
         return new static(
-            file_get_contents($dir . '/.env')
+            File::get($dir . '/.env')
         );
     }
 
     public function get(string $key): ?string
     {
         return $this->parsed[$key] ?? null;
+    }
+
+    public function set($key, $value): void
+    {
+        $this->raw = $this->getUpdatedRaw($key, $value);
+
+        $this->parsed = Dotenv::parse($this->raw);
     }
 
     public function has(string $key): bool
@@ -52,15 +61,6 @@ class Env
     public function all(): array
     {
         return $this->parsed;
-    }
-
-    public function update($key, $value): string
-    {
-        $this->raw = $this->getUpdatedRaw($key, $value);
-
-        $this->parsed = Dotenv::parse($this->raw);
-
-        return $this->raw;
     }
 
     public function toString()
