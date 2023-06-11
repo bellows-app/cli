@@ -2,16 +2,16 @@
 
 namespace Bellows\ServerProviders\Forge;
 
-use Bellows\Artisan;
-use Bellows\Data\CreateSiteParams;
-use Bellows\Data\Daemon;
-use Bellows\Data\ForgeServer;
-use Bellows\Data\ForgeSite;
-use Bellows\Data\Job;
-use Bellows\Data\PhpVersion;
-use Bellows\Facades\Console;
-use Bellows\Facades\Project;
-use Bellows\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Data\CreateSiteParams;
+use Bellows\PluginSdk\Data\Daemon;
+use Bellows\PluginSdk\Data\Job;
+use Bellows\PluginSdk\Data\PhpVersion;
+use Bellows\PluginSdk\Data\Server as ServerData;
+use Bellows\PluginSdk\Data\Site as SiteData;
+use Bellows\PluginSdk\Facades\Artisan;
+use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Util\RawValue;
 use Composer\Semver\Semver;
 use Exception;
@@ -31,7 +31,7 @@ class Server implements ServerInterface
     protected Collection $jobs;
 
     public function __construct(
-        protected ForgeServer $server,
+        protected ServerData $server,
     ) {
         $this->setClient();
     }
@@ -105,22 +105,22 @@ class Server implements ServerInterface
         )->values();
     }
 
-    /** @return \Illuminate\Support\Collection<\Bellows\Data\ForgeSite> */
+    /** @return \Illuminate\Support\Collection<\Bellows\PluginSdk\Data\SiteData> */
     public function getSites(): Collection
     {
         return collect(
             $this->client->get('sites')->json()['sites']
-        )->map(fn ($site) => ForgeSite::from($site));
+        )->map(fn ($site) => SiteData::from($site));
     }
 
-    public function getSiteByDomain(string $domain): ?ForgeSite
+    public function getSiteByDomain(string $domain): ?SiteData
     {
         $existingDomain = collect($this->client->get('sites')->json()['sites'])->first(
             fn ($site) => $site['name'] === $domain
         );
 
         if ($existingDomain) {
-            return ForgeSite::from($existingDomain);
+            return SiteData::from($existingDomain);
         }
 
         return $existingDomain;
@@ -155,7 +155,7 @@ class Server implements ServerInterface
             }
         }
 
-        $site = ForgeSite::from($site);
+        $site = SiteData::from($site);
 
         return new Site($site, $this->server);
     }
@@ -257,7 +257,7 @@ class Server implements ServerInterface
         );
     }
 
-    public function serverData(): ForgeServer
+    public function serverData(): ServerData
     {
         return $this->server;
     }
