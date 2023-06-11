@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows;
+namespace Bellows\Util;
 
 use Bellows\Facades\Project;
 use Bellows\PluginSdk\Util\RawValue;
