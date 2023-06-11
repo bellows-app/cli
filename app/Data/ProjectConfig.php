@@ -2,6 +2,7 @@
 
 namespace Bellows\Data;
 
+use Bellows\PluginSdk\Data\PhpVersion;
 use Spatie\LaravelData\Data;
 
 class ProjectConfig extends Data
