@@ -2,9 +2,7 @@
 
 namespace Bellows\Commands;
 
-use Bellows\PluginSdk\Data\CreateSiteParams;
 use Bellows\Data\Daemon;
-use Bellows\PluginSdk\Data\InstallRepoParams;
 use Bellows\Data\Job;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
@@ -17,9 +15,11 @@ use Bellows\Git\Repo;
 use Bellows\PluginManagers\LaunchManager;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
-use Bellows\PluginSdk\Data\PluginDaemon;
-use Bellows\PluginSdk\Data\PluginJob;
-use Bellows\PluginSdk\Data\PluginWorker;
+use Bellows\PluginSdk\Data\CreateSiteParams;
+use Bellows\PluginSdk\Data\DaemonParams;
+use Bellows\PluginSdk\Data\InstallRepoParams;
+use Bellows\PluginSdk\Data\JobParams;
+use Bellows\PluginSdk\Data\WorkerParams;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
 use Illuminate\Support\Facades\App;
@@ -208,7 +208,7 @@ class Launch extends Command
             composer: true,
         );
 
-        $installRepoParams =  $pluginManager->installRepoParams($baseRepoParams->toArray());
+        $installRepoParams = $pluginManager->installRepoParams($baseRepoParams->toArray());
 
         $this->step('Repository');
 
@@ -283,7 +283,7 @@ class Launch extends Command
         $this->step('Daemons');
 
         $daemons = collect($pluginManager->daemons())->map(
-            fn (PluginDaemon $daemon) => Daemon::from([
+            fn (DaemonParams $daemon) => Daemon::from([
                 'command'   => $daemon->command,
                 'user'      => $daemon->user ?: Project::config()->isolatedUser,
                 'directory' => $daemon->directory
@@ -305,7 +305,7 @@ class Launch extends Command
         $this->step('Workers');
 
         $workers = collect($pluginManager->workers())->map(
-            fn (PluginWorker $worker) => Worker::from(
+            fn (WorkerParams $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
                     ['php_version' => $worker->phpVersion ?? Project::config()->phpVersion->version],
@@ -323,7 +323,7 @@ class Launch extends Command
         $this->step('Scheduled Jobs');
 
         $jobs = collect($pluginManager->jobs())->map(
-            fn (PluginJob $job) => Job::from(
+            fn (JobParams $job) => Job::from(
                 array_merge(
                     $job->toArray(),
                     ['user' => $job->user ?? Project::config()->isolatedUser],
