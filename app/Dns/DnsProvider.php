@@ -3,16 +3,17 @@
 namespace Bellows\Dns;
 
 use Bellows\Config;
+use Bellows\Config\InteractsWithConfig;
 use Bellows\Enums\DnsRecordType;
 use Bellows\Facades\Console;
-use Bellows\PluginSdk\InteractsWithConfig;
+use Bellows\Safety\PreventsCallingFromPlugin;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 abstract class DnsProvider
 {
-    use InteractsWithConfig;
+    use InteractsWithConfig, PreventsCallingFromPlugin;
 
     protected string $baseDomain;
 
@@ -42,6 +43,8 @@ abstract class DnsProvider
 
     public function setCredentials(): bool
     {
+        $this->preventCallingFromPlugin(__METHOD__);
+
         $config = $this->getAllConfigsForApi($this->apiHost);
 
         if (!$config) {
