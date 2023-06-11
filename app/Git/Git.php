@@ -8,12 +8,23 @@ use Illuminate\Support\Facades\Process;
 
 class Git
 {
-    public static function add(string|array $files = null)
+    public static function user(): ?string
     {
-        if ($files === null) {
-            $files = '.';
-        }
+        return trim(Process::run('git config user.name')->output());
+    }
 
+    public static function email(): ?string
+    {
+        return trim(Process::run('git config user.email')->output());
+    }
+
+    public static function gitHubUser(): ?string
+    {
+        return trim(Process::run('git config github.user')->output());
+    }
+
+    public static function add(string|array $files = '.')
+    {
         if (!is_array($files)) {
             $files = [$files];
         }
