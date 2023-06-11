@@ -3,8 +3,6 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
-use Bellows\Data\CreateSiteParams;
-use Bellows\Data\InstallRepoParams;
 use Bellows\Facades\Console;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
