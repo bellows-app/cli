@@ -41,11 +41,11 @@ FOO=bar
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('FOO', 'baz');
+    $env->set('FOO', 'baz');
 
     expect($env->get('FOO'))->toBe('baz');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 FOO=baz
 APP_URL=https://example.com
 ENV);
@@ -57,11 +57,11 @@ FOO=bar
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('FOO', '${APP_URL}');
+    $env->set('FOO', '${APP_URL}');
 
     expect($env->get('FOO'))->toBe('${APP_URL}');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 FOO="${APP_URL}"
 APP_URL=https://example.com
 ENV);
@@ -73,11 +73,11 @@ FOO=bar
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('FOO', '"THIS THOUGH"');
+    $env->set('FOO', '"THIS THOUGH"');
 
     expect($env->get('FOO'))->toBe('THIS THOUGH');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 FOO="THIS THOUGH"
 APP_URL=https://example.com
 ENV);
@@ -89,11 +89,11 @@ FOO_PASSWORD=bar
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('FOO_PASSWORD', 'secretstuff');
+    $env->set('FOO_PASSWORD', 'secretstuff');
 
     expect($env->get('FOO_PASSWORD'))->toBe('secretstuff');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 FOO_PASSWORD="secretstuff"
 APP_URL=https://example.com
 ENV);
@@ -105,11 +105,11 @@ FOO=bar
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('FOO', 'now with a space');
+    $env->set('FOO', 'now with a space');
 
     expect($env->get('FOO'))->toBe('now with a space');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 FOO="now with a space"
 APP_URL=https://example.com
 ENV);
@@ -133,9 +133,9 @@ APP_URL=https://example.com
 FOO=bar
 ENV);
 
-    $newEnv = $env->update('APP_NAME', 'my site');
+    $env->set('APP_NAME', 'my site');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 APP_NAME="my site"
 FOO=bar
@@ -148,9 +148,9 @@ APP_URL=https://example.com
 FOO=bar
 ENV);
 
-    $newEnv = $env->update('VITE_APP_NAME', 'my site');
+    $env->set('VITE_APP_NAME', 'my site');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 VITE_APP_NAME="my site"
 FOO=bar
@@ -163,9 +163,9 @@ APP_URL=https://example.com
 FOO=bar
 ENV);
 
-    $newEnv = $env->update('MIX_APP_NAME', 'my site');
+    $env->set('MIX_APP_NAME', 'my site');
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 MIX_APP_NAME="my site"
 FOO=bar
@@ -178,9 +178,9 @@ APP_URL=https://example.com
 FOO=bar
 ENV);
 
-    $newEnv = $env->update('ENABLED', true);
+    $env->set('ENABLED', true);
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 FOO=bar
 
@@ -194,9 +194,9 @@ APP_URL=https://example.com
 FOO=bar
 ENV);
 
-    $newEnv = $env->update('ENABLED', false);
+    $env->set('ENABLED', false);
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 FOO=bar
 
@@ -209,9 +209,9 @@ it('will keep a null value as is', function () {
 APP_URL=https://example.com
 ENV);
 
-    $newEnv = $env->update('ENABLED', null);
+    $env->set('ENABLED', null);
 
-    expect($newEnv)->toBe(<<<'ENV'
+    expect($env->toString())->toBe(<<<'ENV'
 APP_URL=https://example.com
 
 ENABLED=null
