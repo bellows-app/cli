@@ -5,10 +5,12 @@ namespace Bellows\Deploy;
 use Bellows\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
-use Bellows\PluginSdk\Plugin;
+use Bellows\Safety\PreventsCallingFromPlugin;
 
 class CurrentDeployment
 {
+    use PreventsCallingFromPlugin;
+
     // The site we're currently deploying to
     protected SiteInterface $site;
 
@@ -48,7 +50,7 @@ class CurrentDeployment
 
     public function setSite(SiteInterface $site): self
     {
-        $this->assertNotCalledFromPlugin(__METHOD__);
+        $this->preventCallingFromPlugin(__METHOD__);
 
         $this->site = $site;
 
@@ -61,7 +63,7 @@ class CurrentDeployment
 
     public function setPrimarySite(SiteInterface $site): self
     {
-        $this->assertNotCalledFromPlugin(__METHOD__);
+        $this->preventCallingFromPlugin(__METHOD__);
 
         $this->primarySite = $site;
 
@@ -70,7 +72,7 @@ class CurrentDeployment
 
     public function setServer(ServerInterface $server): self
     {
-        $this->assertNotCalledFromPlugin(__METHOD__);
+        $this->preventCallingFromPlugin(__METHOD__);
 
         $this->server = $server;
 
@@ -79,23 +81,15 @@ class CurrentDeployment
 
     public function setPrimaryServer(ServerInterface $primaryServer): self
     {
-        $this->assertNotCalledFromPlugin(__METHOD__);
+        $this->preventCallingFromPlugin(__METHOD__);
 
         $this->primaryServer = $primaryServer;
 
         return $this;
     }
 
-    protected function assertNotCalledFromPlugin(string $method)
+    public function wantsToChangeValueTo($current, $new, $message)
     {
-        // This should never be called from a plugin, it would cause chaos. If it is, exit immediately.
-        $calledFromPlugin = collect(debug_backtrace())
-            ->filter(fn ($trace) => array_key_exists('object', $trace))
-            ->first(fn ($trace) => is_subclass_of($trace['object'], Plugin::class)) !== null;
-
-        if ($calledFromPlugin) {
-            Console::error("The {$method} should not be called from a plugin.");
-            exit;
-        }
+        return $current === null || $current === $new || Console::confirm("{$message} from {$current}?", true);
     }
 }
