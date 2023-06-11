@@ -33,7 +33,7 @@ class FileHelper
             fn ($line) => strlen(trim($line)) ? Str::finish($line, ';') : $line
         )->implode(PHP_EOL);
 
-        $fileContents = $this->getFile();
+        $fileContents = $this->get();
 
         if (Str::contains($fileContents, $content)) {
             return $this;
@@ -48,7 +48,7 @@ class FileHelper
             $lines->splice($lastImport + 1, 0, $content);
         }
 
-        $this->writeFile($lines->implode(PHP_EOL));
+        $this->write($lines->implode(PHP_EOL));
 
         return $this;
     }
@@ -69,18 +69,23 @@ class FileHelper
     public function replace(string $search, string $replace): static
     {
         // TODO: Handle missing files more gracefully
-        $this->writeFile(str_replace($search, $replace, $this->getFile()));
+        $this->write(str_replace($search, $replace, $this->get()));
 
         return $this;
     }
 
-    protected function getFile(): string
+    public function get(): string
     {
         return File::get($this->path);
     }
 
-    protected function writeFile(string $contents): void
+    public function write(string $contents): void
     {
         File::put($this->path, $contents);
+    }
+
+    public function exists(): bool
+    {
+        return File::exists($this->path);
     }
 }
