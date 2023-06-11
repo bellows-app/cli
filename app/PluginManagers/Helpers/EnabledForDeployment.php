@@ -2,12 +2,13 @@
 
 namespace Bellows\PluginManagers\Helpers;
 
-use Bellows\PluginSdk\Data\DefaultEnabledDecision;
-use Bellows\PluginSdk\Data\DisabledByDefault;
-use Bellows\PluginSdk\Data\EnabledByDefault;
+use Bellows\Data\DefaultEnabledDecision;
+use Bellows\Data\DisabledByDefault;
+use Bellows\Data\EnabledByDefault;
+use Bellows\PluginSdk\Contracts\Deployable;
+use Bellows\PluginSdk\Facades\Composer;
 use Bellows\PluginSdk\Facades\Console;
-use Bellows\PluginSdk\PackageManagers\Composer;
-use Bellows\PluginSdk\PackageManagers\Npm;
+use Bellows\PluginSdk\Facades\Npm;
 use Bellows\PluginSdk\Plugin;
 
 class EnabledForDeployment
@@ -27,38 +28,38 @@ class EnabledForDeployment
         );
     }
 
-    public function isEnabledByDefault(Plugin $plugin): ?DefaultEnabledDecision
+    public function isEnabledByDefault(Deployable $plugin): ?DefaultEnabledDecision
     {
         if (isset($this->cachedDecisions[$plugin->getName()])) {
             return $this->cachedDecisions[$plugin->getName()];
         }
 
-        if (count($plugin->requiredComposerPackages)) {
+        if (count($plugin->requiredComposerPackages())) {
             return $this->decideBasedOnRequiredPackages(
                 Composer::class,
-                $plugin->requiredComposerPackages,
+                $plugin->requiredComposerPackages(),
             );
         }
 
-        if (count($plugin->requiredNpmPackages)) {
+        if (count($plugin->requiredNpmPackages())) {
             return $this->decideBasedOnRequiredPackages(
                 Npm::class,
-                $plugin->requiredNpmPackages,
+                $plugin->requiredNpmPackages(),
             );
         }
 
-        if (count($plugin->anyRequiredComposerPackages)) {
+        if (count($plugin->anyRequiredComposerPackages())) {
             return $this->decideBasedOnRequiredPackages(
                 Composer::class,
-                $plugin->anyRequiredComposerPackages,
+                $plugin->anyRequiredComposerPackages(),
                 'any',
             );
         }
 
-        if (count($plugin->anyRequiredNpmPackages)) {
+        if (count($plugin->anyRequiredNpmPackages())) {
             return $this->decideBasedOnRequiredPackages(
                 Npm::class,
-                $plugin->anyRequiredNpmPackages,
+                $plugin->anyRequiredNpmPackages(),
                 'any',
             );
         }
@@ -89,10 +90,10 @@ class EnabledForDeployment
     protected function hasRequiredPackages($plugin): bool
     {
         return collect(
-            count($plugin->requiredComposerPackages),
-            count($plugin->requiredNpmPackages),
-            count($plugin->anyRequiredComposerPackages),
-            count($plugin->anyRequiredNpmPackages),
+            count($plugin->requiredComposerPackages()),
+            count($plugin->requiredNpmPackages()),
+            count($plugin->anyRequiredComposerPackages()),
+            count($plugin->anyRequiredNpmPackages()),
         )->max() > 0;
     }
 
