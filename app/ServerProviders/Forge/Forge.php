@@ -3,12 +3,12 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Config;
-use Bellows\Data\ForgeServer;
 use Bellows\Facades\Console;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Data\Server as ServerData;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;
 use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerDeployTarget;
-use Bellows\ServerProviders\ServerInterface;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
 use Illuminate\Support\Collection;
@@ -46,7 +46,7 @@ class Forge implements ServerProviderInterface
 
             Console::info("Found only one server, auto-selecting: <comment>{$server['name']}</comment>");
 
-            return new Server(ForgeServer::from($server));
+            return new Server(ServerData::from($server));
         }
 
         $serverName = Console::choice(
@@ -54,7 +54,7 @@ class Forge implements ServerProviderInterface
             $servers->pluck('name')->sort()->values()->toArray()
         );
 
-        $server = ForgeServer::from($servers->first(fn ($s) => $s['name'] === $serverName));
+        $server = ServerData::from($servers->first(fn ($s) => $s['name'] === $serverName));
 
         return new Server($server);
     }
