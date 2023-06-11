@@ -15,9 +15,9 @@ use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\DeploymentManager;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
-use Bellows\PluginSdk\Data\PluginDaemon;
-use Bellows\PluginSdk\Data\PluginJob;
-use Bellows\PluginSdk\Data\PluginWorker;
+use Bellows\PluginSdk\Data\DaemonParams;
+use Bellows\PluginSdk\Data\JobParams;
+use Bellows\PluginSdk\Data\WorkerParams;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
@@ -202,7 +202,7 @@ class Deploy extends Command
         $this->step('Daemons');
 
         $daemons = collect($pluginManager->daemons())->map(
-            fn (PluginDaemon $daemon) => Daemon::from([
+            fn (DaemonParams $daemon) => Daemon::from([
                 'command'   => $daemon->command,
                 'user'      => $daemon->user ?: Project::config()->isolatedUser,
                 'directory' => $daemon->directory
@@ -224,7 +224,7 @@ class Deploy extends Command
         $this->step('Workers');
 
         $workers = collect($pluginManager->workers())->map(
-            fn (PluginWorker $worker) => Worker::from(
+            fn (WorkerParams $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
                     ['php_version' => $worker->phpVersion ?? Project::config()->phpVersion->version],
@@ -242,7 +242,7 @@ class Deploy extends Command
         $this->step('Scheduled Jobs');
 
         $jobs = collect($pluginManager->jobs())->map(
-            fn (PluginJob $job) => Job::from(
+            fn (JobParams $job) => Job::from(
                 array_merge(
                     $job->toArray(),
                     ['user' => $job->user ?? Project::config()->isolatedUser],
