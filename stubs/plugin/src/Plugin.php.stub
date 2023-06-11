@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ pluginNamespace }};
+
+{{ imports }}
+
+class {{ pluginName }} extends Plugin implements {{ implements }}
+{
+    use {{ traits }};
+
+{{ constructor }}
+
+{{ installMethod }}
+
+{{ deployMethod }}
+}

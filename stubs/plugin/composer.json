@@ -1,0 +1,57 @@
+{
+    "name": "{{ packageName }}",
+    "description": "{{ packageDescription }}",
+    "keywords": [
+        "laravel",
+        "console",
+        "cli",
+        "forge",
+        "tools",
+        "productivity"
+    ],
+    "type": "bellows-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "{{ authorName }}",
+            "email": "{{ authorEmail }}"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "bellows-app/plugin-sdk": "dev-main"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.5",
+        "pestphp/pest": "^2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ pluginNamespace }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {
+        "bellows-app/plugin-sdk": {
+            "type": "path",
+            "url": "../../sdk/",
+            "options": {
+                "symlink": true
+            }
+        }
+    }
+}
