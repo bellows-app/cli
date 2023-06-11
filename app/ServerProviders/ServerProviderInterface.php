@@ -2,8 +2,8 @@
 
 namespace Bellows\ServerProviders;
 
-use Illuminate\Support\Collection;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Illuminate\Support\Collection;
 
 interface ServerProviderInterface
 {
