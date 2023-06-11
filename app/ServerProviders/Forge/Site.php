@@ -2,14 +2,15 @@
 
 namespace Bellows\ServerProviders\Forge;
 
-use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
-use Bellows\Env;
+use Bellows\PluginSdk\Contracts\Env;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\InstallRepoParams;
 use Bellows\PluginSdk\Data\SecurityRule;
+use Bellows\PluginSdk\Data\Server as ServerData;
+use Bellows\PluginSdk\Data\Site as SiteData;
 // TODO: Should this data come from the plugin sdk?
 use Bellows\PluginSdk\Data\Worker;
 use Illuminate\Http\Client\PendingRequest;
@@ -30,8 +31,8 @@ class Site implements SiteInterface
     protected Collection $securityRules;
 
     public function __construct(
-        protected ForgeSite $site,
-        protected ForgeServer $server,
+        protected SiteData $site,
+        protected ServerData $server,
     ) {
         $this->setClient();
     }
@@ -56,7 +57,7 @@ class Site implements SiteInterface
         );
     }
 
-    public function getEnv(): Env
+    public function env(): Env
     {
         $this->env ??= new Env((string) $this->client->get('env'));
 
@@ -136,7 +137,7 @@ class Site implements SiteInterface
     }
 
     // TODO: Get rid of this method and just use the get server provider method?
-    public function getServer(): ForgeServer
+    public function getServer(): ServerData
     {
         return $this->server;
     }
