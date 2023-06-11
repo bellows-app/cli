@@ -2,8 +2,10 @@
 
 namespace Bellows;
 
-use Bellows\Data\AddApiCredentialsPrompt;
+use Bellows\Config\InteractsWithConfig;
 use Bellows\Facades\Console;
+use Bellows\PluginSdk\Contracts\HttpClient;
+use Bellows\PluginSdk\Data\AddApiCredentialsPrompt;
 use Bellows\Util\SharedAccount;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
@@ -12,7 +14,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http as HttpFacade;
 use Illuminate\Support\Str;
 
-class Http
+class Http implements HttpClient
 {
     use InteractsWithConfig;
 
@@ -23,7 +25,7 @@ class Http
     ) {
     }
 
-    public function clearClients()
+    public function clearClients(): void
     {
         $this->clients = [];
     }
