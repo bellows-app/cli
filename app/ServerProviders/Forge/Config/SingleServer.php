@@ -2,13 +2,13 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
-use Bellows\Data\PhpVersion;
 use Bellows\Facades\Console;
+use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
+use Bellows\PluginSdk\Data\PhpVersion;
 use Bellows\ServerProviders\AsksForDomain;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerDeployTarget;
-use Bellows\ServerProviders\ServerInterface;
-use Bellows\ServerProviders\SiteInterface;
 use Illuminate\Support\Collection;
 
 class SingleServer implements ServerDeployTarget
