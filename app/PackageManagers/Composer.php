@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Process;
 
 class Composer extends PackageManager
 {
-    public static function packageIsInstalled(string $package): bool
+    public function packageIsInstalled(string $package): bool
     {
-        $composerJson = static::getComposerJson();
+        $composerJson = $this->getComposerJson();
 
         return isset($composerJson['require'][$package]);
     }
 
-    public static function require(string|array $package, bool $dev = false, string $additionalFlags = null): void
+    public function require(string|array $package, bool $dev = false, string $additionalFlags = null): void
     {
         $package = is_array($package) ? implode(' ', $package) : $package;
 
@@ -36,9 +36,14 @@ class Composer extends PackageManager
         Process::runWithOutput("composer require {$package} {$flag}");
     }
 
-    public static function addScript(string $key, string $value): void
+    public function requireDev(string|array $package, string $additionalFlags = null): void
     {
-        $composerJson = static::getComposerJson();
+        $this->require($package, true, $additionalFlags);
+    }
+
+    public function addScript(string $key, string $value): void
+    {
+        $composerJson = $this->getComposerJson();
 
         $currentValue = $composerJson['scripts'][$key] ?? [];
 
@@ -46,33 +51,33 @@ class Composer extends PackageManager
 
         $composerJson['scripts'][$key] = $currentValue;
 
-        static::writeComposerJson($composerJson);
+        $this->writeComposerJson($composerJson);
     }
 
-    public static function allowPlugin(string $plugin): void
+    public function allowPlugin(string $plugin): void
     {
-        $composerJson = static::getComposerJson();
+        $composerJson = $this->getComposerJson();
 
         $composerJson['config']['allow-plugins'] = array_merge(
             $composerJson['config']['allow-plugins'] ?? [],
             [$plugin => true],
         );
 
-        static::writeComposerJson($composerJson);
+        $this->writeComposerJson($composerJson);
     }
 
-    protected static function getComposerJson(): array
+    protected function getComposerJson(): array
     {
         $path = Project::path('composer.json');
 
-        if (!file_exists($path)) {
+        if (File::missing($path)) {
             return [];
         }
 
         return File::json($path);
     }
 
-    protected static function writeComposerJson(array $composerJson): void
+    protected function writeComposerJson(array $composerJson): void
     {
         File::put(
             Project::path('composer.json'),
