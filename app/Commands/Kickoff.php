@@ -8,9 +8,9 @@ use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
 use Bellows\Facades\Project;
-use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;
 use Bellows\PluginManagers\InstallationManager;
+use Bellows\PluginSdk\Facades\Composer;
 use Bellows\Util\ConfigHelper;
 use Bellows\Util\RawValue;
 use Illuminate\Support\Facades\File;
@@ -88,7 +88,7 @@ class Kickoff extends Command
                 ]),
                 $config['env'] ?? [],
             )
-        )->each(fn ($value, $key) => Project::env()->update($key, $value));
+        )->each(fn ($value, $key) => Project::env()->set($key, $value));
 
         File::put($dir . '/.env', Project::env()->toString());
 
@@ -124,11 +124,21 @@ class Kickoff extends Command
             return Artisan::local($command);
         })->each(fn ($command) => Process::runWithOutput($command));
 
-        $this->step('Publish Tags');
+        $this->step('Vendor Publish');
 
-        collect($pluginManager->publishTags($config['publish-tags'] ?? []))->each(
+        // TODO: Check on this and make sure it's all correct
+        $fromConfig = collect($config['publish-tags'] ?? [])->map(fn ($tag) => compact('tag'))->merge(
+            collect($config['publish-provider'] ?? [])->map(fn ($provider) => compact('provider')),
+        )->merge($config['vendor-publish'] ?? []);
+
+        collect($pluginManager->vendorPublish())->each(
             fn ($t) => Process::runWithOutput(
-                Artisan::local("vendor:publish --tag={$t}"),
+                Artisan::local(
+                    'vendor:publish ',
+                    collect($t)->map(
+                        fn ($value, $key) => "--{$key}={$value}"
+                    )->implode(' '),
+                ),
             ),
         );
 
