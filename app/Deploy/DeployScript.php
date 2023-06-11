@@ -3,12 +3,13 @@
 namespace Bellows;
 
 use Bellows\Facades\Console;
+use Bellows\Safety\PreventsCallingFromPlugin;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class DeployScript
 {
-    protected string $script;
+    use PreventsCallingFromPlugin;
 
     const COMPOSER_INSTALL = '$FORGE_COMPOSER install';
 
@@ -20,8 +21,12 @@ class DeployScript
 
     const MIGRATE = '$FORGE_PHP artisan migrate';
 
+    protected string $script;
+
     public function set(string $script)
     {
+        $this->preventCallingFromPlugin(__METHOD__);
+
         $this->script = $script;
     }
 
