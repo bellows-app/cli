@@ -3,7 +3,7 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\LoadsPlugins;
@@ -12,6 +12,7 @@ use Bellows\PluginSdk\Contracts\Installable;
 use Bellows\PluginSdk\PluginResults\InstallationResult;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Spatie\StructureDiscoverer\Data\DiscoveredClass;
 
@@ -31,22 +32,29 @@ class InstallationManager
         $this->setPluginPaths();
     }
 
-    public function setActive(array $pluginsConfig): void
+    public function setActive(array $pluginPackageNames): void
     {
         $plugins = $this->getAllPlugins(
             Scope::raw(Installable::class),
-            function (DiscoveredClass $p) use ($pluginsConfig) {
-                // TODO: Probably something more sophisticated than this for matching?
-                $matches = Str::endsWith($p->namespace . '\\' . $p->name, $pluginsConfig);
+            function (DiscoveredClass $p) use ($pluginPackageNames) {
+                // Directory is src, go up one level and look for a files directory
+                $pluginBaseDir = File::dirname($p->file) . '/..';
 
-                if (!$matches) {
+                $composerFile = "{$pluginBaseDir}/composer.json";
+
+                if (!File::exists($composerFile)) {
                     return false;
                 }
 
-                // Directory is src, go up one level and look for a files directory
-                $filesDir = dirname($p->file) . '/../files';
+                $composer = File::json($composerFile);
 
-                if (is_dir($filesDir)) {
+                if (!in_array($composer['name'] ?? '', $pluginPackageNames)) {
+                    return false;
+                }
+
+                $filesDir = "{$pluginBaseDir}/files";
+
+                if (File::isDirectory($filesDir)) {
                     $this->directoriesToCopy[] = $filesDir;
                 }
 
@@ -71,63 +79,37 @@ class InstallationManager
         })->filter()->values();
     }
 
-    protected function getComposerPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
-    {
-        if (count($plugin->requiredComposerPackages)) {
-            return $plugin->requiredComposerPackages;
-        }
-
-        if (
-            count($plugin->anyRequiredComposerPackages)
-            && count(
-                array_intersect($plugin->anyRequiredComposerPackages, $result->getComposerPackages())
-            ) === 0
-        ) {
-            return [$plugin->anyRequiredComposerPackages[0]];
-        }
-
-        return [];
-    }
-
-    protected function getNpmPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
-    {
-        if (count($plugin->requiredNpmPackages)) {
-            return $plugin->requiredNpmPackages;
-        }
-
-        if (
-            count($plugin->anyRequiredNpmPackages)
-            && count(
-                array_intersect($plugin->anyRequiredNpmPackages, $result->getNpmPackages())
-            ) === 0
-        ) {
-            return [$plugin->anyRequiredNpmPackages[0]];
-        }
-
-        return [];
-    }
-
     public function aliasesToRegister(array $initialValue = []): array
     {
         return $this->call('getAliases')->reduce($initialValue);
     }
 
-    public function directoriesToCopy(): array
+    public function directoriesToCopy(): Collection
     {
-        return $this->directoriesToCopy;
+        return $this->uniqueCollection(
+            $this->call('getDirectoriesToCopy')->reduce($this->directoriesToCopy)
+        );
     }
 
     public function serviceProvidersToRegister(array $initialValue = []): Collection
     {
+        // Auto-register providers from the app/Providers directory of any directories we're copying
+        $providersFromDirectories = $this->directoriesToCopy()
+            ->map(fn ($dir) => glob("{$dir}/app/Providers/*.php"))
+            ->flatten()
+            ->filter()
+            ->map(fn ($file) => basename($file, '.php'))
+            ->map(fn ($filename) => 'App\\Providers\\' . $filename);
+
         return $this->uniqueCollection(
-            $this->call('getServiceProviders')->reduce($initialValue)
+            $this->call('getServiceProviders')->reduce($providersFromDirectories->merge($initialValue)->toArray())
         );
     }
 
-    public function publishTags(array $initialValue = []): Collection
+    public function vendorPublish(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
-            $this->call('getPublishTags')->reduce($initialValue)
+            $this->call('getVendorPublish')->reduce($initialValue)
         );
     }
 
@@ -147,14 +129,33 @@ class InstallationManager
     {
         return $this->uniqueCollection(
             $this->call('getComposerPackages')->reduce($initialValue)
-        );
+        )->unique(fn ($package) => collect(explode(' ', $package))->first());
     }
 
     public function composerDevPackages(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
             $this->call('getComposerDevPackages')->reduce($initialValue)
+        )->unique(fn ($package) => collect(explode(' ', $package))->first());
+    }
+
+    public function allowedComposerPlugins(array $initialValue = []): Collection
+    {
+        return $this->uniqueCollection(
+            $this->call('getAllowedComposerPlugins')->reduce($initialValue)
         );
+    }
+
+    public function gitIgnore(array $initialValue = []): Collection
+    {
+        return $this->uniqueCollection(
+            $this->call('getGitIgnore')->reduce($initialValue)
+        );
+    }
+
+    public function composerScripts(array $initialValue = []): Collection
+    {
+        return collect($this->call('getComposerScripts')->reduce($initialValue));
     }
 
     public function npmPackages(array $initialValue = []): Collection
@@ -169,6 +170,42 @@ class InstallationManager
         return $this->uniqueCollection(
             $this->call('getNpmDevPackages')->reduce($initialValue)
         );
+    }
+
+    protected function getComposerPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
+    {
+        if (count($plugin->requiredComposerPackages())) {
+            return $plugin->requiredComposerPackages();
+        }
+
+        if (
+            count($plugin->anyRequiredComposerPackages())
+            && count(
+                array_intersect($plugin->anyRequiredComposerPackages(), $result->getComposerPackages())
+            ) === 0
+        ) {
+            return [$plugin->anyRequiredComposerPackages()[0]];
+        }
+
+        return [];
+    }
+
+    protected function getNpmPackagesFromPlugin(InstallationResult $result, Installable $plugin): array
+    {
+        if (count($plugin->requiredNpmPackages())) {
+            return $plugin->requiredNpmPackages();
+        }
+
+        if (
+            count($plugin->anyRequiredNpmPackages())
+            && count(
+                array_intersect($plugin->anyRequiredNpmPackages(), $result->getNpmPackages())
+            ) === 0
+        ) {
+            return [$plugin->anyRequiredNpmPackages()[0]];
+        }
+
+        return [];
     }
 
     protected function uniqueCollection(array $arr): Collection
