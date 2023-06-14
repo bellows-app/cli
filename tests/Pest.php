@@ -16,7 +16,7 @@ use Bellows\Config;
 use Bellows\Console;
 use Bellows\Data\ProjectConfig;
 use Bellows\DeployScript;
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Http;
 use Bellows\PackageManagers\Composer;
 use Bellows\PackageManagers\Npm;

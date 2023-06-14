@@ -6,7 +6,7 @@ use Bellows\Data\CreateSiteParams;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\ServerProviders\AsksForDomain;

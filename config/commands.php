@@ -69,7 +69,6 @@ return [
         LaravelZero\Framework\Commands\StubPublishCommand::class,
         Spatie\LaravelRay\Commands\PublishConfigCommand::class,
         Spatie\LaravelData\Commands\DataMakeCommand::class,
-        PluginTester::class,
         Playground::class,
         DeleteSite::class,
     ],

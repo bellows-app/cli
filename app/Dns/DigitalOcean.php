@@ -3,7 +3,7 @@
 namespace Bellows\Dns;
 
 use Bellows\Enums\DnsRecordType;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Util\Domain;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;

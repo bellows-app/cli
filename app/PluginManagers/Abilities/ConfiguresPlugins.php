@@ -2,7 +2,7 @@
 
 namespace Bellows\PluginManagers\Abilities;
 
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Plugin;
 
 trait ConfiguresPlugins

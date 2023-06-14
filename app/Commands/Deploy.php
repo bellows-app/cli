@@ -11,12 +11,13 @@ use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\DeploymentManager;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\DaemonParams;
 use Bellows\PluginSdk\Data\JobParams;
+use Bellows\PluginSdk\Data\SecurityRule;
 use Bellows\PluginSdk\Data\WorkerParams;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerProviderInterface;
@@ -204,12 +205,12 @@ class Deploy extends Command
         $daemons = collect($pluginManager->daemons())->map(
             fn (DaemonParams $daemon) => Daemon::from([
                 'command'   => $daemon->command,
-                'user'      => $daemon->user ?: Project::config()->isolatedUser,
+                'user'      => $daemon->user ?: Project::isolatedUser(),
                 'directory' => $daemon->directory
                     ?: '/' . collect([
                         'home',
-                        Project::config()->isolatedUser,
-                        Project::config()->domain,
+                        Project::isolatedUser(),
+                        Project::domain(),
                     ])->join('/'),
             ])
         );
@@ -227,7 +228,7 @@ class Deploy extends Command
             fn (WorkerParams $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
-                    ['php_version' => $worker->phpVersion ?? Project::config()->phpVersion->version],
+                    ['php_version' => $worker->phpVersion ?? Project::phpVersion()->version],
                 )
             )
         );
@@ -245,7 +246,7 @@ class Deploy extends Command
             fn (JobParams $job) => Job::from(
                 array_merge(
                     $job->toArray(),
-                    ['user' => $job->user ?? Project::config()->isolatedUser],
+                    ['user' => $job->user ?? Project::isolatedUser()],
                 ),
             )
         );
@@ -258,6 +259,10 @@ class Deploy extends Command
         );
 
         $this->step('Wrapping Up');
+
+        collect($pluginManager->securityRules())->each(
+            fn (SecurityRule $rule) => $site->addSecurityRule($rule)
+        );
 
         $this->withSpinner(
             title: 'Cooling the rockets',

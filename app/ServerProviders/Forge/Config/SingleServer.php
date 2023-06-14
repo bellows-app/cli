@@ -2,7 +2,7 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\PhpVersion;

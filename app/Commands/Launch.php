@@ -10,7 +10,6 @@ use Bellows\Data\Worker;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
-use Bellows\Facades\Project;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\LaunchManager;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
@@ -19,7 +18,9 @@ use Bellows\PluginSdk\Data\CreateSiteParams;
 use Bellows\PluginSdk\Data\DaemonParams;
 use Bellows\PluginSdk\Data\InstallRepoParams;
 use Bellows\PluginSdk\Data\JobParams;
+use Bellows\PluginSdk\Data\SecurityRule;
 use Bellows\PluginSdk\Data\WorkerParams;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
 use Illuminate\Support\Facades\App;
@@ -110,17 +111,23 @@ class Launch extends Command
 
         $phpVersion = $serverDeployTarget->determinePhpVersion();
 
-        $projectConfig = new ProjectConfig(
-            isolatedUser: $isolatedUser,
-            repository: $repo,
-            phpVersion: $phpVersion,
-            directory: $dir,
-            domain: $domain,
-            appName: $appName,
-            secureSite: $secureSite ?? false,
-        );
+        Project::setAppName($appName);
+        Project::setIsolatedUser($isolatedUser);
+        Project::setPhpVersion($phpVersion);
+        Project::setDomain($domain);
+        Project::setSiteIsSecure($secureSite ?? false);
 
-        Project::setConfig($projectConfig);
+        // $projectConfig = new ProjectConfig(
+        //     isolatedUser: $isolatedUser,
+        //     repository: $repo,
+        //     phpVersion: $phpVersion,
+        //     directory: $dir,
+        //     domain: $domain,
+        //     appName: $appName,
+        //     secureSite: $secureSite ?? false,
+        // );
+
+        // Project::setConfig($projectConfig);
 
         $this->step('Plugins');
 
@@ -183,12 +190,12 @@ class Launch extends Command
         $this->step('Site');
 
         $baseParams = new CreateSiteParams(
-            domain: Project::config()->domain,
+            domain: Project::domain(),
             projectType: 'php',
             directory: '/public',
             isolated: true,
-            username: Project::config()->isolatedUser,
-            phpVersion: Project::config()->phpVersion->version,
+            username: Project::isolatedUser(),
+            phpVersion: Project::phpVersion()->version,
         );
 
         $createSiteParams = $pluginManager->createSiteParams($baseParams->toArray());
@@ -222,8 +229,8 @@ class Launch extends Command
         $siteEnv = $site->env();
 
         $updatedEnvValues = collect($pluginManager->environmentVariables([
-            'APP_NAME'      => Project::config()->appName,
-            'APP_URL'       => 'http://' . Project::config()->domain,
+            'APP_NAME'      => Project::appName(),
+            'APP_URL'       => 'http://' . Project::domain(),
             'VITE_APP_ENV'  => '${APP_ENV}',
             'VITE_APP_NAME' => '${APP_NAME}',
         ]));
@@ -285,12 +292,12 @@ class Launch extends Command
         $daemons = collect($pluginManager->daemons())->map(
             fn (DaemonParams $daemon) => Daemon::from([
                 'command'   => $daemon->command,
-                'user'      => $daemon->user ?: Project::config()->isolatedUser,
+                'user'      => $daemon->user ?: Project::isolatedUser(),
                 'directory' => $daemon->directory
                     ?: '/' . collect([
                         'home',
-                        Project::config()->isolatedUser,
-                        Project::config()->domain,
+                        Project::isolatedUser(),
+                        Project::domain(),
                     ])->join('/'),
             ])
         );
@@ -308,7 +315,7 @@ class Launch extends Command
             fn (WorkerParams $worker) => Worker::from(
                 array_merge(
                     $worker->toArray(),
-                    ['php_version' => $worker->phpVersion ?? Project::config()->phpVersion->version],
+                    ['php_version' => $worker->phpVersion ?? Project::phpVersion()->version],
                 )
             )
         );
@@ -326,7 +333,7 @@ class Launch extends Command
             fn (JobParams $job) => Job::from(
                 array_merge(
                     $job->toArray(),
-                    ['user' => $job->user ?? Project::config()->isolatedUser],
+                    ['user' => $job->user ?? Project::isolatedUser()],
                 ),
             )
         );
@@ -339,6 +346,10 @@ class Launch extends Command
         );
 
         $this->step('Wrapping Up');
+
+        collect($pluginManager->securityRules())->each(
+            fn (SecurityRule $rule) => $site->addSecurityRule($rule)
+        );
 
         $this->withSpinner(
             title: 'Cooling the rockets',

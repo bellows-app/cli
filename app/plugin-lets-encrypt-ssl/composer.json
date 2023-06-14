@@ -1,0 +1,61 @@
+{
+    "name": "bellows-app/plugin-lets-encrypt-ssl",
+    "description": "An intelligent command line utility that sits on top of Laravel Forge to get your site up and running with all of your third party integrations configured at the speed of light.",
+    "keywords": [
+        "laravel",
+        "console",
+        "cli",
+        "forge",
+        "tools",
+        "productivity"
+    ],
+    "homepage": "https://bellows.dev",
+    "type": "bellows-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Joe Tannenbaum",
+            "email": "joe@joe.codes"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "bellows-app/plugin-sdk": "@dev"
+    },
+    "require-dev": {
+        "illuminate/http": "^10.0",
+        "orchestra/testbench": "^8.5",
+        "pestphp/pest": "^2.0",
+        "spatie/laravel-ray": "^1.32",
+        "tightenco/duster": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bellows\\Plugins\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {
+        "bellows-app/plugin-sdk": {
+            "type": "path",
+            "url": "../../sdk/",
+            "options": {
+                "symlink": true
+            }
+        }
+    }
+}

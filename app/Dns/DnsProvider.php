@@ -5,7 +5,7 @@ namespace Bellows\Dns;
 use Bellows\Config;
 use Bellows\Config\InteractsWithConfig;
 use Bellows\Enums\DnsRecordType;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Safety\PreventsCallingFromPlugin;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;

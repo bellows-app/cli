@@ -2,7 +2,7 @@
 
 namespace Bellows\Util;
 
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Str;
 
 class Vite
@@ -12,9 +12,9 @@ class Vite
         $path = collect([
             'vite.config.js',
             'vite.config.ts',
-        ])->first(fn ($p) => Project::fileExists($p));
+        ])->first(fn ($p) => Project::file($p)->exists());
 
-        $vite = Project::getFile($path);
+        $vite = Project::file($path)->get();
 
         if (str_contains($vite, $content)) {
             return;
@@ -56,7 +56,7 @@ class Vite
             $lines->splice($pluginsStart, 0, $content);
         }
 
-        Project::writeFile($path, $lines->implode(PHP_EOL));
+        Project::file($path)->write($lines->implode(PHP_EOL));
     }
 
     public static function addImport(string $content)

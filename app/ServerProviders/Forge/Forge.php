@@ -3,7 +3,7 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Config;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Data\Server as ServerData;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;

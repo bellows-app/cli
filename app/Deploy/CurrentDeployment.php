@@ -2,7 +2,7 @@
 
 namespace Bellows\Deploy;
 
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\Safety\PreventsCallingFromPlugin;
@@ -88,7 +88,7 @@ class CurrentDeployment
         return $this;
     }
 
-    public function wantsToChangeValueTo($current, $new, $message)
+    public function confirmChangeValueTo($current, $new, $message)
     {
         return $current === null || $current === $new || Console::confirm("{$message} from {$current}?", true);
     }

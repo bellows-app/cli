@@ -2,8 +2,8 @@
 
 namespace Bellows\ServerProviders;
 
-use Bellows\Facades\Console;
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Str;
 
 trait AsksForDomain

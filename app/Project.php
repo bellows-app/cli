@@ -3,8 +3,8 @@
 namespace Bellows;
 
 use Bellows\Data\ProjectConfig;
+use Bellows\PluginSdk\Data\PhpVersion;
 use Bellows\Util\FileHelper;
-use Illuminate\Support\Facades\File;
 
 class Project
 {
@@ -12,7 +12,45 @@ class Project
 
     protected ProjectConfig $config;
 
+    protected string $appName;
+
+    protected string $isolatedUser;
+
+    protected string $domain;
+
     protected string $dir;
+
+    protected PhpVersion $phpVersion;
+
+    public function appName()
+    {
+        return $this->appName;
+    }
+
+    public function setAppName(string $appName): void
+    {
+        $this->appName = $appName;
+    }
+
+    public function isolatedUser(): string
+    {
+        return $this->isolatedUser;
+    }
+
+    public function setIsolatedUser(string $isolatedUser): void
+    {
+        $this->isolatedUser = $isolatedUser;
+    }
+
+    public function domain(): string
+    {
+        return $this->domain;
+    }
+
+    public function setDomain(string $domain): void
+    {
+        $this->domain = $domain;
+    }
 
     public function dir(): string
     {
@@ -22,6 +60,16 @@ class Project
     public function setDir(string $dir): void
     {
         $this->dir = $dir;
+    }
+
+    public function phpVersion(): PhpVersion
+    {
+        return $this->phpVersion;
+    }
+
+    public function setPhpVersion(PhpVersion $phpVersion): void
+    {
+        $this->phpVersion = $phpVersion;
     }
 
     public function setConfig(ProjectConfig $config): void
@@ -41,24 +89,12 @@ class Project
         return $this->env;
     }
 
-    public function fileExists(string $path): bool
-    {
-        return File::exists($this->path($path));
-    }
-
-    public function getFile(string $path): string
-    {
-        return File::get($this->path($path));
-    }
-
-    public function writeFile(string $path, string $contents): void
-    {
-        File::ensureDirectoryExists(dirname($this->path($path)));
-        File::put($this->path($path), $contents);
-    }
-
     public function path(string $path): string
     {
+        // In case we are passing in the full of the project already,
+        // we need to strip the project dir from the path.
+        $path = str_replace($this->dir, '', $path);
+
         return $this->dir . '/' . ltrim($path, '/');
     }
 

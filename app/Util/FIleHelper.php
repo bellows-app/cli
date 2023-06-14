@@ -68,7 +68,10 @@ class FileHelper
 
     public function replace(string $search, string $replace): static
     {
-        // TODO: Handle missing files more gracefully
+        if (!Str::contains($this->get(), $search)) {
+            return $this;
+        }
+
         $this->write(str_replace($search, $replace, $this->get()));
 
         return $this;
@@ -76,11 +79,13 @@ class FileHelper
 
     public function get(): string
     {
+        // TODO: What if the file doesn't exist?
         return File::get($this->path);
     }
 
     public function write(string $contents): void
     {
+        File::ensureDirectoryExists(dirname($this->path));
         File::put($this->path, $contents);
     }
 

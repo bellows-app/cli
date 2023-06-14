@@ -2,7 +2,7 @@
 
 namespace Bellows\Safety;
 
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Plugin;
 
 trait PreventsCallingFromPlugin

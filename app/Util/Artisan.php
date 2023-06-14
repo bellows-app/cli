@@ -2,7 +2,7 @@
 
 namespace Bellows\Util;
 
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\PluginSdk\Util\RawValue;
 
 class Artisan
@@ -18,7 +18,7 @@ class Artisan
             return $command;
         }
 
-        return Project::config()->phpVersion->binary . ' artisan ' . trim($command);
+        return Project::phpVersion()->binary . ' artisan ' . trim($command);
     }
 
     public static function forJob(string|RawValue $command): string
@@ -29,13 +29,13 @@ class Artisan
 
         $artisanPath = '/' . collect([
             'home',
-            Project::config()->isolatedUser,
-            Project::config()->domain,
+            Project::isolatedUser(),
+            Project::domain(),
             'artisan',
         ])->join('/');
 
         return collect([
-            Project::config()->phpVersion->binary,
+            Project::phpVersion()->binary,
             $artisanPath,
             trim($command),
         ])->join(' ');

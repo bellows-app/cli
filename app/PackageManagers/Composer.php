@@ -2,7 +2,8 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
@@ -33,7 +34,11 @@ class Composer extends PackageManager
 
         $flag = $flags->implode(' ');
 
-        Process::runWithOutput("composer require {$package} {$flag}");
+        $command = "composer require {$package} {$flag}";
+
+        Console::comment($command);
+
+        Process::runWithOutput($command);
     }
 
     public function requireDev(string|array $package, string $additionalFlags = null): void
@@ -41,26 +46,46 @@ class Composer extends PackageManager
         $this->require($package, true, $additionalFlags);
     }
 
-    public function addScript(string $key, string $value): void
+    public function addScript(string $event, string|array $commands): void
     {
+        if (!is_array($commands)) {
+            $commands = [$commands];
+        }
+
         $composerJson = $this->getComposerJson();
 
-        $currentValue = $composerJson['scripts'][$key] ?? [];
+        $currentValue = $composerJson['scripts'][$event] ?? [];
 
-        array_push($currentValue, $value);
+        if (is_string($currentValue)) {
+            $currentValue = [$currentValue];
+        }
 
-        $composerJson['scripts'][$key] = $currentValue;
+        foreach ($commands as $command) {
+            if (!in_array($command, $currentValue)) {
+                $currentValue[] = $command;
+            }
+        }
+
+        $composerJson['scripts'][$event] = $currentValue;
 
         $this->writeComposerJson($composerJson);
     }
 
-    public function allowPlugin(string $plugin): void
+    public function allowPlugin(string|array $plugins): void
     {
+        if (!is_array($plugins)) {
+            $plugins = [$plugins];
+        }
+
+        $plugins = collect($plugins)->mapWithKeys(function ($plugin) {
+            return [$plugin => true];
+        });
+
         $composerJson = $this->getComposerJson();
 
         $composerJson['config']['allow-plugins'] = array_merge(
             $composerJson['config']['allow-plugins'] ?? [],
-            [$plugin => true],
+            $plugins->toArray(),
         );
 
         $this->writeComposerJson($composerJson);

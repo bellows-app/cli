@@ -3,7 +3,7 @@
 namespace Bellows;
 
 use Bellows\Config\InteractsWithConfig;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\HttpClient;
 use Bellows\PluginSdk\Data\AddApiCredentialsPrompt;
 use Bellows\Util\SharedAccount;

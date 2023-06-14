@@ -6,7 +6,7 @@ use Bellows\Config;
 use Bellows\Data\PhpVersion;
 use Bellows\Data\ProjectConfig;
 use Bellows\Data\Repository;
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Util\SharedAccount;
 use Illuminate\Support\Sleep;
 use LaravelZero\Framework\Testing\TestCase as BaseTestCase;

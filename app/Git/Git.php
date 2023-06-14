@@ -2,7 +2,7 @@
 
 namespace Bellows\Git;
 
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
@@ -31,29 +31,28 @@ class Git
 
         $files = array_map(fn ($file) => escapeshellarg($file), $files);
 
-        Process::run('git add ' . implode(' ', $files), function ($type, $line) {
-            echo $line;
-        });
+        Process::runWithOutput('git add ' . implode(' ', $files));
     }
 
     public static function commit(string $message)
     {
-        Process::run('git commit -m ' . escapeshellarg($message), function ($type, $line) {
-            echo $line;
-        });
+        Process::runWithOutput('git commit -m ' . escapeshellarg($message));
     }
 
     public static function push()
     {
-        Process::run('git push', function ($type, $line) {
-            echo $line;
-        });
+        Process::runWithOutput('git push');
     }
 
-    public static function ignore(...$files)
+    public static function ignore(string|iterable $files)
     {
-        collect($files)->each(
-            fn ($file) => File::append(Project::config()->directory . '/.gitignore', $file)
+        if (is_string($files)) {
+            $files = [$files];
+        }
+
+        File::append(
+            Project::dir() . '/.gitignore',
+            collect($files)->implode(PHP_EOL) . PHP_EOL,
         );
     }
 }

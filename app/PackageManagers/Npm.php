@@ -2,8 +2,8 @@
 
 namespace Bellows\PackageManagers;
 
-use Bellows\Facades\Project;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -60,7 +60,7 @@ class Npm extends PackageManager
     protected function detectPackageManager(): string
     {
         $lockFile = collect(['yarn.lock', 'package-lock.json'])->first(
-            fn ($file) => Project::fileExists($file),
+            fn ($file) => Project::file($file)->exists(),
         );
 
         return match ($lockFile) {

@@ -2,8 +2,8 @@
 
 namespace Bellows\Util;
 
-use Bellows\Facades\Console;
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Project;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -87,7 +87,7 @@ class ConfigHelper
     {
         $this->keys = collect(explode('.', $key));
 
-        $path = Project::config()->directory . '/config/';
+        $path = Project::dir() . '/config/';
 
         do {
             $filename = $this->keys->shift();

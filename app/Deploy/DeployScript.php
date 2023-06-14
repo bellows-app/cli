@@ -2,7 +2,7 @@
 
 namespace Bellows;
 
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Safety\PreventsCallingFromPlugin;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;

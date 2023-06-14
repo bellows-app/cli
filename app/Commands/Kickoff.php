@@ -2,15 +2,13 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Artisan;
 use Bellows\Config\BellowsConfig;
-use Bellows\Data\PhpVersion;
-use Bellows\Data\ProjectConfig;
-use Bellows\Data\Repository;
-use Bellows\Facades\Project;
-use Bellows\PackageManagers\Npm;
+use Bellows\Git\Git;
 use Bellows\PluginManagers\InstallationManager;
+use Bellows\PluginSdk\Facades\Artisan;
 use Bellows\PluginSdk\Facades\Composer;
+use Bellows\PluginSdk\Facades\Npm;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Util\ConfigHelper;
 use Bellows\Util\RawValue;
 use Illuminate\Support\Facades\File;
@@ -55,18 +53,8 @@ class Kickoff extends Command
 
         $url = $this->ask('URL', Str::of($name)->replace(' ', '')->slug() . '.test');
 
-        // TODO: This is bad. This should not be done. But for now, ok. Maybe NewProject? Not sure.
-        Project::setConfig(
-            new ProjectConfig(
-                isolatedUser: '',
-                repository: new Repository('', ''),
-                phpVersion: new PhpVersion('', '', ''),
-                directory: $dir,
-                domain: $url,
-                appName: $name,
-                secureSite: false,
-            )
-        );
+        Project::setAppName($name);
+        Project::setDomain($url);
 
         $pluginManager->setActive($config['plugins'] ?? []);
 
@@ -81,8 +69,8 @@ class Kickoff extends Command
         collect(
             array_merge(
                 $pluginManager->environmentVariables([
-                    'APP_NAME'      => Project::config()->appName,
-                    'APP_URL'       => 'http://' . Project::config()->domain,
+                    'APP_NAME'      => Project::appName(),
+                    'APP_URL'       => 'http://' . Project::domain(),
                     'VITE_APP_ENV'  => '${APP_ENV}',
                     'VITE_APP_NAME' => '${APP_NAME}',
                 ]),
@@ -90,16 +78,45 @@ class Kickoff extends Command
             )
         )->each(fn ($value, $key) => Project::env()->set($key, $value));
 
-        File::put($dir . '/.env', Project::env()->toString());
+        File::put($dir . '/.env', (string) Project::env());
 
         $this->step('Composer Packages');
 
+        // We're doing this separately from the config below so we dont have to merge recursively
+        $pluginManager->composerScripts()->whenNotEmpty(
+            fn ($scripts) => $scripts->each(fn ($commands, $event) => Composer::addScript($event, $commands)),
+        );
+
+        collect($config['composer-scripts'] ?? [])->whenNotEmpty(
+            fn ($scripts) => $scripts->each(fn ($commands, $event) => Composer::addScript($event, $commands)),
+        );
+
+        $pluginManager->allowedComposerPlugins($config['composer-allow-plugins'] ?? [])->whenNotEmpty(
+            fn ($packages) => Composer::allowPlugin($packages->toArray()),
+        );
+
         $pluginManager->composerPackages($config['composer'] ?? [])->whenNotEmpty(
-            fn ($packages) =>  Composer::require($packages->toArray()),
+            function ($packages) {
+                [$withFlags, $noFlags] = $packages->partition(fn ($package) => Str::contains($package, ' --'));
+
+                if ($noFlags->isNotEmpty()) {
+                    Composer::require($noFlags->toArray());
+                }
+
+                $withFlags->each(fn ($package) => Composer::require($package));
+            }
         );
 
         $pluginManager->composerDevPackages($config['composer-dev'] ?? [])->whenNotEmpty(
-            fn ($packages) => Composer::require($packages->toArray(), true),
+            function ($packages) {
+                [$withFlags, $noFlags] = $packages->partition(fn ($package) => Str::contains($package, ' --'));
+
+                if ($noFlags->isNotEmpty()) {
+                    Composer::requireDev($noFlags->toArray());
+                }
+
+                $withFlags->each(fn ($package) => Composer::requireDev($package));
+            }
         );
 
         $this->step('NPM Packages');
@@ -110,6 +127,10 @@ class Kickoff extends Command
 
         $pluginManager->npmDevPackages($config['npm-dev'] ?? [])->whenNotEmpty(
             fn ($packages) => Npm::install($packages->toArray(), true),
+        );
+
+        $pluginManager->gitIgnore($config['git-ignore'] ?? [])->whenNotEmpty(
+            fn ($files) => Git::ignore($files)
         );
 
         collect($pluginManager->commands($config['commands'] ?? []))->map(function ($command) {
@@ -126,19 +147,17 @@ class Kickoff extends Command
 
         $this->step('Vendor Publish');
 
-        // TODO: Check on this and make sure it's all correct
         $fromConfig = collect($config['publish-tags'] ?? [])->map(fn ($tag) => compact('tag'))->merge(
-            collect($config['publish-provider'] ?? [])->map(fn ($provider) => compact('provider')),
+            collect($config['publish-providers'] ?? [])->map(fn ($provider) => compact('provider')),
         )->merge($config['vendor-publish'] ?? []);
 
-        collect($pluginManager->vendorPublish())->each(
-            fn ($t) => Process::runWithOutput(
-                Artisan::local(
-                    'vendor:publish ',
-                    collect($t)->map(
-                        fn ($value, $key) => "--{$key}={$value}"
-                    )->implode(' '),
-                ),
+        collect($pluginManager->vendorPublish())->map(
+            fn ($t) => collect($t)->filter()->map(
+                fn ($value, $key) => sprintf('--%s="%s"', $key, $value)
+            )->implode(' ')
+        )->each(
+            fn ($params) => Process::runWithOutput(
+                Artisan::local("vendor:publish {$params}"),
             ),
         );
 
@@ -183,14 +202,14 @@ class Kickoff extends Command
         });
 
         collect($configNames)
-            ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/' . $name))
+            ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/files/' . $name))
             ->filter(fn ($dir) => is_dir($dir))
             ->merge($pluginManager->directoriesToCopy())
             ->whenNotEmpty(function ($toCopy) {
                 $this->step('Copying Files');
 
                 $toCopy->each(function ($src) {
-                    Process::run("cp -R {$src}/* " . Project::config()->directory);
+                    Process::run("cp -R {$src}/* " . Project::dir());
                     $this->info('Copied files from ' . $src);
                 });
             });
@@ -199,7 +218,7 @@ class Kickoff extends Command
             $this->step('Removing Files');
 
             $toRemove
-                ->map(fn ($file) => Project::config()->directory . '/' . $file)
+                ->map(fn ($file) => Project::dir() . '/' . $file)
                 ->filter(function ($file) {
                     if (File::exists($file)) {
                         return true;
@@ -228,8 +247,6 @@ class Kickoff extends Command
         // open in editor
 
         $this->newLine();
-
-        // exec('echo ".yarn" >> .gitignore');
 
         // Add repo to GitHub Desktop?
         // exec('github .');

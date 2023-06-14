@@ -3,13 +3,14 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
-use Bellows\Facades\Console;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
 use Bellows\PluginManagers\Abilities\DealsWithServers;
 use Bellows\PluginManagers\Abilities\HasDaemons;
 use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\HasJobs;
+use Bellows\PluginManagers\Abilities\HasSecurityRules;
 use Bellows\PluginManagers\Abilities\HasWorkers;
 use Bellows\PluginManagers\Abilities\LoadsPlugins;
 use Bellows\PluginManagers\Abilities\UpdatesDeploymentScripts;
@@ -29,6 +30,7 @@ class DeploymentManager
         HasWorkers,
         HasJobs,
         WrapsUp,
+        HasSecurityRules,
         UpdatesDeploymentScripts,
         HasEnvironmentVariables,
         DealsWithServers,

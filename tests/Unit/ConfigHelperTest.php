@@ -1,6 +1,6 @@
 <?php
 
-use Bellows\Facades\Project;
+use Bellows\PluginSdk\Facades\Project;
 use Bellows\Util\ConfigHelper;
 use Bellows\Util\Value;
 use Illuminate\Support\Facades\File;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 uses(Tests\TestCase::class);
 
 beforeEach(function () {
-    Project::config()->directory = __DIR__ . '/../stubs/test-app';
+    Project::dir() = __DIR__ . '/../stubs/test-app';
     cleanUpConfigs();
 });
 
@@ -18,12 +18,12 @@ afterEach(function () {
 
 function cleanUpConfigs()
 {
-    collect(glob(Project::config()->directory . '/config/*.php'))->each(fn ($file) => unlink($file));
+    collect(glob(Project::dir() . '/config/*.php'))->each(fn ($file) => unlink($file));
 }
 
 function writeToConfig(string $content, string $filename = 'test')
 {
-    $path = Project::config()->directory . '/config/' . $filename . '.php';
+    $path = Project::dir() . '/config/' . $filename . '.php';
 
     File::ensureDirectoryExists(dirname($path));
 
@@ -36,7 +36,7 @@ function writeToConfig(string $content, string $filename = 'test')
 function getConfigContents(string $filename = 'test'): string
 {
     return file_get_contents(
-        Project::config()->directory . '/config/' . $filename . '.php'
+        Project::dir() . '/config/' . $filename . '.php'
     );
 }
 

@@ -8,7 +8,7 @@ it('can choose a project from the list', function () {
     Http::fake();
 
     $result = $this->plugin({{ pluginClass }}::class)
-        ->expectsQuestion('Which project do you want to use?', Project::getAppName())
+        ->expectsQuestion('Which project do you want to use?', Project::appName())
         ->deploy();
 
     expect($result->getEnvironmentVariables())->toBe([
