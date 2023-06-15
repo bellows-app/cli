@@ -242,11 +242,10 @@ class Kickoff extends Command
             Project::env()->get('APP_NAME') . ' <info>awaits</info>: ' . Project::env()->get('APP_URL')
         );
 
-        // TODO:
-        // npm run dev
-        // open in editor
-
         $this->newLine();
+
+        // TODO:
+        // open in editor
     }
 
     protected function getConfig(): array
