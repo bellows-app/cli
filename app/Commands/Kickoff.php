@@ -247,9 +247,6 @@ class Kickoff extends Command
         // open in editor
 
         $this->newLine();
-
-        // Add repo to GitHub Desktop?
-        // exec('github .');
     }
 
     protected function getConfig(): array
