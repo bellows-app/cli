@@ -3,9 +3,9 @@
 namespace Bellows;
 
 use Bellows\Config\InteractsWithConfig;
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\HttpClient;
 use Bellows\PluginSdk\Data\AddApiCredentialsPrompt;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Util\SharedAccount;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;

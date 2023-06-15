@@ -2,9 +2,9 @@
 
 namespace Bellows\Deploy;
 
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Safety\PreventsCallingFromPlugin;
 
 class CurrentDeployment

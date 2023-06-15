@@ -65,6 +65,7 @@ class PluginInit extends Command
 
         if (!File::isEmptyDirectory($dir)) {
             $this->error('Directory is not empty: ' . $dir);
+
             return;
         }
 

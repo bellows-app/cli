@@ -3,15 +3,21 @@
 namespace Bellows\Commands;
 
 use Bellows\Config\BellowsConfig;
-use Bellows\Git\Git;
+use Bellows\Data\InstallationData;
 use Bellows\PluginManagers\InstallationManager;
-use Bellows\PluginSdk\Facades\Artisan;
-use Bellows\PluginSdk\Facades\Composer;
-use Bellows\PluginSdk\Facades\Npm;
 use Bellows\PluginSdk\Facades\Project;
-use Bellows\Util\ConfigHelper;
-use Bellows\Util\RawValue;
+use Bellows\Processes\CopyFiles;
+use Bellows\Processes\HandleComposer;
+use Bellows\Processes\HandleNpm;
+use Bellows\Processes\InstallLaravel;
+use Bellows\Processes\PublishVendorFiles;
+use Bellows\Processes\RemoveFiles;
+use Bellows\Processes\RenameFiles;
+use Bellows\Processes\SetLocalEnvironmentVariables;
+use Bellows\Processes\UpdateConfigFiles;
+use Bellows\Processes\WrapUp;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
@@ -44,6 +50,8 @@ class Kickoff extends Command
 
         [$configNames, $config] = $this->getConfig();
 
+        $config = collect($config);
+
         $topDirectory = trim(basename($dir));
 
         $name = $this->ask(
@@ -56,185 +64,30 @@ class Kickoff extends Command
         Project::setAppName($name);
         Project::setDomain($url);
 
-        $pluginManager->setActive($config['plugins'] ?? []);
+        $pluginManager->setActive($config->get('plugins', []));
 
-        $this->step('Installing Laravel');
-
-        Process::runWithOutput('composer create-project laravel/laravel .');
-
-        File::put($dir . '/README.md', "# {$name}");
-
-        $this->step('Environment Variables');
-
-        collect(
-            array_merge(
-                $pluginManager->environmentVariables([
-                    'APP_NAME'      => Project::appName(),
-                    'APP_URL'       => 'http://' . Project::domain(),
-                    'VITE_APP_ENV'  => '${APP_ENV}',
-                    'VITE_APP_NAME' => '${APP_NAME}',
-                ]),
-                $config['env'] ?? [],
-            )
-        )->each(fn ($value, $key) => Project::env()->set($key, $value));
-
-        File::put($dir . '/.env', (string) Project::env());
-
-        $this->step('Composer Packages');
-
-        // We're doing this separately from the config below so we dont have to merge recursively
-        $pluginManager->composerScripts()->whenNotEmpty(
-            fn ($scripts) => $scripts->each(fn ($commands, $event) => Composer::addScript($event, $commands)),
-        );
-
-        collect($config['composer-scripts'] ?? [])->whenNotEmpty(
-            fn ($scripts) => $scripts->each(fn ($commands, $event) => Composer::addScript($event, $commands)),
-        );
-
-        $pluginManager->allowedComposerPlugins($config['composer-allow-plugins'] ?? [])->whenNotEmpty(
-            fn ($packages) => Composer::allowPlugin($packages->toArray()),
-        );
-
-        $pluginManager->composerPackages($config['composer'] ?? [])->whenNotEmpty(
-            function ($packages) {
-                [$withFlags, $noFlags] = $packages->partition(fn ($package) => Str::contains($package, ' --'));
-
-                if ($noFlags->isNotEmpty()) {
-                    Composer::require($noFlags->toArray());
-                }
-
-                $withFlags->each(fn ($package) => Composer::require($package));
-            }
-        );
-
-        $pluginManager->composerDevPackages($config['composer-dev'] ?? [])->whenNotEmpty(
-            function ($packages) {
-                [$withFlags, $noFlags] = $packages->partition(fn ($package) => Str::contains($package, ' --'));
-
-                if ($noFlags->isNotEmpty()) {
-                    Composer::requireDev($noFlags->toArray());
-                }
-
-                $withFlags->each(fn ($package) => Composer::requireDev($package));
-            }
-        );
-
-        $this->step('NPM Packages');
-
-        $pluginManager->npmPackages($config['npm'] ?? [])->whenNotEmpty(
-            fn ($packages) => Npm::install($packages->toArray())
-        );
-
-        $pluginManager->npmDevPackages($config['npm-dev'] ?? [])->whenNotEmpty(
-            fn ($packages) => Npm::install($packages->toArray(), true),
-        );
-
-        $pluginManager->gitIgnore($config['git-ignore'] ?? [])->whenNotEmpty(
-            fn ($files) => Git::ignore($files)
-        );
-
-        collect($pluginManager->commands($config['commands'] ?? []))->map(function ($command) {
-            if ($command instanceof RawValue) {
-                return (string) $command;
-            }
-
-            if (Str::startsWith($command, 'php')) {
-                return $command;
-            }
-
-            return Artisan::local($command);
-        })->each(fn ($command) => Process::runWithOutput($command));
-
-        $this->step('Vendor Publish');
-
-        $fromConfig = collect($config['publish-tags'] ?? [])->map(fn ($tag) => compact('tag'))->merge(
-            collect($config['publish-providers'] ?? [])->map(fn ($provider) => compact('provider')),
-        )->merge($config['vendor-publish'] ?? []);
-
-        collect($pluginManager->vendorPublish())->map(
-            fn ($t) => collect($t)->filter()->map(
-                fn ($value, $key) => sprintf('--%s="%s"', $key, $value)
-            )->implode(' ')
-        )->each(
-            fn ($params) => Process::runWithOutput(
-                Artisan::local("vendor:publish {$params}"),
-            ),
-        );
-
-        $this->step('Update Config Files');
-
-        $aliasesFromConfig = array_merge(
-            $config['facades'] ?? [],
-            $config['aliases'] ?? [],
-        );
-
-        collect($pluginManager->aliasesToRegister($aliasesFromConfig))->each(
-            fn ($value, $key) => (new ConfigHelper)->update(
-                "app.aliases.{$key}",
-                Str::finish($value, '::class'),
-            )
-        );
-
-        collect($pluginManager->serviceProvidersToRegister($config['service-providers'] ?? []))->each(
-            fn ($provider) => (new ConfigHelper)->append(
-                'app.providers',
-                Str::finish($provider, '::class'),
-            ),
-        );
-
-        collect($pluginManager->updateConfig($config['config'] ?? []))->each(
-            fn ($value, $key) => (new ConfigHelper)->update($key, $value)
-        );
-
-        collect($config['rename-files'] ?? [])->whenNotEmpty(function ($toRename) {
-            $this->step('Renaming Files');
-
-            $toRename->each(function ($newFile, $oldFile) {
-                if (File::missing(Project::path($oldFile))) {
-                    $this->warn("File {$oldFile} does not exist, skipping.");
-
-                    return;
-                }
-
-                $this->info("{$oldFile} -> {$newFile}");
-                File::move(Project::path($oldFile), Project::path($newFile));
-            });
-        });
-
-        collect($configNames)
+        // TODO: This is a little weird to do up front? Strange, but maybe ok.
+        $directoriesFromKickoffConfig = collect($configNames)
             ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/files/' . $name))
-            ->filter(fn ($dir) => is_dir($dir))
-            ->merge($pluginManager->directoriesToCopy())
-            ->whenNotEmpty(function ($toCopy) {
-                $this->step('Copying Files');
+            ->filter(fn ($dir) => is_dir($dir));
 
-                $toCopy->each(function ($src) {
-                    Process::run("cp -R {$src}/* " . Project::dir());
-                    $this->info('Copied files from ' . $src);
-                });
-            });
+        $config->offsetSet(
+            'directories-to-copy',
+            $directoriesFromKickoffConfig->merge($config->get('directories-to-copy', []))->toArray()
+        );
 
-        collect($config['remove-files'] ?? [])->whenNotEmpty(function ($toRemove) {
-            $this->step('Removing Files');
-
-            $toRemove
-                ->map(fn ($file) => Project::dir() . '/' . $file)
-                ->filter(function ($file) {
-                    if (File::exists($file)) {
-                        return true;
-                    }
-
-                    $this->warn("File {$file} does not exist, skipping.");
-
-                    return false;
-                })
-                ->each(function ($file) {
-                    $this->info($file);
-                    File::delete($file);
-                });
-        });
-
-        $pluginManager->wrapUp();
+        Pipeline::send(new InstallationData($pluginManager, $config))->through([
+            InstallLaravel::class,
+            SetLocalEnvironmentVariables::class,
+            HandleComposer::class,
+            HandleNpm::class,
+            PublishVendorFiles::class,
+            UpdateConfigFiles::class,
+            RenameFiles::class,
+            CopyFiles::class,
+            RemoveFiles::class,
+            WrapUp::class,
+        ]);
 
         $this->step('Consider yourself kicked off!');
 
@@ -250,6 +103,7 @@ class Kickoff extends Command
 
     protected function getConfig(): array
     {
+        // TODO: Validate configs against schema?
         $configs = collect(glob(BellowsConfig::getInstance()->path('kickoff/*.json')))
             ->map(fn ($path) => [
                 'file'   => Str::replace('.json', '', basename($path)),

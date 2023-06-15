@@ -3,7 +3,6 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
 use Bellows\PluginManagers\Abilities\DealsWithServers;
@@ -17,6 +16,7 @@ use Bellows\PluginManagers\Abilities\UpdatesDeploymentScripts;
 use Bellows\PluginManagers\Abilities\WrapsUp;
 use Bellows\PluginManagers\Helpers\EnabledForDeployment;
 use Bellows\PluginSdk\Contracts\Launchable;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Plugin;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;

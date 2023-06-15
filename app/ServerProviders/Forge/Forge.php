@@ -3,9 +3,9 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Config;
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Data\Server as ServerData;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\ServerProviders\Forge\Config\LoadBalancer;
 use Bellows\ServerProviders\Forge\Config\SingleServer;
 use Bellows\ServerProviders\ServerDeployTarget;

@@ -2,7 +2,6 @@
 
 use Bellows\Commands\DeleteSite;
 use Bellows\Commands\Playground;
-use Bellows\Commands\PluginTester;
 
 return [
 

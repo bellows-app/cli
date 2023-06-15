@@ -2,10 +2,10 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\PhpVersion;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
 use Bellows\ServerProviders\Forge\Site;
 use Bellows\ServerProviders\ServerDeployTarget;

@@ -3,17 +3,16 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
-use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\LoadsPlugins;
 use Bellows\PluginManagers\Abilities\WrapsUp;
 use Bellows\PluginSdk\Contracts\Installable;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\PluginResults\InstallationResult;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use Spatie\StructureDiscoverer\Data\DiscoveredClass;
 
 class InstallationManager
@@ -84,10 +83,10 @@ class InstallationManager
         return $this->call('getAliases')->reduce($initialValue);
     }
 
-    public function directoriesToCopy(): Collection
+    public function directoriesToCopy(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
-            $this->call('getDirectoriesToCopy')->reduce($this->directoriesToCopy)
+            $this->call('getDirectoriesToCopy')->reduce(array_merge($this->directoriesToCopy, $initialValue))
         );
     }
 

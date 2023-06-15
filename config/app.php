@@ -1,6 +1,7 @@
 <?php
 
 use Bellows\Providers\AppServiceProvider;
+use Illuminate\Pipeline\PipelineServiceProvider;
 use Illuminate\Translation\TranslationServiceProvider;
 use Illuminate\Validation\ValidationServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
@@ -80,6 +81,7 @@ return [
         RayServiceProvider::class,
         // ValidationServiceProvider::class,
         // TranslationServiceProvider::class,
+        PipelineServiceProvider::class,
     ],
 
     'webhook_signing_secret' => env('WEBHOOK_SIGNING_SECRET', 'LxNu2n6j4PfHuczaHhLd'),

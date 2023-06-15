@@ -36,6 +36,7 @@ class PluginTester extends Command
 
         if (!$plugin) {
             $this->error('No plugin found to test');
+
             return;
         }
 
@@ -95,7 +96,6 @@ class PluginTester extends Command
         // fi
         // DEPLOY;
 
-
         $this->info("Configuring <comment>{$this->argument('plugin')}</comment> plugin...");
 
         $plugin = app('\\Bellows\\Plugins\\' . $this->argument('plugin'));
@@ -132,7 +132,7 @@ class PluginTester extends Command
         ]);
     }
 
-    protected function getPluginToTest(string $dir, string $action): Installable | Deployable | null
+    protected function getPluginToTest(string $dir, string $action): Installable|Deployable|null
     {
         if (!File::exists($dir . '/composer.json') || !File::exists($dir . '/composer.lock') || !File::exists($dir . '/vendor/autoload.php')) {
             // We're not in a plugin directory and we don't have a plugin name, just ask for it
