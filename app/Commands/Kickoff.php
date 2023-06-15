@@ -8,11 +8,13 @@ use Bellows\PluginManagers\InstallationManager;
 use Bellows\PluginSdk\Facades\Project;
 use Bellows\Processes\CopyFiles;
 use Bellows\Processes\HandleComposer;
+use Bellows\Processes\HandleGit;
 use Bellows\Processes\HandleNpm;
 use Bellows\Processes\InstallLaravel;
 use Bellows\Processes\PublishVendorFiles;
 use Bellows\Processes\RemoveFiles;
 use Bellows\Processes\RenameFiles;
+use Bellows\Processes\RunCommands;
 use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
 use Bellows\Processes\WrapUp;
@@ -81,11 +83,13 @@ class Kickoff extends Command
             SetLocalEnvironmentVariables::class,
             HandleComposer::class,
             HandleNpm::class,
+            RunCommands::class,
             PublishVendorFiles::class,
             UpdateConfigFiles::class,
             RenameFiles::class,
             CopyFiles::class,
             RemoveFiles::class,
+            HandleGit::class,
             WrapUp::class,
         ]);
 

@@ -14,8 +14,8 @@ class PublishVendorFiles
     {
         Console::step('Vendor Publish');
 
-        $fromConfig = collect($installation->config->get('publish-tags', []))->map(fn ($tag) => compact('tag'))->merge(
-            collect($installation->config->get('publish-providers', []))->map(fn ($provider) => compact('provider')),
+        $fromConfig = collect($installation->config->get('vendor-publish-tags', []))->map(fn ($tag) => compact('tag'))->merge(
+            collect($installation->config->get('vendor-publish-providers', []))->map(fn ($provider) => compact('provider')),
         )->merge($installation->config->get('vendor-publish', []));
 
         collect($installation->manager->vendorPublish())->map(
