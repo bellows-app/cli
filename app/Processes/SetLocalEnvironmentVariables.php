@@ -2,6 +2,7 @@
 
 namespace Bellows\Processes;
 
+use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Project;
@@ -21,7 +22,7 @@ class SetLocalEnvironmentVariables
                     'VITE_APP_ENV'  => '${APP_ENV}',
                     'VITE_APP_NAME' => '${APP_NAME}',
                 ]),
-                $installation->config->get('env', []),
+                $installation->config->get(KickoffConfigKeys::ENV),
             )
         )->each(fn ($value, $key) => Project::env()->set($key, $value));
 

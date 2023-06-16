@@ -2,6 +2,7 @@
 
 namespace Bellows\Processes;
 
+use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Project;
@@ -12,7 +13,7 @@ class RenameFiles
 {
     public function __invoke(InstallationData $installation, Closure $next)
     {
-        $files = collect($installation->config->get('rename-files', []));
+        $files = collect($installation->config->get(KickoffConfigKeys::REMOVE_FILES));
 
         if ($files->isEmpty()) {
             return $next($installation);

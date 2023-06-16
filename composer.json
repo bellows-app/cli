@@ -22,6 +22,7 @@
         "php": "^8.0",
         "bellows-app/plugin-sdk": "*",
         "illuminate/database": "^10.0",
+        "opis/json-schema": "^2.3",
         "symfony/yaml": "^6.2"
     },
     "require-dev": {

@@ -3,6 +3,7 @@
 namespace Bellows\Commands;
 
 use Bellows\Config\BellowsConfig;
+use Bellows\Config\KickoffConfig;
 use Bellows\Data\InstallationData;
 use Bellows\PluginManagers\InstallationManager;
 use Bellows\PluginSdk\Facades\Project;
@@ -18,7 +19,6 @@ use Bellows\Processes\RunCommands;
 use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
 use Bellows\Processes\WrapUp;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -50,9 +50,11 @@ class Kickoff extends Command
 
         $this->comment("Creating project in {$dir}");
 
-        [$configNames, $config] = $this->getConfig();
+        $config = $this->getConfig();
 
-        $config = collect($config);
+        if (!$config->isValid()) {
+            return Command::FAILURE;
+        }
 
         $topDirectory = trim(basename($dir));
 
@@ -67,16 +69,6 @@ class Kickoff extends Command
         Project::setDomain($url);
 
         $pluginManager->setActive($config->get('plugins', []));
-
-        // TODO: This is a little weird to do up front? Strange, but maybe ok.
-        $directoriesFromKickoffConfig = collect($configNames)
-            ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/files/' . $name))
-            ->filter(fn ($dir) => is_dir($dir));
-
-        $config->offsetSet(
-            'directories-to-copy',
-            $directoriesFromKickoffConfig->merge($config->get('directories-to-copy', []))->toArray()
-        );
 
         Pipeline::send(new InstallationData($pluginManager, $config))->through([
             InstallLaravel::class,
@@ -105,86 +97,22 @@ class Kickoff extends Command
         // open in editor
     }
 
-    protected function getConfig(): array
+    protected function getConfig(): KickoffConfig
     {
-        // TODO: Validate configs against schema?
         $configs = collect(glob(BellowsConfig::getInstance()->path('kickoff/*.json')))
-            ->map(fn ($path) => [
-                'file'   => Str::replace('.json', '', basename($path)),
-                'config' => File::json($path),
-            ])
-            ->map(fn ($item) => array_merge(
-                $item,
-                [
-                    'name' => $item['config']['name'] ?? $item['file'],
-                ],
-            ))
-            ->map(fn ($item) => array_merge(
-                $item,
-                [
-                    'label' => $item['name'] . ' (' . $item['file'] . ')',
-                ],
-            ))
-            ->sortBy('name');
+            ->map(fn ($path) => new KickoffConfig($path))
+            ->sortBy(fn (KickoffConfig $config) => $config->displayName());
 
         // TODO: Offer to init a config if none exist
         if ($configs->count() === 1) {
-            $config = $configs->first();
-
-            return [$config['file'], $config['config']];
+            return $configs->first();
         }
 
         $name = $this->choice(
             'What kind of project are we kicking off today?',
-            $configs->pluck('label')->toArray(),
+            $configs->map(fn (KickoffConfig $c) => $c->displayName())->toArray(),
         );
 
-        $config = $configs->firstWhere('label', $name);
-
-        // We need to make sure we're not recursively extending configs
-        $usedConfigs = [$config['file']];
-
-        $configExtends = $config['config']['extends'] ?? false;
-
-        while ($configExtends !== false) {
-            if (in_array($configExtends, $usedConfigs)) {
-                $this->error('Recursive config extending detected!');
-                exit;
-            }
-
-            $usedConfigs[] = $configExtends;
-
-            $configExtension = $configs->firstWhere('file', $configExtends);
-
-            if (!$configExtension) {
-                $this->error("Config {$configExtends} does not exist!");
-                exit;
-            }
-
-            $config['config'] = $this->mergeConfigs($config['config'], $configExtension['config']);
-
-            $configExtends = $configExtension['config']['extends'] ?? false;
-        }
-
-        return [$usedConfigs, $config['config']];
-    }
-
-    protected function mergeConfigs(array $base, array $toMerge)
-    {
-        $base = collect($base);
-        $toMerge = collect($toMerge);
-
-        $toMerge->each(function ($value, $key) use ($base) {
-            if ($base->has($key)) {
-                if (is_array($value)) {
-                    // We're only interested in merge array values, keep the base config non-array values the same
-                    $base->put($key, array_merge($base->get($key), $value));
-                }
-            } else {
-                $base->put($key, $value);
-            }
-        });
-
-        return $base->toArray();
+        return $configs->first(fn (KickoffConfig $c) => $c->displayName() === $name);
     }
 }

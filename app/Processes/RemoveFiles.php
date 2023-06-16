@@ -2,6 +2,7 @@
 
 namespace Bellows\Processes;
 
+use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Project;
@@ -12,7 +13,7 @@ class RemoveFiles
 {
     public function __invoke(InstallationData $installation, Closure $next)
     {
-        $toRemove = collect($installation->config->get('remove-files', []));
+        $toRemove = collect($installation->config->get(KickoffConfigKeys::REMOVE_FILES));
 
         if ($toRemove->isEmpty()) {
             return $next($installation);

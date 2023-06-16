@@ -2,15 +2,15 @@
 
 namespace Bellows\Data;
 
+use Bellows\Config\KickoffConfig;
 use Bellows\PluginManagers\InstallationManager;
-use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 
 class InstallationData extends Data
 {
     public function __construct(
         public readonly InstallationManager $manager,
-        public readonly Collection $config,
+        public readonly KickoffConfig $config,
     ) {
     }
 }

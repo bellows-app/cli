@@ -2,6 +2,7 @@
 
 namespace Bellows\Processes;
 
+use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Artisan;
 use Bellows\PluginSdk\Facades\Console;
@@ -14,19 +15,23 @@ class PublishVendorFiles
     {
         Console::step('Vendor Publish');
 
-        $fromConfig = collect($installation->config->get('vendor-publish-tags', []))->map(fn ($tag) => compact('tag'))->merge(
-            collect($installation->config->get('vendor-publish-providers', []))->map(fn ($provider) => compact('provider')),
-        )->merge($installation->config->get('vendor-publish', []));
+        $tags = collect(
+            $installation->config->get(KickoffConfigKeys::VENDOR_PUBLISH_TAGS)
+        )->map(fn ($tag) => compact('tag'));
 
-        collect($installation->manager->vendorPublish())->map(
+        $providers = collect(
+            $installation->config->get(KickoffConfigKeys::VENDOR_PUBLISH_PROVIDERS)
+        )->map(fn ($provider) => compact('provider'));
+
+        $fromConfig = $tags->merge($providers)->merge($installation->config->get(KickoffConfigKeys::VENDOR_PUBLISH));
+
+        collect($installation->manager->vendorPublish($fromConfig->toArray()))->map(
             fn ($t) => collect($t)->filter()->map(
                 fn ($value, $key) => sprintf('--%s="%s"', $key, $value)
             )->implode(' ')
-        )->each(
-            fn ($params) => Process::runWithOutput(
-                Artisan::local("vendor:publish {$params}"),
-            ),
-        );
+        )->each(fn ($params) => Process::runWithOutput(
+            Artisan::local("vendor:publish {$params}"),
+        ));
 
         return $next($installation);
     }
