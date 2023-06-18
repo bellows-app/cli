@@ -26,7 +26,12 @@ class BellowsConfig
 
     public function localPluginPath(string $path)
     {
-        return env('HOME') . '/.bellows/local-plugins/' . ltrim($path, '/');
+        return $this->path('local-plugins/' . ltrim($path, '/'));
+    }
+
+    public function kickoffConfigPath(string $path)
+    {
+        return $this->path('kickoff/' . ltrim($path, '/'));
     }
 
     private function __clone()

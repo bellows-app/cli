@@ -56,7 +56,7 @@ class KickoffConfig
 
     public function merge(KickoffConfigKeys $key, array $toMerge)
     {
-        $this->config[$key] = array_merge($this->get($key, []), $toMerge);
+        $this->config[$key->value] = array_merge($this->get($key, []), $toMerge);
     }
 
     public function isValid(): bool
@@ -108,7 +108,7 @@ class KickoffConfig
 
             $usedConfigs[] = $configExtends;
 
-            $extendsConfigPath = BellowsConfig::getInstance()->path('kickoff/' . $configExtends . '.json');
+            $extendsConfigPath = BellowsConfig::getInstance()->kickoffConfigPath($configExtends . '.json');
 
             if (File::missing($extendsConfigPath)) {
                 Console::error("Config extends file for \"{$configExtends}\" does not exist!");

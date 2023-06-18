@@ -4,6 +4,7 @@ namespace Bellows\Commands;
 
 use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
+use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginManagers\InstallationManager;
 use Bellows\PluginSdk\Facades\Project;
@@ -19,6 +20,7 @@ use Bellows\Processes\RunCommands;
 use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
 use Bellows\Processes\WrapUp;
+use Bellows\Util\Editor;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -68,7 +70,7 @@ class Kickoff extends Command
         Project::setAppName($name);
         Project::setDomain($url);
 
-        $pluginManager->setActive($config->get('plugins', []));
+        $pluginManager->setActive($config->get(KickoffConfigKeys::PLUGINS, []));
 
         Pipeline::send(new InstallationData($pluginManager, $config))->through([
             InstallLaravel::class,
@@ -83,7 +85,7 @@ class Kickoff extends Command
             RemoveFiles::class,
             HandleGit::class,
             WrapUp::class,
-        ]);
+        ])->then(fn () => null);
 
         $this->step('Consider yourself kicked off!');
 
@@ -93,17 +95,25 @@ class Kickoff extends Command
 
         $this->newLine();
 
-        // TODO:
-        // open in editor
+        if ($this->confirm('Would you like to open the project in your editor?', true)) {
+            app(Editor::class)->open($dir);
+        }
     }
 
     protected function getConfig(): KickoffConfig
     {
-        $configs = collect(glob(BellowsConfig::getInstance()->path('kickoff/*.json')))
+        $configs = collect(glob(BellowsConfig::getInstance()->kickoffConfigPath('*.json')))
             ->map(fn ($path) => new KickoffConfig($path))
             ->sortBy(fn (KickoffConfig $config) => $config->displayName());
 
-        // TODO: Offer to init a config if none exist
+        if ($configs->count() === 0) {
+            $this->newLine();
+            $this->warn("No kickoff configs found. Let's create one.");
+            $this->call('kickoff:init');
+
+            return $this->getConfig();
+        }
+
         if ($configs->count() === 1) {
             return $configs->first();
         }
