@@ -88,4 +88,8 @@ return [
 
     'url' => env('BELLOWS_URL', 'https://bellows.dev'),
 
+    'json_schemas' => [
+        'kickoff' => 'https://bellows.dev/json-schema/kickoff/v1.json',
+    ],
+
 ];

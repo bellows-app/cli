@@ -3,6 +3,7 @@
 namespace Bellows\Config;
 
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\Util\JsonSchema;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -64,13 +65,13 @@ class KickoffConfig
         $validator = new Validator();
 
         $validator->resolver()->registerFile(
-            BellowsConfig::getInstance()->path('schema.json'),
-            BellowsConfig::getInstance()->path('schema.json'),
+            config('app.json_schemas.kickoff'),
+            JsonSchema::cache(config('app.json_schemas.kickoff')),
         );
 
         $result = $validator->validate(
             (object) $this->config,
-            File::get(BellowsConfig::getInstance()->path('schema.json')),
+            config('app.json_schemas.kickoff'),
         );
 
         if ($result->hasError()) {
