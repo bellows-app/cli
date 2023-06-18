@@ -25,7 +25,8 @@ enum KickoffConfigKeys: string
     case FACADES = 'facades';
     case ALIASES = 'aliases';
     case CONFIG = 'config';
-    case COMMANDS = 'commands';
+    case INSTALLATION_COMMANDS = 'installation-commands';
+    case WRAP_UP_COMMANDS = 'wrap-up-commands';
 
     public static function defaultValue(KickoffConfigKeys $key)
     {

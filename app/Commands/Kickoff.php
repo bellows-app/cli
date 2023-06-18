@@ -16,7 +16,7 @@ use Bellows\Processes\InstallLaravel;
 use Bellows\Processes\PublishVendorFiles;
 use Bellows\Processes\RemoveFiles;
 use Bellows\Processes\RenameFiles;
-use Bellows\Processes\RunCommands;
+use Bellows\Processes\RunInstallationCommands;
 use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
 use Bellows\Processes\WrapUp;
@@ -77,7 +77,7 @@ class Kickoff extends Command
             SetLocalEnvironmentVariables::class,
             HandleComposer::class,
             HandleNpm::class,
-            RunCommands::class,
+            RunInstallationCommands::class,
             PublishVendorFiles::class,
             UpdateConfigFiles::class,
             RenameFiles::class,

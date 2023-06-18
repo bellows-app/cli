@@ -117,10 +117,10 @@ class InstallationManager
         return $this->call('getUpdateConfig')->reduce($initialValue);
     }
 
-    public function commands(array $initialValue = []): Collection
+    public function installationCommands(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
-            $this->call('getCommands')->reduce($initialValue)
+            $this->call('getInstallationCommands')->reduce($initialValue)
         );
     }
 

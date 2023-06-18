@@ -5,18 +5,21 @@ namespace Bellows\Processes;
 use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Artisan;
+use Bellows\PluginSdk\Facades\Value;
 use Bellows\PluginSdk\Values\RawValue;
 use Closure;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
-class RunCommands
+class RunInstallationCommands
 {
     public function __invoke(InstallationData $installation, Closure $next)
     {
-        collect($installation->manager->commands(
-            $installation->config->get(KickoffConfigKeys::COMMANDS)
-        ))
+        $fromConfig = collect($installation->config->get(KickoffConfigKeys::INSTALLATION_COMMANDS))->map(
+            fn ($command) => Value::raw($command)
+        )->toArray();
+
+        collect($installation->manager->installationCommands($fromConfig))
             ->map(function ($command) {
                 if ($command instanceof RawValue) {
                     return (string) $command;
