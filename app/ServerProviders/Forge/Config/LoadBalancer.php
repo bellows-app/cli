@@ -2,12 +2,12 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\Data\CreateSiteParams;
 use Bellows\Data\ForgeServer;
 use Bellows\Data\ForgeSite;
 use Bellows\Data\PhpVersion;
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
-use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\ServerProviders\AsksForDomain;
 use Bellows\ServerProviders\Forge\Client;
@@ -26,17 +26,17 @@ class LoadBalancer implements ServerDeployTarget
 
     protected Collection $servers;
 
-    protected SiteInterface $primarySite;
+    protected ServerProviderSite $primarySite;
 
     protected PendingRequest $client;
 
     public function __construct(
-        protected ServerInterface $server,
+        protected ServerProviderServer $server,
     ) {
         $this->client = Client::getInstance()->http();
     }
 
-    public function getExistingSite(): ?SiteInterface
+    public function getExistingSite(): ?ServerProviderSite
     {
         foreach ($this->servers as $server) {
             $site = Console::withSpinner(
@@ -55,12 +55,12 @@ class LoadBalancer implements ServerDeployTarget
     }
 
     /**
-     * @return Collection<ServerInterface>
+     * @return Collection<ServerProviderServer>
      */
     public function sites(): Collection
     {
         return $this->servers->map(
-            fn (ServerInterface $server) => $server->getSiteByDomain($this->primarySite->name)
+            fn (ServerProviderServer $server) => $server->getSiteByDomain($this->primarySite->name)
         )
             // TODO: We're doing that as a failsafe... is this ok? I guess we should only deploy to valid sites?
             ->filter()
@@ -74,7 +74,7 @@ class LoadBalancer implements ServerDeployTarget
         return $this->domain;
     }
 
-    public function setupForDeploy(SiteInterface $site): void
+    public function setupForDeploy(ServerProviderSite $site): void
     {
         $this->primarySite = $site;
         $this->setLoadBalancedServers();
@@ -181,7 +181,7 @@ other servers are down.)',
         // Figure out the PHP version for the load balanced sites
         $versions = Console::withSpinner(
             title: 'Determining installed PHP versions',
-            task: fn () => $this->servers->map(fn (ServerInterface $server) => $server->validPhpVersionsFromProject()),
+            task: fn () => $this->servers->map(fn (ServerProviderServer $server) => $server->validPhpVersionsFromProject()),
             message: fn ($result) => $result->flatten()->unique('version')->sortByDesc('version')->values()->map(fn (PhpVersion $version) => $version->display)->join(', '),
             success: fn ($result) => true,
         );
@@ -211,12 +211,12 @@ other servers are down.)',
             fn (PhpVersion $version) => Str::replace('PHP ', '', $version->display) === $selectedVersion
         );
 
-        $this->servers->each(fn (ServerInterface $server) => $server->installPhpVersion($phpVersion->version));
+        $this->servers->each(fn (ServerProviderServer $server) => $server->installPhpVersion($phpVersion->version));
 
         return $phpVersion;
     }
 
-    public function getPrimarySite(): ?SiteInterface
+    public function getPrimarySite(): ?ServerProviderSite
     {
         return $this->primarySite;
     }

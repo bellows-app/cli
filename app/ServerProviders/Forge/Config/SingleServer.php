@@ -2,7 +2,8 @@
 
 namespace Bellows\ServerProviders\Forge\Config;
 
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\PhpVersion;
 use Bellows\PluginSdk\Facades\Console;
@@ -20,7 +21,7 @@ class SingleServer implements ServerDeployTarget
     protected SiteInterface $primarySite;
 
     public function __construct(
-        protected ServerInterface $server,
+        protected ServerProviderServer $server,
     ) {
     }
 
@@ -28,7 +29,7 @@ class SingleServer implements ServerDeployTarget
     {
     }
 
-    public function setupForDeploy(SiteInterface $site): void
+    public function setupForDeploy(ServerProviderSite $site): void
     {
         $this->primarySite = $site;
     }
@@ -45,7 +46,7 @@ class SingleServer implements ServerDeployTarget
         return $this->domain;
     }
 
-    public function getExistingSite(): ?SiteInterface
+    public function getExistingSite(): ?ServerProviderSite
     {
         $site = Console::withSpinner(
             title: 'Checking for existing domain on ' . $this->server->name,
@@ -61,7 +62,7 @@ class SingleServer implements ServerDeployTarget
         return null;
     }
 
-    /** @return Collection<ServerInterface> */
+    /** @return Collection<ServerProviderServer> */
     public function sites(): Collection
     {
         return collect([$this->primarySite]);
@@ -77,7 +78,7 @@ class SingleServer implements ServerDeployTarget
         );
     }
 
-    public function getPrimarySite(): ?SiteInterface
+    public function getPrimarySite(): ?ServerProviderSite
     {
         return null;
     }

@@ -1,44 +1,43 @@
 <?php
 
-use Bellows\DeployScript;
+use Bellows\PluginSdk\Facades\DeployScript;
 
 uses(Tests\TestCase::class);
 
 it('can add a string after the composer install command', function () {
-    $current = <<<'SCRIPT'
-cd /home/forgeittest/forgeittest.com
-git pull origin $FORGE_SITE_BRANCH
+    DeployScript::set(
+        <<<'SCRIPT'
+        cd /home/forgeittest/forgeittest.com
+        git pull origin $FORGE_SITE_BRANCH
 
-$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+        $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-( flock -w 10 9 || exit 1
-    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+        ( flock -w 10 9 || exit 1
+            echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
 
-if [ -f artisan ]; then
-    $FORGE_PHP artisan migrate --force
-fi
-SCRIPT;
-
-    $result = DeployScript::addAfterComposerInstall(
-        $current,
-        'npm run production'
+        if [ -f artisan ]; then
+            $FORGE_PHP artisan migrate --force
+        fi
+        SCRIPT
     );
 
+    $result = DeployScript::addAfterComposerInstall('npm run production');
+
     $expected = <<<'SCRIPT'
-cd /home/forgeittest/forgeittest.com
-git pull origin $FORGE_SITE_BRANCH
+    cd /home/forgeittest/forgeittest.com
+    git pull origin $FORGE_SITE_BRANCH
 
-$FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+    $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-npm run production
+    npm run production
 
-( flock -w 10 9 || exit 1
-    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+    ( flock -w 10 9 || exit 1
+        echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
 
-if [ -f artisan ]; then
-    $FORGE_PHP artisan migrate --force
-fi
-SCRIPT;
+    if [ -f artisan ]; then
+        $FORGE_PHP artisan migrate --force
+    fi
+    SCRIPT;
 
     expect($result)->toBe($expected);
 });

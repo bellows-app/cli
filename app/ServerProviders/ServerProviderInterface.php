@@ -2,6 +2,7 @@
 
 namespace Bellows\ServerProviders;
 
+use Bellows\Contracts\ServerProviderServer;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Illuminate\Support\Collection;
 
@@ -11,7 +12,7 @@ interface ServerProviderInterface
 
     public function getServers(): Collection;
 
-    public function getServer(): ?ServerInterface;
+    public function getServer(): ?ServerProviderServer;
 
     public function getServerDeployTargetFromServer(ServerInterface $server): ServerDeployTarget;
 }

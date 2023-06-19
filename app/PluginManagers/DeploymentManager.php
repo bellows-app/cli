@@ -3,6 +3,7 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
 use Bellows\PluginManagers\Abilities\DealsWithServers;
@@ -19,7 +20,6 @@ use Bellows\PluginSdk\Contracts\Deployable;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Plugin;
-use Bellows\ServerProviders\SiteInterface;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 
@@ -47,7 +47,7 @@ class DeploymentManager
         $this->setPluginPaths();
     }
 
-    public function setActive(SiteInterface $site)
+    public function setActive(ServerProviderSite $site)
     {
         $plugins = $this->getAllPlugins(Scope::raw(Deployable::class));
 
@@ -100,7 +100,7 @@ class DeploymentManager
             ->filter();
     }
 
-    protected function getPluginsThatShouldBeDeployed(Collection $plugins, SiteInterface $site)
+    protected function getPluginsThatShouldBeDeployed(Collection $plugins, ServerProviderSite $site)
     {
         Deployment::setSite($site)->setServer($site->getServerProvider());
 

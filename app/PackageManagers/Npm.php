@@ -104,7 +104,7 @@ class Npm extends PackageManager
     {
         $path = Project::path('package.json');
 
-        if (File::mising($path)) {
+        if (File::missing($path)) {
             return [];
         }
 

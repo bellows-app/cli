@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 uses(Tests\TestCase::class);
 
 beforeEach(function () {
-    Project::dir() = __DIR__ . '/../stubs/test-app';
+    Project::setDir(__DIR__ . '/../stubs/test-app');
     cleanUpConfigs();
 });
 

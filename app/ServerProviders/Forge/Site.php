@@ -2,12 +2,13 @@
 
 namespace Bellows\ServerProviders\Forge;
 
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\Data\ForgeSite;
-use Bellows\Data\PhpVersion;
+use Bellows\Env as BellowsEnv;
 use Bellows\PluginSdk\Contracts\Env;
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
-use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
 use Bellows\PluginSdk\Data\InstallRepoParams;
+use Bellows\PluginSdk\Data\PhpVersion;
 use Bellows\PluginSdk\Data\SecurityRule;
 use Bellows\PluginSdk\Data\Server as ServerData;
 use Bellows\PluginSdk\Data\Site as SiteData;
@@ -18,7 +19,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 
-class Site implements SiteInterface
+class Site implements ServerProviderSite
 {
     protected PendingRequest $client;
 
@@ -37,6 +38,11 @@ class Site implements SiteInterface
         $this->setClient();
     }
 
+    public function data(): SiteData
+    {
+        return $this->site;
+    }
+
     public function installRepo(InstallRepoParams $params): void
     {
         $this->client->post('git', $params->toArray());
@@ -50,16 +56,16 @@ class Site implements SiteInterface
         $this->site = ForgeSite::from($site);
     }
 
-    public function getPhpVersion()
+    public function getPhpVersion(): PhpVersion
     {
-        return with(new Server($this->server))->getPhpVersions()->first(
+        return $this->getServerProvider()->getPhpVersions()->first(
             fn (PhpVersion $version) => $version->version === $this->site->php_version
         );
     }
 
     public function env(): Env
     {
-        $this->env ??= new Env((string) $this->client->get('env'));
+        $this->env ??= new BellowsEnv((string) $this->client->get('env'));
 
         return $this->env;
     }
@@ -86,7 +92,7 @@ class Site implements SiteInterface
         $this->client->put('deployment/script', ['content' => $script]);
     }
 
-    public function getWorkers()
+    public function getWorkers(): Collection
     {
         $this->workers ??= collect($this->client->get('workers')->json()['workers'])->map(
             fn ($worker) => Worker::from($worker)
@@ -142,7 +148,7 @@ class Site implements SiteInterface
         return $this->server;
     }
 
-    public function getServerProvider(): ServerInterface
+    public function getServerProvider(): ServerProviderServer
     {
         return new Server($this->server);
     }

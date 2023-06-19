@@ -2,7 +2,7 @@
 
 namespace Bellows\ServerProviders\Forge;
 
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
+use Bellows\Contracts\ServerProviderServer;
 use Bellows\PluginSdk\Data\CreateSiteParams;
 use Bellows\PluginSdk\Data\Daemon;
 use Bellows\PluginSdk\Data\Job;
@@ -12,7 +12,7 @@ use Bellows\PluginSdk\Data\Site as SiteData;
 use Bellows\PluginSdk\Facades\Artisan;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Project;
-use Bellows\Util\RawValue;
+use Bellows\PluginSdk\Values\RawValue;
 use Composer\Semver\Semver;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 
-class Server implements ServerInterface
+class Server implements ServerProviderServer
 {
     protected PendingRequest $client;
 
@@ -34,6 +34,11 @@ class Server implements ServerInterface
         protected ServerData $server,
     ) {
         $this->setClient();
+    }
+
+    public function data(): ServerData
+    {
+        return $this->server;
     }
 
     public function setClient(): void
@@ -106,7 +111,7 @@ class Server implements ServerInterface
     }
 
     /** @return \Illuminate\Support\Collection<\Bellows\PluginSdk\Data\SiteData> */
-    public function getSites(): Collection
+    public function sites(): Collection
     {
         return collect(
             $this->client->get('sites')->json()['sites']
@@ -206,13 +211,6 @@ class Server implements ServerInterface
             $job->toArray(),
             ['command' => Artisan::forJob($job->command)],
         ))->json();
-    }
-
-    // I don't love this method, but we have times when we need
-    // an arbitrary site env that's not the primary site, so we have this.
-    public function getSiteEnv(int $id): string
-    {
-        return (string) $this->client->get("sites/{$id}/env");
     }
 
     public function installPhpVersion(string $version): ?PhpVersion

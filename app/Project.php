@@ -72,6 +72,7 @@ class Project
         $this->phpVersion = $phpVersion;
     }
 
+    // TODO: We'll be done with this at some point, remove
     public function setConfig(ProjectConfig $config): void
     {
         $this->config = $config;

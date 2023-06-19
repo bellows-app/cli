@@ -3,6 +3,7 @@
 namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Config;
+use Bellows\Contracts\ServerProviderServer;
 use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
 use Bellows\PluginSdk\Data\Server as ServerData;
 use Bellows\PluginSdk\Facades\Console;
@@ -33,7 +34,7 @@ class Forge implements ServerProviderInterface
         )->filter(fn ($s) => !$s['revoked'])->sortBy('name')->values();
     }
 
-    public function getServer(): ?ServerInterface
+    public function getServer(): ?ServerProviderServer
     {
         $servers = $this->getServers();
 

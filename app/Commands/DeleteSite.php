@@ -33,7 +33,7 @@ class DeleteSite extends Command
 
         $server = $serverProvider->getServer();
 
-        $allSites = $server->getSites();
+        $allSites = $server->sites();
 
         $sites = $this->choice(
             question: 'Which sites do you want to delete?',

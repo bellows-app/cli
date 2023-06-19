@@ -2,28 +2,28 @@
 
 namespace Bellows\ServerProviders;
 
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
-use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\PluginSdk\Data\PhpVersion;
 use Illuminate\Support\Collection;
 
 interface ServerDeployTarget
 {
-    /** @return Collection<ServerInterface> */
+    /** @return Collection<ServerProviderServer> */
     public function servers(): Collection;
 
-    /** @return Collection<SiteInterface> */
+    /** @return Collection<ServerProviderSite> */
     public function sites(): Collection;
 
     public function getDomain(): string;
 
     public function determinePhpVersion(): PhpVersion;
 
-    public function getExistingSite(): ?SiteInterface;
+    public function getExistingSite(): ?ServerProviderSite;
 
-    public function getPrimarySite(): ?SiteInterface;
+    public function getPrimarySite(): ?ServerProviderSite;
 
     public function setupForLaunch(): void;
 
-    public function setupForDeploy(SiteInterface $site): void;
+    public function setupForDeploy(ServerProviderSite $site): void;
 }

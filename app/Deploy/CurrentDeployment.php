@@ -2,8 +2,8 @@
 
 namespace Bellows\Deploy;
 
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
-use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Contracts\ServerProviderSite;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\Safety\PreventsCallingFromPlugin;
 
@@ -12,43 +12,43 @@ class CurrentDeployment
     use PreventsCallingFromPlugin;
 
     // The site we're currently deploying to
-    protected SiteInterface $site;
+    protected ServerProviderSite $site;
 
     // If load balancing, the primary site, if not, the same as the $site property
-    protected SiteInterface $primarySite;
+    protected ServerProviderSite $primarySite;
 
     // The server we're currently deploying to
-    protected ServerInterface $server;
+    protected ServerProviderServer $server;
 
     // If load balancing, the primary server, if not, the same as the $server property
-    protected ServerInterface $primaryServer;
+    protected ServerProviderServer $primaryServer;
 
     public function confirmDeploy(): bool
     {
         return true;
     }
 
-    public function site(): SiteInterface
+    public function site(): ServerProviderSite
     {
         return $this->site;
     }
 
-    public function primarySite(): SiteInterface
+    public function primarySite(): ServerProviderSite
     {
         return $this->primarySite;
     }
 
-    public function server(): ServerInterface
+    public function server(): ServerProviderServer
     {
         return $this->server;
     }
 
-    public function primaryServer(): ServerInterface
+    public function primaryServer(): ServerProviderServer
     {
         return $this->primaryServer;
     }
 
-    public function setSite(SiteInterface $site): self
+    public function setSite(ServerProviderSite $site): self
     {
         $this->preventCallingFromPlugin(__METHOD__);
 
@@ -61,7 +61,7 @@ class CurrentDeployment
         return $this;
     }
 
-    public function setPrimarySite(SiteInterface $site): self
+    public function setPrimarySite(ServerProviderSite $site): self
     {
         $this->preventCallingFromPlugin(__METHOD__);
 
@@ -70,7 +70,7 @@ class CurrentDeployment
         return $this;
     }
 
-    public function setServer(ServerInterface $server): self
+    public function setServer(ServerProviderServer $server): self
     {
         $this->preventCallingFromPlugin(__METHOD__);
 
@@ -79,7 +79,7 @@ class CurrentDeployment
         return $this;
     }
 
-    public function setPrimaryServer(ServerInterface $primaryServer): self
+    public function setPrimaryServer(ServerProviderServer $primaryServer): self
     {
         $this->preventCallingFromPlugin(__METHOD__);
 

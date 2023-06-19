@@ -4,8 +4,8 @@ namespace Bellows\PluginManagers\Abilities;
 
 trait UpdatesDeploymentScripts
 {
-    public function updateDeployScript(string $deployScript): string
+    public function updateDeployScript(): string
     {
-        return $this->call('getUpdateDeployScript')->reduce($deployScript);
+        return $this->call('getUpdateDeployScript')->reduce('');
     }
 }
