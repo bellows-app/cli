@@ -19,7 +19,7 @@ use Bellows\Processes\RenameFiles;
 use Bellows\Processes\RunInstallationCommands;
 use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
-use Bellows\Processes\WrapUp;
+use Bellows\Processes\WrapUpInstallation;
 use Bellows\Util\Editor;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
@@ -84,7 +84,7 @@ class Kickoff extends Command
             CopyFiles::class,
             RemoveFiles::class,
             HandleGit::class,
-            WrapUp::class,
+            WrapUpInstallation::class,
         ])->then(fn () => null);
 
         $this->step('Consider yourself kicked off!');

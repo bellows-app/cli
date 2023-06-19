@@ -11,7 +11,7 @@ use Closure;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 
-class WrapUp
+class WrapUpInstallation
 {
     public function __invoke(InstallationData $installation, Closure $next)
     {
