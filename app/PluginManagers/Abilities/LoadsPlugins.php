@@ -17,7 +17,7 @@ trait LoadsPlugins
         }
     }
 
-    protected function getAllPlugins(string $interface, Closure $extraFilter = null): Collection
+    protected function getAllPlugins(string|array $interface, Closure $extraFilter = null): Collection
     {
         return PluginLoader::discoverInDirectories($this->pluginPaths, $interface, $extraFilter);
     }

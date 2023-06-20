@@ -14,14 +14,18 @@ class PluginLoader
 {
     public static function discoverInDirectories(
         iterable $directories,
-        string $interface,
+        string|array $interface,
         Closure $extraFilter = null
     ): Collection {
+        if (!is_array($interface)) {
+            $interface = [$interface];
+        }
+
         return collect($directories)
             ->flatMap(
                 fn (string $path) => PluginDiscover::in($path)
                     ->extending(Scope::raw(Plugin::class))
-                    ->implementing($interface)
+                    ->implementing(...$interface)
                     ->full()
                     ->get()
             )
