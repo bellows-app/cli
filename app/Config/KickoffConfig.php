@@ -70,7 +70,8 @@ class KickoffConfig
         );
 
         $result = $validator->validate(
-            (object) $this->config,
+            // We need to re-encode and decode the config to make sure it's a an object
+            json_decode(json_encode($this->config), false),
             config('app.json_schemas.kickoff'),
         );
 
@@ -134,8 +135,16 @@ class KickoffConfig
         $toMerge->each(function ($value, $key) use ($base) {
             if ($base->has($key)) {
                 if (is_array($value)) {
+                    $assoc = array_keys($value) !== range(0, count($value) - 1);
+
+                    $newValue = array_merge($base->get($key), $value);
+
+                    if (!$assoc) {
+                        $newValue = array_values(array_unique($newValue));
+                    }
+
                     // We're only interested in merge array values, keep the base config non-array values the same
-                    $base->put($key, array_merge($base->get($key), $value));
+                    $base->put($key, $newValue);
                 }
             } else {
                 $base->put($key, $value);
