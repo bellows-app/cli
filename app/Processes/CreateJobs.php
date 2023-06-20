@@ -6,6 +6,7 @@ use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Data\Job;
 use Bellows\PluginSdk\Data\JobParams;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
 use Closure;
 
@@ -31,7 +32,7 @@ class CreateJobs
         Console::withSpinner(
             title: 'Creating',
             task: fn () => $jobs->each(
-                fn ($job) => $deployment->server->createJob($job)
+                fn ($job) => Deployment::server()->createJob($job)
             ),
         );
 

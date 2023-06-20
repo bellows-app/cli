@@ -2,15 +2,13 @@
 
 namespace Bellows;
 
-use Bellows\Data\ProjectConfig;
 use Bellows\PluginSdk\Data\PhpVersion;
+use Bellows\PluginSdk\Data\Repository;
 use Bellows\Util\FileHelper;
 
 class Project
 {
     protected Env $env;
-
-    protected ProjectConfig $config;
 
     protected string $appName;
 
@@ -20,7 +18,11 @@ class Project
 
     protected string $dir;
 
+    protected bool $siteIsSecure;
+
     protected PhpVersion $phpVersion;
+
+    protected Repository $gitRepository;
 
     public function appName()
     {
@@ -72,15 +74,24 @@ class Project
         $this->phpVersion = $phpVersion;
     }
 
-    // TODO: We'll be done with this at some point, remove
-    public function setConfig(ProjectConfig $config): void
+    public function siteIsSecure(): bool
     {
-        $this->config = $config;
+        return $this->siteIsSecure;
     }
 
-    public function config(): ProjectConfig
+    public function setSiteIsSecure(bool $siteIsSecure): void
     {
-        return $this->config;
+        $this->siteIsSecure = $siteIsSecure;
+    }
+
+    public function repo(): Repository
+    {
+        return $this->gitRepository;
+    }
+
+    public function setRepo(Repository $repo): void
+    {
+        $this->gitRepository = $repo;
     }
 
     public function env(): Env

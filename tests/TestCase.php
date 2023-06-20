@@ -42,7 +42,6 @@ abstract class TestCase extends BaseTestCase
         Project::setIsolatedUser('tester');
         Project::setPhpVersion(new PhpVersion('8.1', 'php81', 'PHP 8.1'));
 
-
         $projectConfig = new ProjectConfig(
             isolatedUser: 'tester',
             repository: new Repository(

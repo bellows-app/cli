@@ -13,6 +13,8 @@ use Illuminate\Support\Collection;
 
 interface ServerProviderSite extends SiteInterface
 {
+    public function url(): string;
+
     public function installRepo(InstallRepoParams $params): void;
 
     public function getPhpVersion(): PhpVersion;

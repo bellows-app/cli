@@ -2,13 +2,13 @@
 
 namespace Bellows\Data;
 
-use Bellows\Contracts\DeployableManager;
+use Bellows\PluginManagers\LaunchManager;
 use Spatie\LaravelData\Data;
 
-class DeploymentData extends Data
+class LaunchData extends Data
 {
     public function __construct(
-        public readonly DeployableManager $manager,
+        public readonly LaunchManager $manager,
         public array $summary = []
     ) {
     }

@@ -6,6 +6,7 @@ use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Data\Worker;
 use Bellows\PluginSdk\Data\WorkerParams;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
 use Closure;
 
@@ -31,7 +32,7 @@ class CreateWorkers
         Console::withSpinner(
             title: 'Creating',
             task: fn () => $workers->each(
-                fn ($worker) => $deployment->site->createWorker($worker)
+                fn ($worker) => Deployment::site()->createWorker($worker)
             ),
         );
 

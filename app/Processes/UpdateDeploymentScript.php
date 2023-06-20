@@ -4,6 +4,7 @@ namespace Bellows\Processes;
 
 use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\DeployScript;
 use Closure;
 
@@ -11,10 +12,8 @@ class UpdateDeploymentScript
 {
     public function __invoke(DeploymentData $deployment, Closure $next)
     {
-        $deployScript = $deployment->site->getDeploymentScript();
+        $deployScript = Deployment::site()->getDeploymentScript();
         DeployScript::set($deployScript);
-
-        // $updatedDeployScript = $deployment->manager->updateDeployScript($deployScript);
 
         $deployment->manager->updateDeployScript();
 
@@ -28,7 +27,7 @@ class UpdateDeploymentScript
 
         Console::withSpinner(
             title: 'Updating',
-            task: fn () => $deployment->site->updateDeploymentScript($updatedDeployScript),
+            task: fn () => Deployment::site()->updateDeploymentScript($updatedDeployScript),
         );
 
         $deployment->summary[] = ['Deploy Script', $updatedDeployScript];

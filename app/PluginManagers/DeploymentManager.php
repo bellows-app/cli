@@ -3,10 +3,10 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
+use Bellows\Contracts\DeployableManager;
 use Bellows\Contracts\ServerProviderSite;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
-use Bellows\PluginManagers\Abilities\DealsWithServers;
 use Bellows\PluginManagers\Abilities\HasDaemons;
 use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\HasJobs;
@@ -23,19 +23,18 @@ use Bellows\PluginSdk\Plugin;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
 
-class DeploymentManager
+class DeploymentManager implements DeployableManager
 {
-    use LoadsPlugins,
-        HasDaemons,
-        HasWorkers,
-        HasJobs,
-        WrapsUp,
-        HasSecurityRules,
-        UpdatesDeploymentScripts,
-        HasEnvironmentVariables,
-        DealsWithServers,
+    use CallsMethodsOnPlugins,
         ConfiguresPlugins,
-        CallsMethodsOnPlugins;
+        HasDaemons,
+        HasEnvironmentVariables,
+        HasJobs,
+        HasSecurityRules,
+        HasWorkers,
+        UpdatesDeploymentScripts,
+        WrapsUp,
+        LoadsPlugins;
 
     /** @var Collection<\Bellows\PluginSdk\PluginResults\DeployResult> */
     protected Collection $pluginResults;

@@ -15,7 +15,7 @@ class CurrentDeployment
     protected ServerProviderSite $site;
 
     // If load balancing, the primary site, if not, the same as the $site property
-    protected ServerProviderSite $primarySite;
+    protected ?ServerProviderSite $primarySite = null;
 
     // The server we're currently deploying to
     protected ServerProviderServer $server;
@@ -61,7 +61,7 @@ class CurrentDeployment
         return $this;
     }
 
-    public function setPrimarySite(ServerProviderSite $site): self
+    public function setPrimarySite(?ServerProviderSite $site = null): self
     {
         $this->preventCallingFromPlugin(__METHOD__);
 

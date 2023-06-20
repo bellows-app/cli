@@ -4,7 +4,6 @@ namespace Bellows\ServerProviders\Forge;
 
 use Bellows\Contracts\ServerProviderServer;
 use Bellows\Contracts\ServerProviderSite;
-use Bellows\Data\ForgeSite;
 use Bellows\Env as BellowsEnv;
 use Bellows\PluginSdk\Contracts\Env;
 use Bellows\PluginSdk\Data\InstallRepoParams;
@@ -43,17 +42,31 @@ class Site implements ServerProviderSite
         return $this->site;
     }
 
+    public function url(): string
+    {
+        return sprintf(
+            'https://forge.laravel.com/servers/%s/sites/%s/application',
+            $this->getServerProvider()->data()->id,
+            $this->data()->id,
+        );
+    }
+
     public function installRepo(InstallRepoParams $params): void
     {
+        ray($params->toArray());
         $this->client->post('git', $params->toArray());
 
         do {
             $site = $this->client->get('')->json()['site'];
 
+            ray($site);
+
             Sleep::for(2)->seconds();
         } while ($site['repository_status'] !== 'installed');
 
-        $this->site = ForgeSite::from($site);
+        $this->site = SiteData::from($site);
+
+        ray($this->site);
     }
 
     public function getPhpVersion(): PhpVersion

@@ -6,6 +6,7 @@ use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Data\Daemon;
 use Bellows\PluginSdk\Data\DaemonParams;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
 use Closure;
 
@@ -35,7 +36,7 @@ class CreateDaemons
         Console::withSpinner(
             title: 'Creating',
             task: fn () => $daemons->each(
-                fn ($daemon) => $deployment->server->createDaemon($daemon),
+                fn ($daemon) => Deployment::server()->createDaemon($daemon),
             ),
         );
 

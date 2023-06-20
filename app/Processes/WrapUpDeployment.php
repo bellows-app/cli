@@ -5,6 +5,7 @@ namespace Bellows\Processes;
 use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Data\SecurityRule;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Closure;
 
 class WrapUpDeployment
@@ -14,7 +15,7 @@ class WrapUpDeployment
         Console::step('Wrapping Up');
 
         collect($deployment->manager->securityRules())->each(
-            fn (SecurityRule $rule) => $deployment->site->addSecurityRule($rule)
+            fn (SecurityRule $rule) => Deployment::site()->addSecurityRule($rule)
         );
 
         Console::withSpinner(

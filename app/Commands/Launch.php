@@ -2,28 +2,30 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Data\Daemon;
-use Bellows\Data\Job;
-use Bellows\Data\ProjectConfig;
-use Bellows\Data\Repository;
-use Bellows\Data\Worker;
+use Bellows\Contracts\ServerProviderServer;
+use Bellows\Data\DeploymentData;
+use Bellows\Data\LaunchData;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\LaunchManager;
-use Bellows\PluginSdk\Contracts\ServerProviders\ServerInterface;
-use Bellows\PluginSdk\Contracts\ServerProviders\SiteInterface;
-use Bellows\PluginSdk\Data\CreateSiteParams;
-use Bellows\PluginSdk\Data\DaemonParams;
-use Bellows\PluginSdk\Data\InstallRepoParams;
-use Bellows\PluginSdk\Data\JobParams;
-use Bellows\PluginSdk\Data\SecurityRule;
-use Bellows\PluginSdk\Data\WorkerParams;
+use Bellows\PluginSdk\Data\Repository;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
+use Bellows\Processes\CreateDaemons;
+use Bellows\Processes\CreateJobs;
+use Bellows\Processes\CreateSite;
+use Bellows\Processes\CreateWorkers;
+use Bellows\Processes\InstallRepository;
+use Bellows\Processes\SetLaunchEnvironmentVariables;
+use Bellows\Processes\SummarizeDeployment;
+use Bellows\Processes\UpdateDeploymentScript;
+use Bellows\Processes\WrapUpDeployment;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
@@ -87,9 +89,7 @@ class Launch extends Command
 
         if ($existingSite = $serverDeployTarget->getExistingSite()) {
             if ($this->confirm('View existing site in Forge?', true)) {
-                Process::run(
-                    "open https://forge.laravel.com/servers/{$existingSite->getServer()->id}/sites/{$existingSite->id}"
-                );
+                Process::run('open ' . $existingSite->url());
             }
 
             return;
@@ -99,7 +99,7 @@ class Launch extends Command
 
         $isolatedUser = $this->ask('Isolated User', Str::snake($appName));
 
-        $repo = $this->getGitInfo($dir, $domain);
+        Project::setRepo($this->getGitInfo($dir, $domain));
 
         $dnsProvider = $this->getDnsProvider($domain);
 
@@ -117,29 +117,17 @@ class Launch extends Command
         Project::setDomain($domain);
         Project::setSiteIsSecure($secureSite ?? false);
 
-        // $projectConfig = new ProjectConfig(
-        //     isolatedUser: $isolatedUser,
-        //     repository: $repo,
-        //     phpVersion: $phpVersion,
-        //     directory: $dir,
-        //     domain: $domain,
-        //     appName: $appName,
-        //     secureSite: $secureSite ?? false,
-        // );
-
-        // Project::setConfig($projectConfig);
-
         $this->step('Plugins');
 
-        $pluginManager->setPrimaryServer($server);
-        $pluginManager->setPrimarySite($serverDeployTarget->getPrimarySite());
+        Deployment::setPrimaryServer($server);
+        Deployment::setPrimarySite($serverDeployTarget->getPrimarySite());
 
         $pluginManager->setActive();
 
         $this->info('💨 Off we go!');
 
         $siteUrls = $servers->map(
-            fn (ServerInterface $server) => $this->createSite($server, $pluginManager)
+            fn (ServerProviderServer $server) => $this->createSite($server, $pluginManager)
         );
 
         if ($siteUrls->count() === 1) {
@@ -161,6 +149,7 @@ class Launch extends Command
 
     protected function getDnsProvider(string $domain): ?DnsProvider
     {
+        // TODO: Centralize this logic somewhere. In the factory itself?
         $dnsProvider = DnsFactory::fromDomain($domain);
 
         if (!$dnsProvider) {
@@ -180,220 +169,43 @@ class Launch extends Command
     }
 
     protected function createSite(
-        ServerInterface $server,
+        ServerProviderServer $server,
         LaunchManager $pluginManager,
     ): string {
-        $pluginManager->setServer($server);
+        Deployment::setServer($server);
 
         $this->step("Launching on {$server->name}");
 
-        $this->step('Site');
-
-        $baseParams = new CreateSiteParams(
-            domain: Project::domain(),
-            projectType: 'php',
-            directory: '/public',
-            isolated: true,
-            username: Project::isolatedUser(),
-            phpVersion: Project::phpVersion()->version,
+        $launchData = new LaunchData(
+            manager: $pluginManager,
         );
 
-        $createSiteParams = $pluginManager->createSiteParams($baseParams->toArray());
+        $launchResult = Pipeline::send($launchData)->through([
+            CreateSite::class,
+            InstallRepository::class,
+        ])->thenReturn();
 
-        /** @var SiteInterface $site */
-        $site = $this->withSpinner(
-            title: 'Creating',
-            task: fn () => $server->createSite(CreateSiteParams::from($createSiteParams)),
+        $deployData = new DeploymentData(
+            manager: $pluginManager,
         );
 
-        $pluginManager->setSite($site);
-
-        $baseRepoParams = new InstallRepoParams(
-            provider: 'github',
-            repository: Project::config()->repository->url,
-            branch: Project::config()->repository->branch,
-            composer: true,
-        );
-
-        $installRepoParams = $pluginManager->installRepoParams($baseRepoParams->toArray());
-
-        $this->step('Repository');
-
-        $this->withSpinner(
-            title: 'Installing',
-            task: fn () => $site->installRepo(InstallRepoParams::from($installRepoParams)),
-        );
+        Pipeline::send($deployData)->through([
+            SetLaunchEnvironmentVariables::class,
+            UpdateDeploymentScript::class,
+            CreateDaemons::class,
+            CreateWorkers::class,
+            CreateJobs::class,
+            WrapUpDeployment::class,
+            SummarizeDeployment::class,
+        ])->thenReturn();
 
         $this->step('Environment Variables');
-
-        $siteEnv = $site->env();
-
-        $updatedEnvValues = collect($pluginManager->environmentVariables([
-            'APP_NAME'      => Project::appName(),
-            'APP_URL'       => 'http://' . Project::domain(),
-            'VITE_APP_ENV'  => '${APP_ENV}',
-            'VITE_APP_NAME' => '${APP_NAME}',
-        ]));
-
-        $updatedEnvValues->each(
-            fn ($v, $k) => $siteEnv->update(
-                $k,
-                is_array($v) ? $v[0] : $v,
-                is_array($v),
-            )
-        );
-
-        $inLocalButNotInRemote = collect(
-            array_keys(Project::env()->all())
-        )->diff(
-            array_keys($siteEnv->all())
-        )->values();
-
-        if ($inLocalButNotInRemote->isNotEmpty()) {
-            $this->newLine();
-            $this->info('The following environment variables are in your local .env file but not in your remote .env file:');
-            $this->newLine();
-
-            $inLocalButNotInRemote->each(
-                fn ($k) => $this->comment($k)
-            );
-
-            if ($this->confirm('Would you like to add any of them? They will be added with their existing values.')) {
-                $toAdd = $this->choice(
-                    question: 'Which environment variables would you like to add?',
-                    choices: $inLocalButNotInRemote->toArray(),
-                    multiple: true,
-                );
-
-                collect($toAdd)->each(
-                    fn ($k) => $siteEnv->update($k, Project::env()->get($k))
-                );
-            }
-        }
-
-        $this->withSpinner(
-            title: 'Updating',
-            task: fn () => $site->updateEnv($siteEnv->toString()),
-        );
-
-        $this->step('Deploy Script');
-
-        $deployScript = $site->getDeploymentScript();
-        ray($deployScript);
-        $updatedDeployScript = $pluginManager->updateDeployScript($deployScript);
-
-        $this->withSpinner(
-            title: 'Updating',
-            task: fn () => $deployScript === $updatedDeployScript ? true : $site->updateDeploymentScript($updatedDeployScript),
-        );
-
-        $this->step('Daemons');
-
-        $daemons = collect($pluginManager->daemons())->map(
-            fn (DaemonParams $daemon) => Daemon::from([
-                'command'   => $daemon->command,
-                'user'      => $daemon->user ?: Project::isolatedUser(),
-                'directory' => $daemon->directory
-                    ?: '/' . collect([
-                        'home',
-                        Project::isolatedUser(),
-                        Project::domain(),
-                    ])->join('/'),
-            ])
-        );
-
-        $this->withSpinner(
-            title: 'Creating',
-            task: fn () => $daemons->each(
-                fn ($daemon) => $server->createDaemon($daemon),
-            ),
-        );
-
-        $this->step('Workers');
-
-        $workers = collect($pluginManager->workers())->map(
-            fn (WorkerParams $worker) => Worker::from(
-                array_merge(
-                    $worker->toArray(),
-                    ['php_version' => $worker->phpVersion ?? Project::phpVersion()->version],
-                )
-            )
-        );
-
-        $this->withSpinner(
-            title: 'Creating',
-            task: fn () => $workers->each(
-                fn ($worker) => $site->createWorker($worker)
-            ),
-        );
-
-        $this->step('Scheduled Jobs');
-
-        $jobs = collect($pluginManager->jobs())->map(
-            fn (JobParams $job) => Job::from(
-                array_merge(
-                    $job->toArray(),
-                    ['user' => $job->user ?? Project::isolatedUser()],
-                ),
-            )
-        );
-
-        $this->withSpinner(
-            title: 'Creating',
-            task: fn () => $jobs->each(
-                fn ($job) => $server->createJob($job)
-            ),
-        );
-
-        $this->step('Wrapping Up');
-
-        collect($pluginManager->securityRules())->each(
-            fn (SecurityRule $rule) => $site->addSecurityRule($rule)
-        );
-
-        $this->withSpinner(
-            title: 'Cooling the rockets',
-            task: fn () => $pluginManager->wrapUp(),
-        );
-
-        $this->step('Summary');
-
-        $this->table(
-            ['Task', 'Value'],
-            collect([
-                [
-                    'Environment Variables',
-                    $updatedEnvValues->isNotEmpty() ? $updatedEnvValues->keys()->join(PHP_EOL) : '-',
-                ],
-                [
-                    'Deploy Script',
-                    $deployScript,
-                ],
-                [
-                    'Daemons',
-                    $daemons->isNotEmpty() ? $daemons->pluck('command')->join(PHP_EOL) : '-',
-                ],
-                [
-                    'Workers',
-                    $workers->isNotEmpty() ? $workers->pluck('connection')->join(PHP_EOL) : '-',
-                ],
-                [
-                    'Scheduled Jobs',
-                    $jobs->isNotEmpty() ? $jobs->pluck('command')->join(PHP_EOL) : '-',
-                ],
-            ])->map(fn ($row) => [
-                "<comment>{$row[0]}</comment>",
-                $row[1] . PHP_EOL,
-            ])->toArray(),
-        );
 
         $this->newLine();
         $this->info('🎉 Site created successfully!');
         $this->newLine();
 
-        $siteUrl = "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
-
-        return $siteUrl;
+        return Deployment::site()->url();
     }
 
     protected function getGitInfo(string $dir, string $domain): Repository

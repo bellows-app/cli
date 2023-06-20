@@ -4,6 +4,7 @@ namespace Bellows\Processes;
 
 use Bellows\Data\DeploymentData;
 use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Deployment;
 use Closure;
 
 class SetEnvironmentVariables
@@ -18,7 +19,7 @@ class SetEnvironmentVariables
 
         Console::step('Environment Variables');
 
-        $siteEnv = $deployment->site->env();
+        $siteEnv = Deployment::site()->env();
 
         $updatedVars->each(
             fn ($v, $k) => $siteEnv->set(
@@ -30,7 +31,7 @@ class SetEnvironmentVariables
 
         Console::withSpinner(
             title: 'Updating',
-            task: fn () => $deployment->site->updateEnv((string) $siteEnv),
+            task: fn () => Deployment::site()->updateEnv((string) $siteEnv),
         );
 
         $deployment->summary[] = ['Environment Variables', $updatedVars->keys()->join(PHP_EOL)];

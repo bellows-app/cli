@@ -4,18 +4,19 @@ namespace Bellows\Commands;
 
 use Bellows\Contracts\ServerProviderSite;
 use Bellows\Data\DeploymentData;
-use Bellows\Data\ProjectConfig;
-use Bellows\Data\Repository;
 use Bellows\Dns\DnsFactory;
 use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\PluginManagers\DeploymentManager;
+use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Data\Site as SiteData;
+use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
 use Bellows\Processes\CreateDaemons;
 use Bellows\Processes\CreateJobs;
 use Bellows\Processes\CreateWorkers;
 use Bellows\Processes\SetEnvironmentVariables;
+use Bellows\Processes\SummarizeDeployment;
 use Bellows\Processes\UpdateDeploymentScript;
 use Bellows\Processes\WrapUpDeployment;
 use Bellows\ServerProviders\Forge\Site;
@@ -104,27 +105,26 @@ class Deploy extends Command
         $this->comment('Gathering some information...');
         $this->newLine();
 
-        $siteUrls = $sites->map(function (ServerProviderSite $site) use ($server, $siteProvider, $phpVersion, $dir) {
+        $siteUrls = $sites->map(function (ServerProviderSite $site) use ($server, $siteProvider, $phpVersion) {
             $siteEnv = $site->env();
 
             Project::setIsolatedUser($site->username);
             Project::setDomain($site->name);
             Project::setAppName($siteEnv->get('APP_NAME') ?? '');
             Project::setPhpVersion($phpVersion);
-            // $projectConfig = new ProjectConfig(
-            //     repository: new Repository($site->repository, $site->repository_branch),
-            //     phpVersion: $phpVersion,
-            //     directory: $dir,
-            //     secureSite: Str::contains($siteEnv->get('APP_URL'), 'https://'),
-            // );
+            Project::setSiteIsSecure(Str::contains($siteEnv->get('APP_URL'), 'https://'));
+            Project::setRepo(new Repository($site->repository, $site->repository_branch));
 
             /** @var DeploymentManager $pluginManager */
             $pluginManager = app(DeploymentManager::class);
-            $pluginManager->setPrimaryServer($server);
-            $pluginManager->setPrimarySite($siteProvider);
+
+            Deployment::setPrimaryServer($server);
+            Deployment::setPrimarySite($siteProvider);
+
             $pluginManager->setActive($site);
 
             $this->info('💨 Off we go!');
+
             $url = $this->deployToSite($site, $pluginManager);
 
             return $url;
@@ -146,43 +146,30 @@ class Deploy extends Command
     ): string {
         $server = $site->getServerProvider();
 
-        $pluginManager->setSite($site);
-        $pluginManager->setServer($server);
+        Deployment::setSite($site);
+        Deployment::setServer($server);
 
         $this->step("Deploying to {$site->name} ({$site->getServer()->name})");
 
         $data = new DeploymentData(
             manager: $pluginManager,
-            site: $site,
-            server: $server,
         );
 
-        $result = Pipeline::send($data)->through([
+        Pipeline::send($data)->through([
             SetEnvironmentVariables::class,
             UpdateDeploymentScript::class,
             CreateDaemons::class,
             CreateWorkers::class,
             CreateJobs::class,
             WrapUpDeployment::class,
+            SummarizeDeployment::class,
         ])->thenReturn();
-
-        if (count($result->summary) > 0) {
-            $this->step('Summary');
-
-            $this->table(
-                ['Task', 'Value'],
-                collect($result->summary)->map(fn ($row) => [
-                    "<comment>{$row[0]}</comment>",
-                    $row[1] . PHP_EOL,
-                ])->toArray(),
-            );
-        }
 
         $this->newLine();
         $this->info('🎉 Site deployed successfully!');
         $this->newLine();
 
-        return "https://forge.laravel.com/servers/{$server->id}/sites/{$site->id}/application";
+        return $site->url();
     }
 
     protected function getDnsProvider(string $domain): ?DnsProvider

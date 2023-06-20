@@ -3,9 +3,9 @@
 namespace Bellows\PluginManagers;
 
 use Bellows\Config;
+use Bellows\Contracts\DeployableManager;
 use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
 use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
-use Bellows\PluginManagers\Abilities\DealsWithServers;
 use Bellows\PluginManagers\Abilities\HasDaemons;
 use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
 use Bellows\PluginManagers\Abilities\HasJobs;
@@ -15,27 +15,24 @@ use Bellows\PluginManagers\Abilities\LoadsPlugins;
 use Bellows\PluginManagers\Abilities\UpdatesDeploymentScripts;
 use Bellows\PluginManagers\Abilities\WrapsUp;
 use Bellows\PluginManagers\Helpers\EnabledForDeployment;
-use Bellows\PluginSdk\Contracts\Launchable;
+use Bellows\PluginSdk\Contracts\Deployable;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Plugin;
 use Bellows\Util\Scope;
 use Illuminate\Support\Collection;
-use ReflectionClass;
 
-class LaunchManager
+class LaunchManager implements DeployableManager
 {
-    use LoadsPlugins,
-        HasDaemons,
-        HasWorkers,
-        HasJobs,
-        WrapsUp,
-        HasSecurityRules,
-        UpdatesDeploymentScripts,
-        HasEnvironmentVariables,
-        DealsWithServers,
+    use CallsMethodsOnPlugins,
         ConfiguresPlugins,
-        CallsMethodsOnPlugins,
-        DealsWithServers;
+        HasDaemons,
+        HasEnvironmentVariables,
+        HasJobs,
+        HasSecurityRules,
+        HasWorkers,
+        UpdatesDeploymentScripts,
+        WrapsUp,
+        LoadsPlugins;
 
     /** @var Collection<\Bellows\PluginSdk\PluginResults\DeployResult> */
     protected Collection $pluginResults;
@@ -49,9 +46,7 @@ class LaunchManager
 
     public function setActive()
     {
-        $plugins = $this->getAllPlugins(Scope::raw(Launchable::class))->filter(
-            fn (Plugin $plugin) => (new ReflectionClass($plugin))->implementsInterface(Scope::raw(Launchable::class))
-        )->values();
+        $plugins = $this->getAllPlugins(Scope::raw(Deployable::class));
 
         $decisionMaker = new EnabledForDeployment();
 
