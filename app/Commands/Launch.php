@@ -5,7 +5,6 @@ namespace Bellows\Commands;
 use Bellows\Contracts\ServerProviderServer;
 use Bellows\Data\DeploymentData;
 use Bellows\Data\LaunchData;
-use Bellows\Dns\AbstractDnsProvider;
 use Bellows\Dns\DnsFactory;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Git\Repo;
@@ -26,8 +25,8 @@ use Bellows\Processes\UpdateDeploymentScript;
 use Bellows\Processes\UpdateDomainDNS;
 use Bellows\Processes\WrapUpDeployment;
 use Bellows\ServerProviders\ServerProviderInterface;
+use Bellows\Util\Domain;
 use Exception;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -91,6 +90,7 @@ class Launch extends Command
         $servers = $serverDeployTarget->servers();
 
         if ($existingSite = $serverDeployTarget->getExistingSite()) {
+            $this->newLine();
             if ($this->confirm('View existing site in Forge?', true)) {
                 Process::run('open ' . $existingSite->url());
             }
@@ -106,15 +106,14 @@ class Launch extends Command
 
         $dnsProvider = DnsFactory::fromDomain($domain);
 
-        // TODO: Or if DNS is already pointed to server?
-        if ($dnsProvider) {
+        $aRecord = dns_get_record(Domain::getBaseDomain($domain), DNS_A)[0]['ip'] ?? null;
+
+        if ($dnsProvider || $aRecord === $server->data()->ip_address) {
             $this->newLine();
             $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
         }
 
         $this->newLine();
-
-        App::instance(AbstractDnsProvider::class, $dnsProvider);
 
         $phpVersion = $serverDeployTarget->determinePhpVersion();
 
