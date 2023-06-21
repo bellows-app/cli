@@ -17,6 +17,7 @@ use Bellows\Processes\CreateDaemons;
 use Bellows\Processes\CreateJobs;
 use Bellows\Processes\CreateSite;
 use Bellows\Processes\CreateWorkers;
+use Bellows\Processes\EnableQuickDeploy;
 use Bellows\Processes\InstallRepository;
 use Bellows\Processes\SetLaunchEnvironmentVariables;
 use Bellows\Processes\SetupSSL;
@@ -202,6 +203,7 @@ class Launch extends Command
             CreateWorkers::class,
             CreateJobs::class,
             SetupSSL::class,
+            EnableQuickDeploy::class,
             WrapUpDeployment::class,
             SummarizeDeployment::class,
         ])->thenReturn();
