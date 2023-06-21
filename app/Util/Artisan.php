@@ -3,7 +3,7 @@
 namespace Bellows\Util;
 
 use Bellows\PluginSdk\Facades\Project;
-use Bellows\PluginSdk\Util\RawValue;
+use Bellows\PluginSdk\Values\RawValue;
 
 class Artisan
 {

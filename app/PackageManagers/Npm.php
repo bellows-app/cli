@@ -63,10 +63,12 @@ class Npm extends PackageManager
             fn ($file) => Project::file($file)->exists(),
         );
 
+        $yarnInstalled = trim(Process::run('which yarn')->output()) !== 'yarn not found';
+
         return match ($lockFile) {
             'yarn.lock'         => 'yarn',
             'package-lock.json' => 'npm',
-            default             => Console::choice(
+            default             => !$yarnInstalled  ? 'npm' : Console::choice(
                 'Which package manager are you using?',
                 ['yarn', 'npm'],
                 'npm',
