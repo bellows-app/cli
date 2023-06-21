@@ -11,7 +11,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class DigitalOcean extends DnsProvider
+class DigitalOcean extends AbstractDnsProvider
 {
     protected string $apiBaseUrl = 'https://api.digitalocean.com/v2/';
 

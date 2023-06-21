@@ -68,7 +68,7 @@ class Npm extends PackageManager
         return match ($lockFile) {
             'yarn.lock'         => 'yarn',
             'package-lock.json' => 'npm',
-            default             => !$yarnInstalled  ? 'npm' : Console::choice(
+            default             => !$yarnInstalled ? 'npm' : Console::choice(
                 'Which package manager are you using?',
                 ['yarn', 'npm'],
                 'npm',

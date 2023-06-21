@@ -8,7 +8,7 @@ use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class GoDaddy extends DnsProvider
+class GoDaddy extends AbstractDnsProvider
 {
     protected string $apiBaseUrl = 'https://api.godaddy.com/v1/';
 

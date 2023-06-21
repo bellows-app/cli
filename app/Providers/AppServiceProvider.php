@@ -7,6 +7,7 @@ use Bellows\Config\BellowsConfig;
 use Bellows\Console;
 use Bellows\Deploy\CurrentDeployment;
 use Bellows\Deploy\DeployScript;
+use Bellows\Dns\DnsProvider;
 use Bellows\Http;
 use Bellows\Mixins\Console as MixinsConsole;
 use Bellows\PackageManagers\Composer;
@@ -83,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('bellows_deploy_script', fn () => new DeployScript);
         $this->app->singleton('bellows_npm', fn () => app(Npm::class));
         $this->app->bind('bellows_domain', fn () => Domain::class);
+        $this->app->singleton('bellows_dns', fn () => new DnsProvider);
         $this->app->singleton('bellows_project', fn () => new Project);
         $this->app->singleton('bellows_artisan', fn () => new Artisan);
         $this->app->singleton('bellows_deployment', fn () => new CurrentDeployment);

@@ -70,7 +70,7 @@ class UpdateDomainDNS
     protected function updateRecord(array $config)
     {
         if ($config['subdomain'] === 'www') {
-            return Dns::addCNAMERecord($config['subdomain'],  '@',  1800);
+            return Dns::addCNAMERecord($config['subdomain'], '@', 1800);
         }
 
         return Dns::addARecord(

@@ -4,8 +4,8 @@ namespace Bellows\Commands;
 
 use Bellows\Contracts\ServerProviderSite;
 use Bellows\Data\DeploymentData;
+use Bellows\Dns\AbstractDnsProvider;
 use Bellows\Dns\DnsFactory;
-use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\PluginManagers\DeploymentManager;
 use Bellows\PluginSdk\Data\Repository;
@@ -172,7 +172,7 @@ class Deploy extends Command
         return $site->url();
     }
 
-    protected function getDnsProvider(string $domain): ?DnsProvider
+    protected function getDnsProvider(string $domain): ?AbstractDnsProvider
     {
         $dnsProvider = DnsFactory::fromDomain($domain);
 

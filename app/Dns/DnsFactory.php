@@ -2,11 +2,13 @@
 
 namespace Bellows\Dns;
 
+use Bellows\PluginSdk\Facades\Console;
+use Bellows\PluginSdk\Facades\Dns;
 use Bellows\Util\Domain;
 
 class DnsFactory
 {
-    public static function fromDomain(string $domain): ?DnsProvider
+    public static function fromDomain(string $domain): ?AbstractDnsProvider
     {
         $baseDomain = Domain::getBaseDomain($domain);
         $nameservers = dns_get_record($baseDomain, DNS_NS);
@@ -23,6 +25,26 @@ class DnsFactory
             Cloudflare::class,
         ])->first(fn ($provider) => $provider::matchByNameserver($nameserver));
 
-        return $result ? app($result, ['domain' => $domain]) : null;
+        if ($result) {
+            return self::confirm(app($result, ['domain' => $domain]));
+        }
+
+        Console::miniTask('Unsupported DNS provider', $domain, false);
+
+        return null;
+    }
+
+    protected static function confirm(AbstractDnsProvider $provider): ?AbstractDnsProvider
+    {
+        Console::miniTask('Detected DNS provider', $provider->getName());
+
+        if (!$provider->setCredentials()) {
+            // We found a DNS provider, but they don't want to use it
+            return null;
+        }
+
+        Dns::set($provider);
+
+        return $provider;
     }
 }

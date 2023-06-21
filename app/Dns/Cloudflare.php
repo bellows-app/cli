@@ -9,7 +9,7 @@ use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class Cloudflare extends DnsProvider
+class Cloudflare extends AbstractDnsProvider
 {
     protected string $apiBaseUrl = 'https://api.cloudflare.com/client/v4/';
 

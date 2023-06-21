@@ -5,8 +5,8 @@ namespace Bellows\Commands;
 use Bellows\Contracts\ServerProviderServer;
 use Bellows\Data\DeploymentData;
 use Bellows\Data\LaunchData;
+use Bellows\Dns\AbstractDnsProvider;
 use Bellows\Dns\DnsFactory;
-use Bellows\Dns\DnsProvider;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Git\Repo;
 use Bellows\PluginManagers\LaunchManager;
@@ -104,16 +104,17 @@ class Launch extends Command
 
         Project::setRepo($this->getGitInfo($dir, $domain));
 
-        $dnsProvider = $this->getDnsProvider($domain);
+        $dnsProvider = DnsFactory::fromDomain($domain);
 
         // TODO: Or if DNS is already pointed to server?
         if ($dnsProvider) {
+            $this->newLine();
             $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
         }
 
         $this->newLine();
 
-        App::instance(DnsProvider::class, $dnsProvider);
+        App::instance(AbstractDnsProvider::class, $dnsProvider);
 
         $phpVersion = $serverDeployTarget->determinePhpVersion();
 
@@ -151,27 +152,6 @@ class Launch extends Command
             $siteUrls->each(fn (string $siteUrl) => $this->info($siteUrl));
             $this->newLine();
         }
-    }
-
-    protected function getDnsProvider(string $domain): ?DnsProvider
-    {
-        // TODO: Centralize this logic somewhere. In the factory itself?
-        $dnsProvider = DnsFactory::fromDomain($domain);
-
-        if (!$dnsProvider) {
-            $this->miniTask('Unsupported DNS provider', $domain, false);
-
-            return null;
-        }
-
-        $this->miniTask('Detected DNS provider', $dnsProvider->getName());
-
-        if (!$dnsProvider->setCredentials()) {
-            // We found a DNS provider, but they don't want to use it
-            return null;
-        }
-
-        return $dnsProvider;
     }
 
     protected function createSite(
