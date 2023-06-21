@@ -19,8 +19,10 @@ use Bellows\Processes\CreateSite;
 use Bellows\Processes\CreateWorkers;
 use Bellows\Processes\InstallRepository;
 use Bellows\Processes\SetLaunchEnvironmentVariables;
+use Bellows\Processes\SetupSSL;
 use Bellows\Processes\SummarizeDeployment;
 use Bellows\Processes\UpdateDeploymentScript;
+use Bellows\Processes\UpdateDomainDNS;
 use Bellows\Processes\WrapUpDeployment;
 use Bellows\ServerProviders\ServerProviderInterface;
 use Exception;
@@ -103,7 +105,10 @@ class Launch extends Command
 
         $dnsProvider = $this->getDnsProvider($domain);
 
-        $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
+        // TODO: Or if DNS is already pointed to server?
+        if ($dnsProvider) {
+            $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
+        }
 
         $this->newLine();
 
@@ -180,7 +185,7 @@ class Launch extends Command
             manager: $pluginManager,
         );
 
-        $launchResult = Pipeline::send($launchData)->through([
+        Pipeline::send($launchData)->through([
             CreateSite::class,
             InstallRepository::class,
         ])->thenReturn();
@@ -190,11 +195,13 @@ class Launch extends Command
         );
 
         Pipeline::send($deployData)->through([
+            UpdateDomainDNS::class,
             SetLaunchEnvironmentVariables::class,
             UpdateDeploymentScript::class,
             CreateDaemons::class,
             CreateWorkers::class,
             CreateJobs::class,
+            SetupSSL::class,
             WrapUpDeployment::class,
             SummarizeDeployment::class,
         ])->thenReturn();

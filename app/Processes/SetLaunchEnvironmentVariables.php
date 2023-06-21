@@ -18,7 +18,7 @@ class SetLaunchEnvironmentVariables
 
         $updatedVars = collect($deployment->manager->environmentVariables([
             'APP_NAME'      => Project::appName(),
-            'APP_URL'       => 'http://' . Project::domain(),
+            'APP_URL'       => (Project::siteIsSecure() ? 'https://' : 'http://') . Project::domain(),
             'VITE_APP_ENV'  => '${APP_ENV}',
             'VITE_APP_NAME' => '${APP_NAME}',
         ]));
