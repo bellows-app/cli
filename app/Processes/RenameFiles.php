@@ -13,7 +13,7 @@ class RenameFiles
 {
     public function __invoke(InstallationData $installation, Closure $next)
     {
-        $files = collect($installation->config->get(KickoffConfigKeys::REMOVE_FILES));
+        $files = collect($installation->config->get(KickoffConfigKeys::RENAME_FILES));
 
         if ($files->isEmpty()) {
             return $next($installation);
