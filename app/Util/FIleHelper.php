@@ -93,4 +93,14 @@ class FileHelper
     {
         return File::exists($this->path);
     }
+
+    public function isDirectory(): bool
+    {
+        return File::isDirectory($this->path);
+    }
+
+    public function makeDirectory(): bool
+    {
+        return File::makeDirectory(path: $this->path, recursive: true);
+    }
 }
