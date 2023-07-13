@@ -70,6 +70,9 @@ class Kickoff extends Command
         Project::setAppName($name);
         Project::setDomain($url);
 
+        $this->comment('Gathering information...');
+        $this->newLine();
+
         $pluginManager->setActive($config->get(KickoffConfigKeys::PLUGINS, []));
 
         Pipeline::send(new InstallationData($pluginManager, $config))->through([
