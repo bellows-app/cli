@@ -21,19 +21,18 @@ class WrapUpInstallation
             fn ($command) => Value::raw($command)
         )->toArray();
 
-        collect($installation->manager->installationCommands($fromConfig))
-            ->map(function ($command) {
-                if ($command instanceof RawValue) {
-                    return (string) $command;
-                }
+        // TODO: wrapUpCommands in SDK/InstallationManager?
+        collect($fromConfig)->map(function ($command) {
+            if ($command instanceof RawValue) {
+                return (string) $command;
+            }
 
-                if (Str::startsWith($command, 'php')) {
-                    return $command;
-                }
+            if (Str::startsWith($command, 'php')) {
+                return $command;
+            }
 
-                return Artisan::local($command);
-            })
-            ->each(fn ($command) => Process::runWithOutput($command));
+            return Artisan::local($command);
+        })->each(fn ($command) => Process::runWithOutput($command));
 
         return $next($installation);
     }
