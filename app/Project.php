@@ -110,8 +110,43 @@ class Project
         return $this->dir . '/' . ltrim($path, '/');
     }
 
+    public function resource(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('resources', $path);
+    }
+
+    public function app(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('app', $path);
+    }
+
+    public function config(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('config', $path);
+    }
+
+    public function public(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('public', $path);
+    }
+
+    public function storage(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('storage', $path);
+    }
+
+    public function database(string $path): FileHelper
+    {
+        return $this->fileWithPrefix('database', $path);
+    }
+
     public function file(string $path): FileHelper
     {
         return new FileHelper($this->path($path));
+    }
+
+    protected function fileWithPrefix(string $prefix, string $path): FileHelper
+    {
+        return $this->file($prefix . '/' . ltrim($path, '/'));
     }
 }
