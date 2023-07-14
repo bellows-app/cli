@@ -24,6 +24,12 @@ class BellowsConfig
         return env('HOME') . '/.bellows/' . ltrim($path, '/');
     }
 
+    public function pluginsPath(string $path)
+    {
+        return $this->path('plugins/' . ltrim($path, '/'));
+    }
+
+
     public function localPluginPath(string $path)
     {
         return $this->path('local-plugins/' . ltrim($path, '/'));
