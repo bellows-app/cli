@@ -95,6 +95,35 @@ class PluginInit extends Command
 
         Process::runWithOutput("cd {$dir} && composer install --no-interaction");
 
+        if ($this->confirm('Symlink plugin to Bellows for local development?', true)) {
+            $pluginComposerPath = BellowsConfig::getInstance()->pluginsPath('composer.json');
+
+            $pluginComposerJson = File::json($pluginComposerPath);
+
+            $pluginComposerJson['repositories'] ??= [];
+
+            $pluginComposerJson['repositories'][$packageName] = [
+                'type'    => 'path',
+                'url'     => $dir,
+                'options' => [
+                    'symlink' => true,
+                ],
+            ];
+
+            File::put(
+                $pluginComposerPath,
+                json_encode($pluginComposerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            );
+
+            Process::runWithOutput(
+                sprintf(
+                    "cd %s && composer require %s --no-interaction",
+                    BellowsConfig::getInstance()->pluginsPath(''),
+                    $packageName,
+                ),
+            );
+        }
+
         $this->info('Plugin created successfully!');
 
         if ($this->confirm('Would you like to open the plugin directory now?', true)) {
@@ -118,7 +147,7 @@ class PluginInit extends Command
 
         $replacements = [
             '{{ packageName }}'        => $packageName,
-            '{{ pluginNamespace }}'    => str_replace('\\', '\\\\', $pluginNamespace),
+            '{{ pluginNamespace }}'    => str_replace('\\', '\\\\', $pluginNamespace) . '\\\\',
             '{{ packageDescription }}' => str_replace('"', '\\"', $description),
             '{{ authorName }}'         => str_replace('"', '\\"', $authorName),
             '{{ authorEmail }}'        => $authorEmail,
