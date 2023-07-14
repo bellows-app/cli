@@ -26,6 +26,7 @@ use Bellows\Util\Vite;
 use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Signals;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\ServiceProvider;
 use Phar;
@@ -43,7 +44,10 @@ class AppServiceProvider extends ServiceProvider
             collect([
                 BellowsConfig::getInstance()->path(''),
                 BellowsConfig::getInstance()->path('logs'),
-            ])->filter(fn ($d) => !is_dir($d))->each(fn ($d) => mkdir($d));
+                BellowsConfig::getInstance()->pluginsPath(''),
+                BellowsConfig::getInstance()->localPluginPath(''),
+                BellowsConfig::getInstance()->kickoffConfigPath(''),
+            ])->filter(fn ($d) => File::ensureDirectoryExists($d));
         }
     }
 
