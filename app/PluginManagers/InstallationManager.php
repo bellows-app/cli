@@ -124,6 +124,13 @@ class InstallationManager
         );
     }
 
+    public function wrapUpCommands(array $initialValue = []): Collection
+    {
+        return $this->uniqueCollection(
+            $this->call('getWrapUpCommands')->reduce($initialValue)
+        );
+    }
+
     public function composerPackages(array $initialValue = []): Collection
     {
         return $this->uniqueCollection(
