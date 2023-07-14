@@ -48,7 +48,7 @@
     "repositories": {
         "bellows-app/plugin-sdk": {
             "type": "path",
-            "url": "../../sdk/",
+            "url": "/Users/joetannenbaum/Dev/projects/bellows/sdk",
             "options": {
                 "symlink": true
             }
