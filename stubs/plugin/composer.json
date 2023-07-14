@@ -44,14 +44,5 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "repositories": {
-        "bellows-app/plugin-sdk": {
-            "type": "path",
-            "url": "/Users/joetannenbaum/Dev/projects/bellows/sdk",
-            "options": {
-                "symlink": true
-            }
-        }
-    }
+    "prefer-stable": true
 }
