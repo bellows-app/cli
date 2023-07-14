@@ -2,6 +2,8 @@
 
 namespace Bellows\Util;
 
+// vendor/laravel-zero/foundation/src/Illuminate/Foundation/Concerns/ResolvesDumpSource.php
+
 use Bellows\Config;
 use Bellows\PluginSdk\Facades\Console;
 use Illuminate\Support\Facades\Process;
