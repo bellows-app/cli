@@ -50,6 +50,11 @@ class KickoffConfig
         return $this->allConfigs;
     }
 
+    public function path(): string
+    {
+        return $this->path;
+    }
+
     public function get(KickoffConfigKeys $key, mixed $default = null)
     {
         return $this->config[$key->value] ?? $default ?? KickoffConfigKeys::defaultValue($key);
