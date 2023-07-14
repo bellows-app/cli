@@ -76,6 +76,14 @@ class KickoffConfig
         }
     }
 
+    public function removePlugin(string $plugin): void
+    {
+        $this->config[KickoffConfigKeys::PLUGINS->value] = collect($this->config[KickoffConfigKeys::PLUGINS->value])
+            ->reject(fn ($p) => $p === $plugin)
+            ->values()
+            ->toArray();
+    }
+
     public function writeToFile(): void
     {
         File::put($this->path, json_encode($this->config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
