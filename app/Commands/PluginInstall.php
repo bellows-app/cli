@@ -20,9 +20,8 @@ class PluginInstall extends Command
     public function handle()
     {
         $this->newLine();
-        $query = $this->argument('query');
 
-        $toInstall = $this->search($query);
+        $toInstall = $this->search($this->argument('query'));
 
         $pluginComposerPath = BellowsConfig::getInstance()->pluginsPath('composer.json');
 
