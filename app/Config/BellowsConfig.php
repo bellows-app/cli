@@ -10,7 +10,7 @@ class BellowsConfig
     {
     }
 
-    public static function getInstance()
+    public static function getInstance(): self
     {
         if (self::$instance == null) {
             self::$instance = new BellowsConfig();
