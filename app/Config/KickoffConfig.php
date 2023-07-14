@@ -65,6 +65,22 @@ class KickoffConfig
         $this->config[$key->value] = array_merge($this->get($key, []), $toMerge);
     }
 
+    public function addComposerDependency(string $package, bool $dev = false): void
+    {
+        $key = $dev ? KickoffConfigKeys::COMPOSER_DEV : KickoffConfigKeys::COMPOSER;
+
+        $this->config[$key->value] ??= [];
+
+        if (!in_array($package, $this->config[$key->value])) {
+            $this->config[$key->value][] = $package;
+        }
+    }
+
+    public function writeToFile(): void
+    {
+        File::put($this->path, json_encode($this->config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
     public function isValid(): bool
     {
         $validator = new Validator();
