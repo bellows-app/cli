@@ -14,7 +14,7 @@ class KickoffInit extends Command
 
     protected $description = 'Initialize a new kickoff config';
 
-    public function handle()
+    public function handle(Editor $editor)
     {
         $name = $this->ask('Config name (for your own reference, e.g. API, Web App)');
 
@@ -31,14 +31,14 @@ class KickoffInit extends Command
         }
 
         File::put($path, json_encode([
-            '$schema' => './../schema.json',
+            '$schema' => config('app.json_schemas.kickoff'),
             'name'    => $name,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         // TODO: Explanation and link to docs
 
         if ($this->confirm('Would you like to edit the config file now?', true)) {
-            app(Editor::class)->open($path);
+            $editor->open($path);
         }
     }
 }
