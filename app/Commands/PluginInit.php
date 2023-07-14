@@ -4,6 +4,7 @@ namespace Bellows\Commands;
 
 use Bellows\Config\BellowsConfig;
 use Bellows\Git\Git;
+use Bellows\Util\Editor;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -15,21 +16,21 @@ class PluginInit extends Command
 
     protected $description = 'Create a new Bellows plugin';
 
-    public function handle()
+    public function handle(Editor $editor)
     {
-        $className = $this->askRequired('Plugin class name?');
+        $className = $this->askRequired('Plugin class name');
 
         $className = collect(preg_split('/(?=[A-Z])/', $className))->filter()->implode(' ');
         $name = Str::slug($className);
 
-        $description = $this->askRequired('Short plugin description?');
+        $description = $this->askRequired('Short plugin description');
 
         $vendorNamespace = $this->getVendorNamespace();
 
-        $packageName = $this->ask('Package name?', "{$vendorNamespace}/bellows-plugin-{$name}");
+        $packageName = $this->ask('Package name', "{$vendorNamespace}/bellows-plugin-{$name}");
 
         $suggestedPluginNamespace = Str::studly(Git::user() ?: $vendorNamespace);
-        $pluginNamespace = $this->ask('Package namespace?', "{$suggestedPluginNamespace}\\BellowsPlugin");
+        $pluginNamespace = $this->ask('Package namespace', "{$suggestedPluginNamespace}\\BellowsPlugin");
 
         $abilities = $this->choice(
             'Is this plugin (choose at least one)',
@@ -39,12 +40,23 @@ class PluginInit extends Command
             true
         );
 
+        $pluginType = $this->choice(
+            'Does this plugin create any of the following',
+            ['Database', 'Repository', 'None of these'],
+        );
+
+        $pluginType = match ($pluginType) {
+            'None of these'   => null,
+            default           => $pluginType,
+        };
+
         $interactsWithApi = $this->confirm('Does this plugin interact with an API?');
 
         $pluginFileContent = $this->getPluginFileContent(
             $className,
             $pluginNamespace,
             $abilities,
+            $pluginType,
             $interactsWithApi,
         );
 
@@ -86,18 +98,12 @@ class PluginInit extends Command
         $this->info('Plugin created successfully!');
 
         if ($this->confirm('Would you like to open the plugin directory now?', true)) {
-            // vendor/laravel-zero/foundation/src/Illuminate/Foundation/Concerns/ResolvesDumpSource.php
-            $openIn = $this->choice('Open in', ['Finder', 'Terminal']);
+            $openIn = $this->choice('Open in', ['Finder', 'Editor']);
 
-            switch ($openIn) {
-                case 'Finder':
-                    Process::run("open {$dir}");
-                    break;
-                case 'Terminal':
-                    // TODO: Doesn't actually work. Is this possible?
-                    Process::run("cd {$dir}");
-                    break;
-            }
+            match ($openIn) {
+                'Finder' => Process::run("open {$dir}"),
+                'Editor' => $editor->open($dir),
+            };
         }
     }
 
@@ -154,6 +160,7 @@ class PluginInit extends Command
         string $className,
         string $pluginNamespace,
         array $abilities,
+        ?string $pluginType,
         bool $interactsWithApi,
     ): string {
         $pluginFileContent = File::get(base_path('stubs/plugin/src/Plugin.php.stub'));
@@ -184,11 +191,15 @@ class PluginInit extends Command
             $defaultImports->push('Illuminate\\Http\\Client\\PendingRequest');
         }
 
+        if ($pluginType) {
+            $defaultImports->push('Bellows\\PluginSdk\\Contracts\\' . $pluginType);
+        }
+
         $imports = $defaultImports->sort()->map(
             fn ($import) => "use {$import};"
         )->implode("\n");
 
-        $implements = collect($abilities)->implode(', ');
+        $implements = collect($abilities)->merge($pluginType ? [$pluginType] : [])->implode(', ');
 
         $traits = collect($abilities)->map(
             fn ($ability) => match ($ability) {
