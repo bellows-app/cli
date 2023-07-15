@@ -29,7 +29,6 @@ class BellowsConfig
         return $this->path('plugins/' . ltrim($path, '/'));
     }
 
-
     public function localPluginPath(string $path)
     {
         return $this->path('local-plugins/' . ltrim($path, '/'));

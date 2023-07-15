@@ -5,12 +5,9 @@ namespace Bellows\Commands;
 use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
 use Bellows\Config\KickoffConfigKeys;
-use Bellows\Git\Git;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
-use LaravelZero\Framework\Commands\Command;
+use Bellows\Plugins\Manager;
 use Illuminate\Support\Str;
+use LaravelZero\Framework\Commands\Command;
 
 class PluginRemove extends Command
 {
@@ -18,26 +15,19 @@ class PluginRemove extends Command
 
     protected $description = 'Remove a Bellows plugin';
 
-    public function handle()
+    public function handle(Manager $pluginManager)
     {
         $this->newLine();
 
-        $pluginComposerPath = BellowsConfig::getInstance()->pluginsPath('composer.json');
-
-        if (File::missing($pluginComposerPath)) {
+        if (!$pluginManager->hasAnyInstalled()) {
             $this->error('No plugins installed! Nothing to remove.');
+
             return;
         }
 
-        $toRemove = $this->search($this->argument('query'));
+        $toRemove = $this->search($pluginManager, $this->argument('query'));
 
-        Process::runWithOutput(
-            sprintf(
-                "cd %s && composer remove %s --no-interaction",
-                BellowsConfig::getInstance()->pluginsPath(''),
-                $toRemove,
-            ),
-        );
+        $pluginManager->remove($toRemove, true);
 
         $this->newLine();
         $this->info('Plugin removed!');
@@ -86,10 +76,9 @@ class PluginRemove extends Command
         $this->info(sprintf('Plugin removed from kickoff %s.', Str::plural('config', $configsWithPlugin->count())));
     }
 
-    protected function search(?string $query = null): string
+    protected function search(Manager $pluginManager, ?string $query = null): string
     {
-        $composerJson = File::json(BellowsConfig::getInstance()->pluginsPath('composer.json'));
-        $current = collect($composerJson['require'] ?? [])->keys();
+        $current = $pluginManager->installed();
 
         if ($query !== null) {
             $filtered = $current->filter(
@@ -104,7 +93,7 @@ class PluginRemove extends Command
                 return $current->first();
             }
 
-            return $this->search();
+            return $this->search($pluginManager);
         }
 
         return $this->choice('Which plugin would you like to remove', $current->toArray());

@@ -2,8 +2,8 @@
 
 namespace Bellows\ProcessManagers\Abilities;
 
-use Bellows\ProcessManagers\CommandRunner;
 use Bellows\PluginSdk\Plugin;
+use Bellows\ProcessManagers\CommandRunner;
 
 trait CallsMethodsOnPlugins
 {

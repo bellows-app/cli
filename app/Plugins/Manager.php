@@ -5,6 +5,7 @@ namespace Bellows\Plugins;
 use Bellows\Config;
 use Bellows\Config\BellowsConfig;
 use Bellows\Util\Vendor;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
@@ -21,6 +22,16 @@ class Manager
             // We've already installed the default plugins, move along now
             return;
         }
+
+        $this->install([
+            'bellows-app/plugin-run-schedule',
+            'bellows-app/plugin-queue',
+            'bellows-app/plugin-optimize',
+            'bellows-app/plugin-local-database',
+            'bellows-app/plugin-compile-assets',
+        ]);
+
+        $this->config->set('plugins.defaults_installed_at', now()->toDateTimeString());
     }
 
     public function install(string|array $plugins, $showOutput = false)
@@ -34,9 +45,9 @@ class Manager
                 $pluginComposerPath,
                 json_encode(
                     [
-                        'name' => Vendor::namespace() . '/plugins',
+                        'name'        => Vendor::namespace() . '/plugins',
                         'description' => 'Bellows plugins',
-                        'require' => (object) [],
+                        'require'     => (object) [],
                     ],
                     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
                 )
@@ -48,12 +59,47 @@ class Manager
 
             Process::$method(
                 sprintf(
-                    "cd %s && composer require %s --no-interaction",
+                    'cd %s && composer require %s --no-interaction',
                     BellowsConfig::getInstance()->pluginsPath(''),
                     // TODO: Remove this after we tag
                     $plugin . ':dev-main',
                 ),
             );
         });
+    }
+
+    public function remove(string|array $plugins, $showOutput = false)
+    {
+        $plugins = is_array($plugins) ? $plugins : [$plugins];
+
+        collect($plugins)->each(function ($plugin) use ($showOutput) {
+            $method = $showOutput ? 'runWithOutput' : 'run';
+
+            Process::$method(
+                sprintf(
+                    'cd %s && composer remove %s --no-interaction',
+                    BellowsConfig::getInstance()->pluginsPath(''),
+                    $plugin,
+                ),
+            );
+        });
+    }
+
+    public function installed(): Collection
+    {
+        $pluginComposerPath = BellowsConfig::getInstance()->pluginsPath('composer.json');
+
+        if (File::missing($pluginComposerPath)) {
+            return collect();
+        }
+
+        $composerJson = File::json($pluginComposerPath);
+
+        return collect($composerJson['require'] ?? [])->keys();
+    }
+
+    public function hasAnyInstalled(): bool
+    {
+        return $this->installed()->isNotEmpty();
     }
 }

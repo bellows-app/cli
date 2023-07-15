@@ -5,6 +5,7 @@ namespace Bellows\Commands;
 use Bellows\Config\BellowsConfig;
 use Bellows\Git\Git;
 use Bellows\Util\Editor;
+use Bellows\Util\Vendor;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -25,7 +26,7 @@ class PluginInit extends Command
 
         $description = $this->askRequired('Short plugin description');
 
-        $vendorNamespace = $this->getVendorNamespace();
+        $vendorNamespace = Vendor::namespace();
 
         $packageName = $this->ask('Package name', "{$vendorNamespace}/bellows-plugin-{$name}");
 
@@ -117,7 +118,7 @@ class PluginInit extends Command
 
             Process::runWithOutput(
                 sprintf(
-                    "cd %s && composer require %s --no-interaction",
+                    'cd %s && composer require %s --no-interaction',
                     BellowsConfig::getInstance()->pluginsPath(''),
                     $packageName,
                 ),
@@ -369,16 +370,5 @@ class PluginInit extends Command
         }
 
         return $pluginFileContent;
-    }
-
-    protected function getVendorNamespace(): ?string
-    {
-        return collect([
-            $_SERVER['COMPOSER_DEFAULT_VENDOR'] ?? null,
-            Git::gitHubUser(),
-            $_SERVER['USERNAME'] ?? null,
-            $_SERVER['USER'] ?? null,
-            get_current_user(),
-        ])->filter()->first();
     }
 }

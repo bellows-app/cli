@@ -4,11 +4,10 @@ namespace Bellows\Commands;
 
 use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
-use Bellows\Git\Git;
 use Bellows\Plugins\Manager;
 use Illuminate\Support\Facades\Http;
-use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
+use LaravelZero\Framework\Commands\Command;
 
 class PluginInstall extends Command
 {
@@ -65,8 +64,8 @@ class PluginInstall extends Command
         }
 
         $response = Http::acceptJson()->withUserAgent('bellows@joe.codes')->get('https://packagist.org/search.json', [
-            'q' => $query,
-            'type' => 'bellows-plugin',
+            'q'        => $query,
+            'type'     => 'bellows-plugin',
             'per_page' => 10,
         ]);
 
@@ -74,6 +73,7 @@ class PluginInstall extends Command
 
         if ($results['total'] === 0) {
             $this->error('No plugins found for "' . $query . '"');
+
             return $this->search();
         }
 
