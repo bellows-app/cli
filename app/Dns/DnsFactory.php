@@ -31,7 +31,7 @@ class DnsFactory
 
         Console::miniTask('Unsupported DNS provider', $domain, false);
 
-        return null;
+        return app(FakeDNSProvider::class);
     }
 
     protected static function confirm(AbstractDnsProvider $provider): ?AbstractDnsProvider
@@ -40,7 +40,7 @@ class DnsFactory
 
         if (!$provider->setCredentials()) {
             // We found a DNS provider, but they don't want to use it
-            return null;
+            return app(FakeDNSProvider::class);
         }
 
         Dns::set($provider);
