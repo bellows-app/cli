@@ -6,6 +6,7 @@ use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
 use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
+use Bellows\Plugins\Manager;
 use Bellows\PluginSdk\Facades\Project;
 use Bellows\Processes\CopyFiles;
 use Bellows\Processes\HandleComposer;
@@ -33,8 +34,10 @@ class Kickoff extends Command
 
     protected $description = 'Start a new Laravel project according to your specifications';
 
-    public function handle(InstallationManager $pluginManager)
+    public function handle(InstallationManager $installationManager, Manager $pluginManager)
     {
+        $pluginManager->installDefaults();
+
         if (Process::run('ls -A .')->output() !== '') {
             $this->newLine();
             $this->error('Directory is not empty. Kickoff only works with a fresh directory.');
@@ -74,9 +77,9 @@ class Kickoff extends Command
         $this->comment('Gathering information...');
         $this->newLine();
 
-        $pluginManager->setActive($config->get(KickoffConfigKeys::PLUGINS, []));
+        $installationManager->setActive($config->get(KickoffConfigKeys::PLUGINS, []));
 
-        Pipeline::send(new InstallationData($pluginManager, $config))->through([
+        Pipeline::send(new InstallationData($installationManager, $config))->through([
             InstallLaravel::class,
             SetLocalEnvironmentVariables::class,
             HandleComposer::class,

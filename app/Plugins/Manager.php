@@ -4,6 +4,7 @@ namespace Bellows\Plugins;
 
 use Bellows\Config;
 use Bellows\Config\BellowsConfig;
+use Bellows\PluginSdk\Facades\Console;
 use Bellows\Util\Vendor;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -22,6 +23,9 @@ class Manager
             // We've already installed the default plugins, move along now
             return;
         }
+
+        Console::newLine();
+        Console::info('Installing default plugins, one moment...');
 
         $this->install([
             'bellows-app/plugin-run-schedule',

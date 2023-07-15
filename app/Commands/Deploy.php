@@ -7,6 +7,7 @@ use Bellows\Data\DeploymentData;
 use Bellows\Dns\AbstractDnsProvider;
 use Bellows\Dns\DnsFactory;
 use Bellows\Exceptions\EnvMissing;
+use Bellows\Plugins\Manager;
 use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Data\Site as SiteData;
 use Bellows\PluginSdk\Facades\Deployment;
@@ -33,8 +34,10 @@ class Deploy extends Command
 
     protected $description = 'Deploy a feature(s) of the current repository to a site on a Forge server.';
 
-    public function handle(ServerProviderInterface $serverProvider)
+    public function handle(ServerProviderInterface $serverProvider, Manager $pluginManager)
     {
+        $pluginManager->installDefaults();
+
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');

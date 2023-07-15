@@ -8,6 +8,7 @@ use Bellows\Data\LaunchData;
 use Bellows\Dns\DnsFactory;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Git\Repo;
+use Bellows\Plugins\Manager;
 use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;
@@ -38,8 +39,10 @@ class Launch extends Command
 
     protected $description = 'Launch the current repository as a site on a Forge server.';
 
-    public function handle(LaunchManager $pluginManager, ServerProviderInterface $serverProvider)
+    public function handle(LaunchManager $launchManager, ServerProviderInterface $serverProvider, Manager $pluginManager)
     {
+        $pluginManager->installDefaults();
+
         // Why are we warning? After Laravel 10 warn needs to be called at
         // least once before being able to use the <warning></warning> tags. Not sure why.
         $this->warn('');
@@ -128,12 +131,12 @@ class Launch extends Command
         Deployment::setPrimaryServer($server);
         Deployment::setPrimarySite($serverDeployTarget->getPrimarySite());
 
-        $pluginManager->setActive();
+        $launchManager->setActive();
 
         $this->info('💨 Off we go!');
 
         $siteUrls = $servers->map(
-            fn (ServerProviderServer $server) => $this->createSite($server, $pluginManager)
+            fn (ServerProviderServer $server) => $this->createSite($server, $launchManager)
         );
 
         if ($siteUrls->count() === 1) {
