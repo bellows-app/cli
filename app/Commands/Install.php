@@ -85,7 +85,7 @@ class Install extends Command
         if ($query) {
             $filtered = $plugins->filter(
                 fn ($plugin) => Str::contains($plugin, strtolower($query))
-            );
+            )->values();
 
             $plugins = $filtered->isNotEmpty() ? $filtered : $plugins;
         }
