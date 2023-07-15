@@ -5,9 +5,8 @@ namespace Bellows\Commands;
 use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
 use Bellows\Git\Git;
-use Illuminate\Support\Facades\File;
+use Bellows\Plugins\Manager;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Str;
 
@@ -17,36 +16,13 @@ class PluginInstall extends Command
 
     protected $description = 'Search for and install a Bellows plugin';
 
-    public function handle()
+    public function handle(Manager $pluginManager)
     {
         $this->newLine();
 
         $toInstall = $this->search($this->argument('query'));
 
-        $pluginComposerPath = BellowsConfig::getInstance()->pluginsPath('composer.json');
-
-        if (File::missing($pluginComposerPath)) {
-            File::put(
-                $pluginComposerPath,
-                json_encode(
-                    [
-                        'name' => $this->getVendorNamespace() . '/plugins',
-                        'description' => 'Bellows plugins',
-                        'require' => (object) [],
-                    ],
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
-                )
-            );
-        }
-
-        Process::runWithOutput(
-            sprintf(
-                "cd %s && composer require %s --no-interaction",
-                BellowsConfig::getInstance()->pluginsPath(''),
-                // TODO: Remove this after we tag
-                $toInstall . ':dev-main',
-            ),
-        );
+        $pluginManager->install($toInstall, true);
 
         $this->newLine();
         $this->info('Plugin installed successfully!');
@@ -80,17 +56,6 @@ class PluginInstall extends Command
 
         $this->newLine();
         $this->info(sprintf('Plugin added to kickoff %s successfully!', Str::plural('config', $files->count())));
-    }
-
-    protected function getVendorNamespace(): ?string
-    {
-        return collect([
-            $_SERVER['COMPOSER_DEFAULT_VENDOR'] ?? null,
-            Git::gitHubUser(),
-            $_SERVER['USERNAME'] ?? null,
-            $_SERVER['USER'] ?? null,
-            get_current_user(),
-        ])->filter()->first();
     }
 
     protected function search(?string $query = null): string
