@@ -91,7 +91,9 @@ class DeployScript
 
         $parts->splice($index + 1, 0, $toAdd);
 
-        return $this->cleanUp($parts->implode(PHP_EOL));
+        $this->script = $parts->implode(PHP_EOL);
+
+        return $this->cleanUp();
     }
 
     public function addBeforeLine(string|array $toFind, string|array $toAdd): string
@@ -106,7 +108,9 @@ class DeployScript
 
         $parts->splice($index, 0, $toAdd);
 
-        return $this->cleanUp($parts->implode(PHP_EOL));
+        $this->script = $parts->implode(PHP_EOL);
+
+        return $this->cleanUp();
     }
 
     protected function findLine(string|array $toFind): array
