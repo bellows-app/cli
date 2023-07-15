@@ -2,9 +2,7 @@
 
 namespace Bellows\Commands;
 
-use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
-use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\Plugins\Manager;
 use Bellows\PluginSdk\Facades\Project;
@@ -12,7 +10,6 @@ use Bellows\Processes\CopyFiles;
 use Bellows\Processes\HandleComposer;
 use Bellows\Processes\HandleGit;
 use Bellows\Processes\HandleNpm;
-use Bellows\Processes\InstallLaravel;
 use Bellows\Processes\PublishVendorFiles;
 use Bellows\Processes\RemoveFiles;
 use Bellows\Processes\RenameFiles;
@@ -22,7 +19,6 @@ use Bellows\Processes\SetLocalEnvironmentVariables;
 use Bellows\Processes\UpdateConfigFiles;
 use Bellows\Processes\WrapUpInstallation;
 use Bellows\ProcessManagers\InstallationManager;
-use Bellows\Util\Editor;
 use Illuminate\Support\Facades\Pipeline;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
