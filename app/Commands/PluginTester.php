@@ -5,6 +5,8 @@ namespace Bellows\Commands;
 use Bellows\Plugins\PluginLoader;
 use Bellows\PluginSdk\Contracts\Deployable;
 use Bellows\PluginSdk\Contracts\Installable;
+use Bellows\PluginSdk\Data\PhpVersion;
+use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Facades\Project;
 use Bellows\PluginSdk\Plugin;
 use Illuminate\Support\Facades\File;
@@ -13,24 +15,25 @@ use LaravelZero\Framework\Commands\Command;
 
 class PluginTester extends Command
 {
-    protected $signature = 'plugin:test {--install} {--deploy} {--project.isolatedUser=bellows_tester} '
-        . '{--project.repositoryUrl=bellows/tester} {--project.repositoryBranch=main} {--project.phpVersion=8.1} '
-        . '{--project.phpBinary=php81} {--project.directory=tests/stubs/plugins/default} '
-        . '{--project.domain=bellowstester.com} {--project.appName=Bellows Tester} {--project.secureSite=true}';
+    protected $signature = 'plugin:test {--install} {--deploy} {--isolatedUser=bellows_tester} '
+        . '{--repositoryUrl=bellows/tester} {--repositoryBranch=main} {--phpVersion=8.1} '
+        . '{--directory=tests/stubs/plugins/default} {--domain=bellowstester.com} '
+        . '{--appName="Bellows Tester"} {--secureSite=true}';
 
     protected $description = 'Test plugins in isolation';
 
     public function handle()
     {
+        $this->newLine();
+        $this->alert('Remember: This is testing your *actual* plugin against any APIs you are connected to!');
+
         $dir = trim(Process::run('pwd')->output());
 
-        if ($this->option('install')) {
-            $action = 'install';
-        } elseif ($this->option('deploy')) {
-            $action = 'deploy';
-        } else {
-            $action = $this->choice('What would you like to test?', ['install', 'deploy']);
-        }
+        $action = match (true) {
+            $this->option('install') => 'install',
+            $this->option('deploy')  => 'deploy',
+            default                  => $this->choice('What would you like to test?', ['install', 'deploy']),
+        };
 
         $plugin = $this->getPluginToTest($dir, $action);
 
@@ -40,96 +43,28 @@ class PluginTester extends Command
             return;
         }
 
-        Project::setDir($this->option('project.directory'));
-        Project::setAppName($this->option('project.appName'));
-        Project::setIsolatedUser($this->option('project.isolatedUser'));
-        Project::setDomain($this->option('project.domain'));
+        Project::setDir($this->option('directory'));
+        Project::setAppName($this->option('appName'));
+        Project::setIsolatedUser($this->option('isolatedUser'));
+        Project::setDomain($this->option('domain'));
+        Project::setRepo(new Repository(
+            $this->option('repositoryUrl'),
+            $this->option('repositoryBranch')
+        ));
+        Project::setPhpVersion(
+            new PhpVersion(
+                'php' . str_replace('.', '', $this->option('phpVersion')),
+                'php' . $this->option('phpVersion'),
+                'PHP ' . $this->option('phpVersion')
+            ),
+        );
+        Project::setSiteIsSecure($this->option('secureSite') === 'true' || $this->option('secureSite') === '1');
 
         if ($action === 'install') {
             $this->installPlugin($plugin);
         } elseif ($action === 'deploy') {
             $this->deployPlugin($plugin);
         }
-
-        // Project::setConfig(new ProjectConfig(
-        //     isolatedUser: $this->option('project.isolatedUser'),
-        //     repository: new Repository(
-        //         $this->option('project.repositoryUrl'),
-        //         $this->option('project.repositoryBranch')
-        //     ),
-        //     phpVersion: new PhpVersion(
-        //         $this->option('project.phpVersion'),
-        //         $this->option('project.phpBinary'),
-        //         $this->option('project.phpVersion')
-        //     ),
-        //     directory: $this->option('project.directory'),
-        //     domain: $this->option('project.domain'),
-        //     appName: $this->option('project.appName'),
-        //     secureSite: $this->option('project.secureSite'),
-        // ));
-
-        // app()->bind(ForgeServer::class, function () {
-        //     return Server::from([
-        //         'id'         => 123,
-        //         'name'       => 'test-server',
-        //         'type'       => 'php',
-        //         'ip_address' => '123.123.123.123',
-        //     ]);
-        // });
-
-        // app()->bind(
-        //     Config::class,
-        //     fn () => new Config(base_path('tests/stubs/config')),
-        // );
-
-        // $deployScript = <<<'DEPLOY'
-        // cd /home/link_leap/linkleapapp.com
-        // git pull origin $FORGE_SITE_BRANCH
-
-        // $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
-        // ( flock -w 10 9 || exit 1
-        //     echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
-
-        // if [ -f artisan ]; then
-        //     $FORGE_PHP artisan migrate --force
-        // fi
-        // DEPLOY;
-
-        $this->info("Configuring <comment>{$this->argument('plugin')}</comment> plugin...");
-
-        $plugin = app('\\Bellows\\Plugins\\' . $this->argument('plugin'));
-
-        $plugin->launch();
-
-        $this->newLine(2);
-
-        dd([
-            'createSiteParams'     => $plugin->createSiteParams(
-                new CreateSiteParams(
-                    domain: $this->option('project.domain'),
-                    projectType: 'php',
-                    directory: $this->option('project.directory'),
-                    isolated: true,
-                    username: $this->option('project.isolatedUser'),
-                    phpVersion: $this->option('project.phpVersion'),
-                ),
-            ),
-            'installRepoParams'    => $plugin->installRepoParams(
-                new InstallRepoParams(
-                    'github',
-                    $this->option('project.repositoryUrl'),
-                    $this->option('project.repositoryBranch'),
-                    composer: true,
-                ),
-            ),
-            'environmentVariables' => $plugin->environmentVariables(),
-            'updateDeployScript'   => $plugin->updateDeployScript($deployScript),
-            'workers'              => $plugin->workers(),
-            'jobs'                 => $plugin->jobs(),
-            'daemons'              => $plugin->daemons(),
-            // 'wrapUp' => $plugin->wrapUp(),
-        ]);
     }
 
     protected function getPluginToTest(string $dir, string $action): Installable|Deployable|null
@@ -174,60 +109,13 @@ class PluginTester extends Command
 
     protected function installPlugin(Installable $plugin): void
     {
-        $this->info("Installing <comment>{$plugin->getName()}</comment> plugin...");
-
         $result = $plugin->install();
-
         dd($result);
-
-        // $plugin->install(
-        //     new CreateSiteParams(
-        //         domain: $this->option('project.domain'),
-        //         projectType: 'php',
-        //         directory: $this->option('project.directory'),
-        //         isolated: true,
-        //         username: $this->option('project.isolatedUser'),
-        //         phpVersion: $this->option('project.phpVersion'),
-        //     ),
-        //     new InstallRepoParams(
-        //         'github',
-        //         $this->option('project.repositoryUrl'),
-        //         $this->option('project.repositoryBranch'),
-        //         composer: true,
-        //     ),
-        //     $this->option('project.secureSite'),
-        // );
     }
 
     protected function deployPlugin(Deployable $plugin): void
     {
-        $this->info("Deploying <comment>{$plugin->getName()}</comment> plugin...");
-
-        // $plugin->deploy(
-        //     new CreateSiteParams(
-        //         domain: $this->option('project.domain'),
-        //         projectType: 'php',
-        //         directory: $this->option('project.directory'),
-        //         isolated: true,
-        //         username: $this->option('project.isolatedUser'),
-        //         phpVersion: $this->option('project.phpVersion'),
-        //     ),
-        //     new InstallRepoParams(
-        //         'github',
-        //         $this->option('project.repositoryUrl'),
-        //         $this->option('project.repositoryBranch'),
-        //         composer: true,
-        //     ),
-        //     $this->option('project.secureSite'),
-        //     $this->option('project.appName'),
-        //     $this->option('project.phpVersion'),
-        //     $this->option('project.phpBinary'),
-        //     $this->option('project.repositoryBranch'),
-        //     $this->option('project.repositoryUrl'),
-        //     $this->option('project.directory'),
-        //     $this->option('project.isolatedUser'),
-        //     $this->option('project.domain'),
-        //     $this->option('project.secureSite'),
-        // );
+        $result = $plugin->deploy();
+        dd($result);
     }
 }
