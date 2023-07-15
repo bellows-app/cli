@@ -6,6 +6,6 @@ trait UpdatesDeploymentScripts
 {
     public function updateDeployScript(): string
     {
-        return $this->call('getUpdateDeployScript')->reduce('');
+        return $this->call('getUpdateDeployScript')->run();
     }
 }
