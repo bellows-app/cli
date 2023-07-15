@@ -69,14 +69,5 @@
     "prefer-stable": true,
     "bin": [
         "builds/bellows"
-    ],
-    "repositories": {
-        "bellows-app/plugin-sdk": {
-            "type": "path",
-            "url": "../sdk/",
-            "options": {
-                "symlink": true
-            }
-        }
-    }
+    ]
 }

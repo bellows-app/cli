@@ -4,15 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "37df949ab0b74176ffd66fcec4d62ae5",
+    "content-hash": "e5a684c9cb74d70fe4f2e17f976b7c40",
     "packages": [
         {
             "name": "bellows-app/plugin-sdk",
             "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../sdk",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bellows-app/plugin-sdk.git",
                 "reference": "0da439d8f2bed662d21dc9fb22d3aa5d9279a28a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bellows-app/plugin-sdk/zipball/0da439d8f2bed662d21dc9fb22d3aa5d9279a28a",
+                "reference": "0da439d8f2bed662d21dc9fb22d3aa5d9279a28a",
+                "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.7",
@@ -35,17 +41,14 @@
                 "phpstan/phpstan": "^1.10",
                 "tightenco/duster": "^1.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Bellows\\PluginSdk\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\": "tests/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -65,10 +68,11 @@
                 "productivity",
                 "tools"
             ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/bellows-app/plugin-sdk/issues",
+                "source": "https://github.com/bellows-app/plugin-sdk/tree/main"
+            },
+            "time": "2023-07-14T01:17:35+00:00"
         },
         {
             "name": "brick/math",
