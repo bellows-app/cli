@@ -111,7 +111,7 @@ class Launch extends Command
 
         $aRecord = dns_get_record(Domain::getBaseDomain($domain), DNS_A)[0]['ip'] ?? null;
 
-        if ($dnsProvider || $aRecord === $server->data()->ip_address) {
+        if (($dnsProvider || $aRecord === $server->data()->ip_address) && !$dnsProvider->isFake()) {
             $this->newLine();
             $secureSite = $dnsProvider ? $this->confirm('Secure site (enable SSL)?', true) : false;
         }

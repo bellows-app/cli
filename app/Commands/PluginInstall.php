@@ -46,10 +46,8 @@ class PluginInstall extends Command
 
         $files = $configs->filter(fn (KickoffConfig $c) => in_array($c->displayName(), $selected));
 
-        $dev = $this->confirm('Add this plugin as a dev dependency?');
-
-        $files->each(function (KickoffConfig $config) use ($toInstall, $dev) {
-            $config->addComposerDependency($toInstall, $dev);
+        $files->each(function (KickoffConfig $config) use ($toInstall) {
+            $config->addPlugin($toInstall);
             $config->writeToFile();
         });
 

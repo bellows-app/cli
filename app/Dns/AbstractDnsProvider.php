@@ -34,6 +34,11 @@ abstract class AbstractDnsProvider
         return Str::contains($nameserver, static::getNameServerDomain());
     }
 
+    public function isFake(): bool
+    {
+        return false;
+    }
+
     abstract public static function getNameServerDomain(): string;
 
     public function getName(): string

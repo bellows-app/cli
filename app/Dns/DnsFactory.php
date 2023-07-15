@@ -31,7 +31,7 @@ class DnsFactory
 
         Console::miniTask('Unsupported DNS provider', $domain, false);
 
-        return app(FakeDNSProvider::class);
+        return app(FakeDNSProvider::class, ['domain' => $domain]);
     }
 
     protected static function confirm(AbstractDnsProvider $provider): ?AbstractDnsProvider

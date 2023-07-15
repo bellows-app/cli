@@ -65,14 +65,14 @@ class KickoffConfig
         $this->config[$key->value] = array_merge($this->get($key, []), $toMerge);
     }
 
-    public function addComposerDependency(string $package, bool $dev = false): void
+    public function addPlugin(string $plugin): void
     {
-        $key = $dev ? KickoffConfigKeys::COMPOSER_DEV : KickoffConfigKeys::COMPOSER;
+        $key = KickoffConfigKeys::PLUGINS->value;
 
-        $this->config[$key->value] ??= [];
+        $this->config[$key] ??= [];
 
-        if (!in_array($package, $this->config[$key->value])) {
-            $this->config[$key->value][] = $package;
+        if (!in_array($plugin, $this->config[$key])) {
+            $this->config[$key][] = $plugin;
         }
     }
 

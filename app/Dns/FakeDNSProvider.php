@@ -8,13 +8,18 @@ use Illuminate\Support\Facades\Http;
 
 class FakeDNSProvider extends AbstractDnsProvider
 {
-    protected string $apiBaseUrl = '';
+    protected string $apiBaseUrl = 'https://bellows.dev';
 
     protected string $zoneId;
 
     public static function getNameServerDomain(): string
     {
         return 'not.a.real.dns.provider';
+    }
+
+    public function isFake(): bool
+    {
+        return true;
     }
 
     public function addCNAMERecord(string $name, string $value, int $ttl): bool
