@@ -1,12 +1,12 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\ProcessManagers;
 
 use Bellows\Config;
-use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
-use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
-use Bellows\PluginManagers\Abilities\LoadsPlugins;
-use Bellows\PluginManagers\Abilities\WrapsUp;
+use Bellows\ProcessManagers\Abilities\CallsMethodsOnPlugins;
+use Bellows\ProcessManagers\Abilities\HasEnvironmentVariables;
+use Bellows\ProcessManagers\Abilities\LoadsPlugins;
+use Bellows\ProcessManagers\Abilities\WrapsUp;
 use Bellows\PluginSdk\Contracts\Installable;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\PluginResults\InstallationResult;

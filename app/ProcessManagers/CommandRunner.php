@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\ProcessManagers;
 
 use Closure;
 use Illuminate\Support\Collection;

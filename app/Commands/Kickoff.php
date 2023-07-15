@@ -6,7 +6,7 @@ use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfig;
 use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
-use Bellows\PluginManagers\InstallationManager;
+use Bellows\ProcessManagers\InstallationManager;
 use Bellows\PluginSdk\Facades\Project;
 use Bellows\Processes\CopyFiles;
 use Bellows\Processes\HandleComposer;

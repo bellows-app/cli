@@ -2,7 +2,7 @@
 
 namespace Bellows\Data;
 
-use Bellows\PluginManagers\LaunchManager;
+use Bellows\ProcessManagers\LaunchManager;
 use Spatie\LaravelData\Data;
 
 class LaunchData extends Data

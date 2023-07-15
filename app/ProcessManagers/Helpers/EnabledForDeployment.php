@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows\PluginManagers\Helpers;
+namespace Bellows\ProcessManagers\Helpers;
 
 use Bellows\Data\DefaultEnabledDecision;
 use Bellows\Data\DisabledByDefault;

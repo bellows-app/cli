@@ -3,7 +3,7 @@
 namespace Bellows\Data;
 
 use Bellows\Config\KickoffConfig;
-use Bellows\PluginManagers\InstallationManager;
+use Bellows\ProcessManagers\InstallationManager;
 use Spatie\LaravelData\Data;
 
 class InstallationData extends Data

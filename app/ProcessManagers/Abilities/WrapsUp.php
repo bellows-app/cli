@@ -1,6 +1,6 @@
 <?php
 
-namespace Bellows\PluginManagers\Abilities;
+namespace Bellows\ProcessManagers\Abilities;
 
 trait WrapsUp
 {

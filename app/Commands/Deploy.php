@@ -7,7 +7,7 @@ use Bellows\Data\DeploymentData;
 use Bellows\Dns\AbstractDnsProvider;
 use Bellows\Dns\DnsFactory;
 use Bellows\Exceptions\EnvMissing;
-use Bellows\PluginManagers\DeploymentManager;
+use Bellows\ProcessManagers\DeploymentManager;
 use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Data\Site as SiteData;
 use Bellows\PluginSdk\Facades\Deployment;

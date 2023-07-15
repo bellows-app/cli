@@ -8,7 +8,7 @@ use Bellows\Data\LaunchData;
 use Bellows\Dns\DnsFactory;
 use Bellows\Exceptions\EnvMissing;
 use Bellows\Git\Repo;
-use Bellows\PluginManagers\LaunchManager;
+use Bellows\ProcessManagers\LaunchManager;
 use Bellows\PluginSdk\Data\Repository;
 use Bellows\PluginSdk\Facades\Deployment;
 use Bellows\PluginSdk\Facades\Project;

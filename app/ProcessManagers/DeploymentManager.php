@@ -1,21 +1,21 @@
 <?php
 
-namespace Bellows\PluginManagers;
+namespace Bellows\ProcessManagers;
 
 use Bellows\Config;
 use Bellows\Contracts\DeployableManager;
 use Bellows\Contracts\ServerProviderSite;
-use Bellows\PluginManagers\Abilities\CallsMethodsOnPlugins;
-use Bellows\PluginManagers\Abilities\ConfiguresPlugins;
-use Bellows\PluginManagers\Abilities\HasDaemons;
-use Bellows\PluginManagers\Abilities\HasEnvironmentVariables;
-use Bellows\PluginManagers\Abilities\HasJobs;
-use Bellows\PluginManagers\Abilities\HasSecurityRules;
-use Bellows\PluginManagers\Abilities\HasWorkers;
-use Bellows\PluginManagers\Abilities\LoadsPlugins;
-use Bellows\PluginManagers\Abilities\UpdatesDeploymentScripts;
-use Bellows\PluginManagers\Abilities\WrapsUp;
-use Bellows\PluginManagers\Helpers\EnabledForDeployment;
+use Bellows\ProcessManagers\Abilities\CallsMethodsOnPlugins;
+use Bellows\ProcessManagers\Abilities\ConfiguresPlugins;
+use Bellows\ProcessManagers\Abilities\HasDaemons;
+use Bellows\ProcessManagers\Abilities\HasEnvironmentVariables;
+use Bellows\ProcessManagers\Abilities\HasJobs;
+use Bellows\ProcessManagers\Abilities\HasSecurityRules;
+use Bellows\ProcessManagers\Abilities\HasWorkers;
+use Bellows\ProcessManagers\Abilities\LoadsPlugins;
+use Bellows\ProcessManagers\Abilities\UpdatesDeploymentScripts;
+use Bellows\ProcessManagers\Abilities\WrapsUp;
+use Bellows\ProcessManagers\Helpers\EnabledForDeployment;
 use Bellows\PluginSdk\Contracts\Deployable;
 use Bellows\PluginSdk\Facades\Console;
 use Bellows\PluginSdk\Facades\Deployment;
