@@ -38,6 +38,16 @@ class Manager
         $this->config->set('plugins.defaults_installed_at', now()->toDateTimeString());
     }
 
+    public function updateAll()
+    {
+        Process::runWithOutput(
+            sprintf(
+                'cd %s && composer update --no-interaction',
+                BellowsConfig::getInstance()->pluginsPath(''),
+            ),
+        );
+    }
+
     public function install(string|array $plugins, $showOutput = false)
     {
         $plugins = is_array($plugins) ? $plugins : [$plugins];
