@@ -87,6 +87,8 @@ class PluginInit extends Command
         File::put($dir . '/composer.json', $composerJson);
         File::put($dir . '/src/' . $className . 'Plugin.php', $pluginFileContent);
         File::put($dir . '/tests/Feature/' . $className . 'Test.php', $testFileContent);
+        File::put($dir . '/.gitignore', "/vendor");
+        File::put($dir . '/README.md', "# {$className} Plugin\n\n{$description}");
         File::delete($dir . '/src/Plugin.php.stub');
         File::delete($dir . '/tests/Feature/Test.php.stub');
 
