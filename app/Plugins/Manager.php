@@ -75,8 +75,7 @@ class Manager
                 sprintf(
                     'cd %s && composer require %s --no-interaction',
                     BellowsConfig::getInstance()->pluginsPath(''),
-                    // TODO: Remove this after we tag
-                    $plugin . ':dev-main',
+                    $plugin,
                 ),
             );
         });
