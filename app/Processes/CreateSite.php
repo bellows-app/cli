@@ -33,12 +33,7 @@ class CreateSite
             task: fn () => Deployment::server()->createSite(CreateSiteParams::from($createSiteParams)),
         );
 
-        ray($site);
-        ray($deployment->manager);
-
         Deployment::setSite($site);
-
-        ray($deployment->manager);
 
         return $next($deployment);
     }

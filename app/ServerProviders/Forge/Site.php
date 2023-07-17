@@ -59,14 +59,10 @@ class Site implements ServerProviderSite
         do {
             $site = $this->client->get('')->json()['site'];
 
-            ray($site);
-
             Sleep::for(2)->seconds();
         } while ($site['repository_status'] !== 'installed');
 
         $this->site = SiteData::from($site);
-
-        ray($this->site);
     }
 
     public function getPhpVersion(): PhpVersion
