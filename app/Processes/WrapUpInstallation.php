@@ -22,7 +22,7 @@ class WrapUpInstallation
         )->toArray();
 
         // TODO: wrapUpCommands in SDK/InstallationManager?
-        collect($fromConfig)->map(function ($command) {
+        collect($installation->manager->wrapUpCommands($fromConfig))->map(function ($command) {
             if ($command instanceof RawValue) {
                 return (string) $command;
             }

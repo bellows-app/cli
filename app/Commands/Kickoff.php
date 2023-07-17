@@ -92,7 +92,6 @@ class Kickoff extends Command
             RemoveFiles::class,
             HandleGit::class,
             WrapUpInstallation::class,
-            RunWrapUpCommands::class,
         ])->then(fn () => null);
 
         $this->step('Consider yourself kicked off!');

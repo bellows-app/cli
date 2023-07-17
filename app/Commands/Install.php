@@ -68,7 +68,6 @@ class Install extends Command
             RemoveFiles::class,
             HandleGit::class,
             WrapUpInstallation::class,
-            RunWrapUpCommands::class,
         ])->then(fn () => null);
 
         $this->step('All set!');
