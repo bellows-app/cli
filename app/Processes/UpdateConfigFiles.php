@@ -2,6 +2,7 @@
 
 namespace Bellows\Processes;
 
+use Bellows\Config\BellowsConfig;
 use Bellows\Config\KickoffConfigKeys;
 use Bellows\Data\InstallationData;
 use Bellows\PluginSdk\Facades\Console;
@@ -19,6 +20,17 @@ class UpdateConfigFiles
     {
         Console::step('Updating Config Files');
 
+        // TODO: This is repeated logic from elsewhere but it's fine for now to reduce further bugs.
+        // But let's centralize this perhaps.
+        $providersFromKickoffFiles = collect($installation->config->all())
+            ->map(fn ($name) => BellowsConfig::getInstance()->path('kickoff/files/' . $name))
+            ->filter(fn ($dir) => is_dir($dir))
+            ->map(fn ($dir) => glob("{$dir}/app/Providers/*.php"))
+            ->flatten()
+            ->filter()
+            ->map(fn ($file) => basename($file, '.php'))
+            ->map(fn ($filename) => 'App\\Providers\\' . $filename);
+
         $aliasesFromConfig = array_merge(
             $installation->config->get(KickoffConfigKeys::FACADES),
             $installation->config->get(KickoffConfigKeys::ALIASES),
@@ -32,7 +44,10 @@ class UpdateConfigFiles
         );
 
         collect($installation->manager->serviceProvidersToRegister(
-            $installation->config->get(KickoffConfigKeys::SERVICE_PROVIDERS)
+            array_merge(
+                $installation->config->get(KickoffConfigKeys::SERVICE_PROVIDERS),
+                $providersFromKickoffFiles->toArray(),
+            ),
         ))->each(fn ($provider) => $this->configHelper->append(
             'app.providers',
             Str::finish($provider, '::class'),
