@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e5a684c9cb74d70fe4f2e17f976b7c40",
+    "content-hash": "1fcdfcbbf758fb44050696c264cabf09",
     "packages": [
         {
             "name": "bellows-app/plugin-sdk",
-            "version": "dev-main",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bellows-app/plugin-sdk.git",
@@ -41,7 +41,6 @@
                 "phpstan/phpstan": "^1.10",
                 "tightenco/duster": "^1.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -70,7 +69,7 @@
             ],
             "support": {
                 "issues": "https://github.com/bellows-app/plugin-sdk/issues",
-                "source": "https://github.com/bellows-app/plugin-sdk/tree/main"
+                "source": "https://github.com/bellows-app/plugin-sdk/tree/0.1.0"
             },
             "time": "2023-07-14T01:17:35+00:00"
         },
