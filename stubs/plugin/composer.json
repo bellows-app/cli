@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "bellows-app/plugin-sdk": "dev-main"
+        "bellows-app/plugin-sdk": "^0.1.0"
     },
     "require-dev": {
         "orchestra/testbench": "^8.5",
