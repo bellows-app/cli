@@ -6,14 +6,19 @@ use Bellows\Config\BellowsConfig;
 use Bellows\Plugins\PluginLoader;
 use Closure;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 
 trait LoadsPlugins
 {
     protected function setPluginPaths()
     {
         if (count($this->pluginPaths) === 0) {
-            $this->pluginPaths[] = BellowsConfig::getInstance()->path('plugins/vendor');
-            require_once BellowsConfig::getInstance()->path('plugins/vendor/autoload.php');
+            $autoloadPath = BellowsConfig::getInstance()->path('plugins/vendor/autoload.php');
+
+            if (File::exists($autoloadPath)) {
+                $this->pluginPaths[] = BellowsConfig::getInstance()->path('plugins/vendor');
+                require_once $autoloadPath;
+            }
         }
     }
 
