@@ -146,18 +146,18 @@ class DeployScript
             return $toAdd->map(fn ($item) => "\t" . $item)->implode(PHP_EOL);
         }
 
-        $containsArtisanCommand = $toAdd->first(fn ($item) => Str::startsWith($item, '$FORGE_PHP artisan'));
+        $toAdd = $toAdd->map(function ($item) {
+            if (!Str::startsWith($item, '$FORGE_PHP artisan')) {
+                return $item;
+            }
 
-        if ($containsArtisanCommand) {
-            // Wrap it in an if to be safe
-            // (TODO: Probably should check if the nested if is an artisan check above and wrap in case?)
-            $toAdd = $toAdd->map(fn ($item) => "\t" . $item);
+            // Wrap it in an if artisan exists
+            $item = 'if [ -f artisan ]; then' . PHP_EOL . "\t" . $item . PHP_EOL . 'fi';
 
-            $toAdd->prepend('if [ -f artisan ]; then');
-            $toAdd->push('fi');
-        }
+            return $item;
+        });
 
-        return Str::wrap($toAdd->implode(PHP_EOL), PHP_EOL);
+        return Str::wrap($toAdd->implode(PHP_EOL . PHP_EOL), PHP_EOL);
     }
 
     protected function cleanUp(): string
