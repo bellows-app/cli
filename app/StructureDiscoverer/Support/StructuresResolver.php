@@ -4,6 +4,7 @@ namespace Bellows\StructureDiscoverer\Support;
 
 use Spatie\StructureDiscoverer\Data\DiscoveredStructure;
 use Spatie\StructureDiscoverer\Support\StructuresResolver as BaseStructuresResolver;
+use Spatie\StructureDiscoverer\Enums\Sort;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 
@@ -13,6 +14,8 @@ class StructuresResolver extends BaseStructuresResolver
     public function discover(
         array $directories,
         array $ignoredFiles = [],
+        ?Sort $sort,
+        bool $reverseSorting
     ): array {
         if (empty($directories)) {
             return [];
