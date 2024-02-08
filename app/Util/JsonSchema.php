@@ -4,6 +4,7 @@ namespace Bellows\Util;
 
 use Bellows\Config\BellowsConfig;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 
 class JsonSchema
 {
@@ -19,7 +20,7 @@ class JsonSchema
             return $fullPath;
         }
 
-        $data = file_get_contents($url);
+        $data = Http::get($url)->body();
 
         if (!is_string($data)) {
             return null;
